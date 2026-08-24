@@ -92,8 +92,24 @@ async def process_task_time(message: Message, state: FSMContext):
     except ValueError:
         await message.answer("❌ Vaqt formati noto'g'ri kiritildi! Iltimos, `2026-08-25 18:30` ko'rinishida yozing.")
 
+import asyncio
+import os
+from aiohttp import web
+
+async def handle(request):
+    return web.Response(text="Bot ishlayapti!")
+
 async def main():
     scheduler.start()
+    
+    app = web.Application()
+    app.router.add_get("/", handle)
+    runner = web.AppRunner(app)
+    await runner.setup()
+    port = int(os.environ.get("PORT", 8080))
+    site = web.TCPSite(runner, "0.0.0.0", port)
+    await site.start()
+
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
