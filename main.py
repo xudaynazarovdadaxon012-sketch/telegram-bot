@@ -1,16 +1,18 @@
 import asyncio
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.storage.memory import MemoryStorage
 
-# Tokeningizni shu yerga yozing
-API_TOKEN = '8760162640:AAECQSshZ5jA3goZUWx4rG8MIfLkrBrRk20'
+API_TOKEN = '8760162640:AAECQSshZSJA3goZUWx4rG8MIFLkrBrRk20'
 
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher(storage=MemoryStorage())
+
+# O'zbekiston vaqt mintaqasi (UTC+5)
+UZB_TZ = timezone(timedelta(hours=5))
 
 class Form(StatesGroup):
     waiting_for_text = State()
@@ -35,20 +37,26 @@ async def process_text(message: types.Message, state: FSMContext):
 async def process_time(message: types.Message, state: FSMContext):
     user_time_str = message.text.strip()
     try:
-        now = datetime.now()
-        target_time = datetime.strptime(user_time_str, "%H:%M").replace(
-            year=now.year, month=now.month, day=now.day
-        )
+        # Hozirgi O'zbekiston vaqti
+        now = datetime.now(UZB_TZ)
         
+        # Foydalanuvchi kiritgan vaqt
+        parsed_time = datetime.strptime(user_time_str, "%H:%M").time()
+        
+        # Bugungi shu soat (O'zbekiston vaqti bilan)
+        target_time = datetime.combine(now.date(), parsed_time).replace(tzinfo=UZB_TZ)
+        
+        # Agar vaqt o'tib ketgan bo'lsa, ertangi kunga o'tkazadi
+        if target_time <= now:
+            target_time += timedelta(days=1)
+            
         delay = (target_time - now).total_seconds()
-        if delay < 0:
-            delay += 86400  # Agar ko'rsatilgan vaqt o'tib ketgan bo'lsa, ertangi kunga o'tkazadi
 
         data = await state.get_data()
         reminder_text = data.get('text')
         await state.clear()
         
-        await message.answer(f"Kelishdik! Eslatma {user_time_str} ga o'rnatildi.")
+        await message.answer(f"Kelishdik! Eslatma O'zbekiston vaqti bilan {user_time_str} ga o'rnatildi.")
         
         await asyncio.sleep(delay)
         await message.answer(f"🔔 **Eslatma:** {reminder_text}")
