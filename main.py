@@ -1,37 +1,77 @@
 import asyncio
 import os
+import sqlite3
 from datetime import datetime, timedelta, timezone
-from aiogram import Bot, Dispatcher, types
+from aiogram import Bot, Dispatcher, types, F
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.storage.memory import MemoryStorage
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiohttp import web
 
+# Telegram Bot Token
 API_TOKEN = '8760162640:AAGhmn9AtwtXIvk234ETV-gKA6aeCQKDPnY'
 
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher(storage=MemoryStorage())
-
 UZB_TZ = timezone(timedelta(hours=5))
+
+# Ma'lumotlar bazasini sozlash (SQLite)
+def init_db():
+    conn = sqlite3.connect("reminders.db")
+    cursor = conn.cursor()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS reminders (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
+            text TEXT,
+            remind_time TEXT
+        )
+    """)
+    conn.commit()
+    conn.close()
+
+init_db()
 
 class Form(StatesGroup):
     waiting_for_text = State()
     waiting_for_time = State()
 
+# Asosiy menyu tugmalari
+def main_menu():
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="➕ Yangi eslatma", callback_data="add_reminder")],
+        [InlineKeyboardButton(text="📋 Eslatmalarim", callback_data="list_reminders")],
+        [InlineKeyboardButton(text="ℹ️ Bot haqida", callback_data="about")]
+    ])
+    return keyboard
+
 @dp.message(Command("start"))
 async def start_handler(message: types.Message):
-    await message.answer("Salom! Eslatma qo'shish uchun /remind buyrug'ini yuboring.")
+    await message.answer(
+        f"👋 Salom, **{message.from_user.first_name}**!\n\n"
+        "Men sizning shaxsiy rejalashtiruvchi yordamchingizman. Quyidagi tugmalardan birini tanlang:",
+        reply_markup=main_menu()
+    )
 
-@dp.message(Command("remind"))
-async def remind_handler(message: types.Message, state: FSMContext):
-    await message.answer("Nima haqida eslatib o'tay?")
+@dp.callback_query(F.data == "about")
+async def about_handler(callback: types.CallbackQuery):
+    await callback.message.edit_text(
+        "🤖 **Pro Rejalashtiruvchi Bot**\n\n"
+        "Ushbu bot sizga muhim topshiriqlar va uchrashuvlarni o'z vaqtida eslatib turadi.",
+        reply_markup=main_menu()
+    )
+
+@dp.callback_query(F.data == "add_reminder")
+async def add_reminder_start(callback: types.CallbackQuery, state: FSMContext):
+    await callback.message.edit_text("📝 Nima haqida eslatishim kerak? Matnni kiriting:")
     await state.set_state(Form.waiting_for_text)
 
 @dp.message(Form.waiting_for_text)
 async def process_text(message: types.Message, state: FSMContext):
     await state.update_data(text=message.text)
-    await message.answer("Soat nechada eslatay? (Format: HH:MM, masalan 14:30)")
+    await message.answer("⏰ Soat nechada eslatay? (Format: **HH:MM**, masalan: 14:30):")
     await state.set_state(Form.waiting_for_time)
 
 @dp.message(Form.waiting_for_time)
@@ -46,23 +86,49 @@ async def process_time(message: types.Message, state: FSMContext):
             target_time += timedelta(days=1)
             
         delay = (target_time - now).total_seconds()
-
         data = await state.get_data()
         reminder_text = data.get('text')
+        
+        # Bazasiga saqlash
+        conn = sqlite3.connect("reminders.db")
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO reminders (user_id, text, remind_time) VALUES (?, ?, ?)", 
+                       (message.from_user.id, reminder_text, target_time.strftime("%Y-%m-%d %H:%M")))
+        conn.commit()
+        conn.close()
+
         await state.clear()
+        await message.answer(
+            f"✅ **Eslatma saqlandi!**\n\n📌 **Matn:** {reminder_text}\n🕒 **Vaqt:** {user_time_str}",
+            reply_markup=main_menu()
+        )
         
-        await message.answer(f"Kelishdik! O'zbekiston vaqti bilan {user_time_str} ga o'rnatildi.")
-        
-        # Eslatmani kutish
         await asyncio.sleep(delay)
-        await message.answer(f"🔔 **Eslatma:** {reminder_text}")
+        await message.answer(f"🔔 **ESLATMA!**\n\n📌 {reminder_text}")
         
     except ValueError:
-        await message.answer("Vaqt formati noto'g'ri. Iltimos, **HH:MM** ko'rinishida kiriting (masalan: 09:15 yoki 18:30).")
+        await message.answer("❌ Noto'g'ri vaqt kiritildi. Iltimos, **HH:MM** formatida yozing (masalan: 09:15).")
 
-# Render port talab qilgani uchun soxta veb-server
+@dp.callback_query(F.data == "list_reminders")
+async def list_reminders(callback: types.CallbackQuery):
+    conn = sqlite3.connect("reminders.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT text, remind_time FROM reminders WHERE user_id = ?", (callback.from_user.id,))
+    rows = cursor.fetchall()
+    conn.close()
+
+    if not rows:
+        text = "📭 Sizda hozircha faol eslatmalar yo'q."
+    else:
+        text = "📋 **Sizning eslatmalaringiz:**\n\n"
+        for i, row in enumerate(rows, 1):
+            text += f"{i}. {row[0]} — 🕒 {row[1]}\n"
+
+    await callback.message.edit_text(text, reply_markup=main_menu())
+
+# Render o'chib qolmasligi uchun veb-server
 async def handle(request):
-    return web.Response(text="Bot ishlamoqda!")
+    return web.Response(text="Bot faol ishlamoqda!")
 
 async def start_web_server():
     app = web.Application()
@@ -74,7 +140,6 @@ async def start_web_server():
     await site.start()
 
 async def main():
-    # Veb serverni va botni bir vaqtda ishga tushirish
     await start_web_server()
     await dp.start_polling(bot)
 
