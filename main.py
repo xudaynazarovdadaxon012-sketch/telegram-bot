@@ -7,7 +7,7 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import KeyboardButton, ReplyKeyboardMarkup
 
-BOT_TOKEN = "YOUR_BOT_TOKEN_HERE"  # Bu yerga yangi tokeningizni qo'ying
+BOT_TOKEN = "8760162640:AAECQSshZ5jA3goZUWx4rG8MIfLkrBrRk20"  # Bu yerga yangi tokeningizni qo'ying
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher(storage=MemoryStorage())
