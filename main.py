@@ -1,5 +1,5 @@
 import asyncio
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 import logging
 import sqlite3
 from aiogram import Bot, Dispatcher, F, types
@@ -29,7 +29,7 @@ class ReminderState(StatesGroup):
   waiting_for_time = State()
 
 
-# --- Ma'lumotlar bazasi ---
+# --- Ma'lumotlar bazasi (SQLite) ---
 conn = sqlite3.connect("reminders.db", check_same_thread=False)
 cursor = conn.cursor()
 cursor.execute("""
@@ -222,11 +222,12 @@ async def list_reminders(callback: types.CallbackQuery):
   await callback.answer()
 
 
-# --- FONDAGI ESLATMALARNI TEKSHIRUVCHI ---
+# --- O'ZBEKISTON VAQTI BO'YICHA ESLATMALARNI TEKSHIRISH ---
 async def check_reminders():
+  uzb_tz = timezone(timedelta(hours=5))
   while True:
     try:
-      now = datetime.now().strftime("%H:%M")
+      now = datetime.now(uzb_tz).strftime("%H:%M")
       cursor.execute(
           "SELECT id, user_id, text FROM reminders WHERE remind_time = ?",
           (now,),
@@ -243,7 +244,7 @@ async def check_reminders():
     except Exception as e:
       logging.error(f"Eslatma yuborishda xatolik: {e}")
 
-    await asyncio.sleep(40)
+    await asyncio.sleep(30)
 
 
 # --- WEB SERVER ---
