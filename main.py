@@ -9,7 +9,7 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 # BotFather'dan olingan tokenni shu yerga joylang
-BOT_TOKEN = "8699416020:AAEj3qDas2qEE0SfNXc1F9TeX4vRzAPKD1g"
+BOT_TOKEN = "8760162640:AAECQSshZ5jA3goZUWx4rG8MIfLkrBrRk20"
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher(storage=MemoryStorage())
