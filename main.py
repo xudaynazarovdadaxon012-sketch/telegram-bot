@@ -1,3 +1,20 @@
+import os
+from threading import Thread
+from flask import Flask
+
+app = Flask('')
+
+@app.route('/')
+def home():
+    return "Bot alive"
+
+def run():
+    app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 8080)))
+
+def keep_alive():
+    t = Thread(target=run)
+    t.daemon = True
+    t.start()
 import asyncio
 import os
 import sqlite3
@@ -145,3 +162,6 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+if __name__ == '__main__':
+    keep_alive() # Mana shu yangi qator
+    asyncio.run(main()) # Botingizning o'zida bor bo'lgan kodi
