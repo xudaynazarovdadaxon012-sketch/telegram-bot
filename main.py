@@ -161,7 +161,4 @@ async def main():
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
-    asyncio.run(main())
-if __name__ == '__main__':
-    keep_alive() # Mana shu yangi qator
-    asyncio.run(main()) # Botingizning o'zida bor bo'lgan kodi
+  asyncio.run(main())a bor bo'lgan kodi
