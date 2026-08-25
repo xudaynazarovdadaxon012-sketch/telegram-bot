@@ -3,6 +3,8 @@ import logging
 import sqlite3
 from aiogram import Bot, Dispatcher, F, types
 from aiogram.filters import Command
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from aiohttp import web
 import requests
@@ -10,14 +12,18 @@ import requests
 # Bot tokeningizni shu yerga qo'ying
 API_TOKEN = "8760162640:AAGhmn9AtwtXIvk234ETV-gKA6aeCQKDPnY"
 
-# Loglarni sozlash
 logging.basicConfig(level=logging.INFO)
 
-# Bot va Dispatcher yaratish
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher()
 
-# --- Ma'lumotlar bazasi (SQLite) ---
+
+# Shahar nomini kutish holati (State)
+class WeatherState(StatesGroup):
+  waiting_for_city = State()
+
+
+# Ma'lumotlar bazasi
 conn = sqlite3.connect("reminders.db", check_same_thread=False)
 cursor = conn.cursor()
 cursor.execute("""
@@ -31,7 +37,7 @@ CREATE TABLE IF NOT EXISTS reminders (
 conn.commit()
 
 
-# --- Asosiy Menyudagi Tugmalar ---
+# Asosiy menyu
 def get_main_keyboard():
   return InlineKeyboardMarkup(
       inline_keyboard=[
@@ -50,9 +56,9 @@ def get_main_keyboard():
   )
 
 
-# --- /start komandasi ---
 @dp.message(Command("start"))
-async def send_welcome(message: types.Message):
+async def send_welcome(message: types.Message, state: FSMContext):
+  await state.clear()
   await message.answer(
       f"Assalomu alaykum, {message.from_user.first_name}!\n\n"
       "Men sizning ko'p funksiyali yordamchingizman. "
@@ -61,7 +67,7 @@ async def send_welcome(message: types.Message):
   )
 
 
-# --- Valyuta kurslarini olish ---
+# --- Valyuta kurslari ---
 @dp.callback_query(F.data == "valyuta")
 async def get_currency(callback: types.CallbackQuery):
   try:
@@ -81,34 +87,63 @@ async def get_currency(callback: types.CallbackQuery):
     await callback.message.answer(
         text, parse_mode="Markdown", reply_markup=get_main_keyboard()
     )
-  except Exception as e:
+  except Exception:
     await callback.message.answer(
         "Valyuta kurslarini olishda xatolik yuz berdi."
     )
   await callback.answer()
 
 
-# --- Ob-havo ma'lumotlarini olish ---
+# --- Ob-havo tugmasi bosilganda shahar nomini so'rash ---
 @dp.callback_query(F.data == "obhavo")
-async def get_weather(callback: types.CallbackQuery):
-  try:
-    # Toshkent koordinatalari uchun bepul ob-havo API
-    url = "https://api.open-meteo.com/v1/forecast?latitude=41.2646&longitude=69.2163&current_weather=true"
-    res = requests.get(url).json()
-    temp = res["current_weather"]["temperature"]
-    wind = res["current_weather"]["windspeed"]
+async def ask_city(callback: types.CallbackQuery, state: FSMContext):
+  await state.set_state(WeatherState.waiting_for_city)
+  await callback.message.answer(
+      "🌤 Qaysi shaharning ob-havosi kerak?\n\n"
+      "Iltimos, shahar nomini matn sifatida yozib yuboring (masalan: *Samarqand*, *Toshkent*, *Buxoro*, *Namangan*):",
+      parse_mode="Markdown",
+  )
+  await callback.answer()
+
+
+# --- Foydalanuvchi kiritgan shahar bo'yicha ob-havoni izlash ---
+@dp.message(WeatherState.waiting_for_city)
+async def weather_by_city(message: types.Message, state: FSMContext):
+  city_name = message.text.strip()
+
+  # Shahar koordinatalarini aniqlash API
+  geo_url = (
+      f"https://geocoding-api.open-meteo.com/v1/search?name={city_name}&count=1"
+  )
+  geo_res = requests.get(geo_url).json()
+
+  if geo_res.get("results"):
+    lat = geo_res["results"][0]["latitude"]
+    lon = geo_res["results"][0]["longitude"]
+    found_name = geo_res["results"][0]["name"]
+
+    # Ob-havoni olish API
+    weather_url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current_weather=true"
+    weather_res = requests.get(weather_url).json()
+
+    temp = weather_res["current_weather"]["temperature"]
+    wind = weather_res["current_weather"]["windspeed"]
 
     text = (
-        f"🌤 **Toshkent shahridagi hozirgi ob-havo:**\n\n"
+        f"🌤 **{found_name} shahridagi hozirgi ob-havo:**\n\n"
         f"🌡 Harorat: **{temp}°C**\n"
         f"💨 Shamol tezligi: **{wind} km/h**"
     )
-    await callback.message.answer(
-        text, parse_mode="Markdown", reply_markup=get_main_keyboard()
+    await message.answer(text, parse_mode="Markdown")
+  else:
+    await message.answer(
+        f"❌ '{city_name}' shahri topilmadi. Iltimos, shahar nomini to'g'ri kiritganingizni tekshirib, qayta urinib ko'ring."
     )
-  except Exception as e:
-    await callback.message.answer("Ob-havoni olishda xatolik yuz berdi.")
-  await callback.answer()
+
+  await message.answer(
+      "Boshqa bo'limni tanlashingiz mumkin:", reply_markup=get_main_keyboard()
+  )
+  await state.clear()
 
 
 # --- Eslatmalarni ko'rish ---
@@ -133,7 +168,7 @@ async def list_reminders(callback: types.CallbackQuery):
   await callback.answer()
 
 
-# --- Web-server (Render uxlab qolmasligi uchun) ---
+# Web-server
 async def handle(request):
   return web.Response(text="Bot is running online 24/7!")
 
@@ -147,7 +182,6 @@ async def start_web_server():
   await site.start()
 
 
-# --- Asosiy ishga tushirish funksiyasi ---
 async def main():
   await start_web_server()
   await dp.start_polling(bot)
