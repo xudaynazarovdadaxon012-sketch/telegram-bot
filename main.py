@@ -6,7 +6,8 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.storage.memory import MemoryStorage
 
-API_TOKEN = '8760162640:AAECQSshZ5jA3goZUWx4rG8MIfLkrBrRk20'  # BotFather'dan olingan token
+# Tokeningizni shu yerga yozing
+API_TOKEN = '8760162640:AAECQSshZ5jA3goZUWx4rG8MIfLkrBrRk20'
 
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher(storage=MemoryStorage())
