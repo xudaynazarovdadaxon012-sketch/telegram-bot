@@ -1,4 +1,5 @@
 import asyncio
+from datetime import datetime
 import logging
 import sqlite3
 from aiogram import Bot, Dispatcher, F, types
@@ -18,12 +19,17 @@ bot = Bot(token=API_TOKEN)
 dp = Dispatcher()
 
 
-# Shahar nomini kutish holati (State)
+# --- FSM Holatlari ---
 class WeatherState(StatesGroup):
   waiting_for_city = State()
 
 
-# Ma'lumotlar bazasi
+class ReminderState(StatesGroup):
+  waiting_for_text = State()
+  waiting_for_time = State()
+
+
+# --- Ma'lumotlar bazasi ---
 conn = sqlite3.connect("reminders.db", check_same_thread=False)
 cursor = conn.cursor()
 cursor.execute("""
@@ -37,10 +43,16 @@ CREATE TABLE IF NOT EXISTS reminders (
 conn.commit()
 
 
-# Asosiy menyu
+# --- Asosiy Menyudagi Tugmalar ---
 def get_main_keyboard():
   return InlineKeyboardMarkup(
       inline_keyboard=[
+          [
+              InlineKeyboardButton(
+                  text="➕ Yangi eslatma qo'shish",
+                  callback_data="add_reminder",
+              )
+          ],
           [
               InlineKeyboardButton(
                   text="📝 Eslatmalarim", callback_data="list_reminders"
@@ -56,18 +68,18 @@ def get_main_keyboard():
   )
 
 
+# --- /start komandasi ---
 @dp.message(Command("start"))
 async def send_welcome(message: types.Message, state: FSMContext):
   await state.clear()
   await message.answer(
       f"Assalomu alaykum, {message.from_user.first_name}!\n\n"
-      "Men sizning ko'p funksiyali yordamchingizman. "
-      "Quyidagi bo'limlardan birini tanlang:",
+      "Men sizning ko'p funksiyali yordamchingizman. Quyidagi bo'limlardan birini tanlang:",
       reply_markup=get_main_keyboard(),
   )
 
 
-# --- Valyuta kurslari ---
+# --- 1. VALYUTA KURSLARI ---
 @dp.callback_query(F.data == "valyuta")
 async def get_currency(callback: types.CallbackQuery):
   try:
@@ -94,24 +106,20 @@ async def get_currency(callback: types.CallbackQuery):
   await callback.answer()
 
 
-# --- Ob-havo tugmasi bosilganda shahar nomini so'rash ---
+# --- 2. OB-HAVO ---
 @dp.callback_query(F.data == "obhavo")
 async def ask_city(callback: types.CallbackQuery, state: FSMContext):
   await state.set_state(WeatherState.waiting_for_city)
   await callback.message.answer(
-      "🌤 Qaysi shaharning ob-havosi kerak?\n\n"
-      "Iltimos, shahar nomini matn sifatida yozib yuboring (masalan: *Samarqand*, *Toshkent*, *Buxoro*, *Namangan*):",
+      "🌤 Qaysi shaharning ob-havosi kerak?\n\nIltimos, shahar nomini matn sifatida yozib yuboring (masalan: *Samarqand*, *Toshkent*, *Buxoro*):",
       parse_mode="Markdown",
   )
   await callback.answer()
 
 
-# --- Foydalanuvchi kiritgan shahar bo'yicha ob-havoni izlash ---
 @dp.message(WeatherState.waiting_for_city)
 async def weather_by_city(message: types.Message, state: FSMContext):
   city_name = message.text.strip()
-
-  # Shahar koordinatalarini aniqlash API
   geo_url = (
       f"https://geocoding-api.open-meteo.com/v1/search?name={city_name}&count=1"
   )
@@ -122,7 +130,6 @@ async def weather_by_city(message: types.Message, state: FSMContext):
     lon = geo_res["results"][0]["longitude"]
     found_name = geo_res["results"][0]["name"]
 
-    # Ob-havoni olish API
     weather_url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current_weather=true"
     weather_res = requests.get(weather_url).json()
 
@@ -137,7 +144,7 @@ async def weather_by_city(message: types.Message, state: FSMContext):
     await message.answer(text, parse_mode="Markdown")
   else:
     await message.answer(
-        f"❌ '{city_name}' shahri topilmadi. Iltimos, shahar nomini to'g'ri kiritganingizni tekshirib, qayta urinib ko'ring."
+        f"❌ '{city_name}' shahri topilmadi. Iltimos, shahar nomini to'g'ri kiriting."
     )
 
   await message.answer(
@@ -146,7 +153,54 @@ async def weather_by_city(message: types.Message, state: FSMContext):
   await state.clear()
 
 
-# --- Eslatmalarni ko'rish ---
+# --- 3. ESLATMALAR ---
+@dp.callback_query(F.data == "add_reminder")
+async def start_add_reminder(
+    callback: types.CallbackQuery, state: FSMContext
+):
+  await state.set_state(ReminderState.waiting_for_text)
+  await callback.message.answer(
+      "📝 Nima haqida eslatib qo'yay?\n(Masalan: *Kitob o'qish* yoki *Dori ichish*)"
+  )
+  await callback.answer()
+
+
+@dp.message(ReminderState.waiting_for_text)
+async def process_reminder_text(message: types.Message, state: FSMContext):
+  await state.update_data(reminder_text=message.text)
+  await state.set_state(ReminderState.waiting_for_time)
+  await message.answer(
+      "⏰ Soat nechada eslatay?\nFormat: **SOAT:DAQIQA** (Masalan: `14:30` yoki `09:00`):",
+      parse_mode="Markdown",
+  )
+
+
+@dp.message(ReminderState.waiting_for_time)
+async def process_reminder_time(message: types.Message, state: FSMContext):
+  time_input = message.text.strip()
+  try:
+    datetime.strptime(time_input, "%H:%M")
+    user_data = await state.get_data()
+    reminder_text = user_data["reminder_text"]
+
+    cursor.execute(
+        "INSERT INTO reminders (user_id, text, remind_time) VALUES (?, ?, ?)",
+        (message.from_user.id, reminder_text, time_input),
+    )
+    conn.commit()
+
+    await message.answer(
+        f"✅ Eslatma saqlandi!\n\n📌 **{reminder_text}**\n⏰ Vaqti: **{time_input}**",
+        parse_mode="Markdown",
+        reply_markup=get_main_keyboard(),
+    )
+    await state.clear()
+  except ValueError:
+    await message.answer(
+        "❌ Noto'g'ri vaqt formati! Iltimos, **14:30** shaklida qayta kiriting:"
+    )
+
+
 @dp.callback_query(F.data == "list_reminders")
 async def list_reminders(callback: types.CallbackQuery):
   cursor.execute(
@@ -161,14 +215,38 @@ async def list_reminders(callback: types.CallbackQuery):
   else:
     msg = "📝 **Sizning eslatmalaringiz:**\n\n"
     for row in rows:
-      msg += f"• {row[0]} — _{row[1]}_\n"
+      msg += f"• {row[0]} — ⏰ _{row[1]}_\n"
     await callback.message.answer(
         msg, parse_mode="Markdown", reply_markup=get_main_keyboard()
     )
   await callback.answer()
 
 
-# Web-server
+# --- FONDAGI ESLATMALARNI TEKSHIRUVCHI ---
+async def check_reminders():
+  while True:
+    try:
+      now = datetime.now().strftime("%H:%M")
+      cursor.execute(
+          "SELECT id, user_id, text FROM reminders WHERE remind_time = ?",
+          (now,),
+      )
+      reminders = cursor.fetchall()
+
+      for rem in reminders:
+        rem_id, user_id, text = rem
+        await bot.send_message(
+            user_id, f"🔔 **ESLATMA!**\n\n📌 {text}", parse_mode="Markdown"
+        )
+        cursor.execute("DELETE FROM reminders WHERE id = ?", (rem_id,))
+        conn.commit()
+    except Exception as e:
+      logging.error(f"Eslatma yuborishda xatolik: {e}")
+
+    await asyncio.sleep(40)
+
+
+# --- WEB SERVER ---
 async def handle(request):
   return web.Response(text="Bot is running online 24/7!")
 
@@ -182,8 +260,10 @@ async def start_web_server():
   await site.start()
 
 
+# --- ISHGA TUSHIRISH ---
 async def main():
   await start_web_server()
+  asyncio.create_task(check_reminders())
   await dp.start_polling(bot)
 
 
