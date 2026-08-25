@@ -1,164 +1,157 @@
-import os
-from threading import Thread
-from flask import Flask
-
-app = Flask('')
-
-@app.route('/')
-def home():
-    return "Bot alive"
-
-def run():
-    app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 8080)))
-
-def keep_alive():
-    t = Thread(target=run)
-    t.daemon = True
-    t.start()
 import asyncio
-import os
+import logging
 import sqlite3
-from datetime import datetime, timedelta, timezone
-from aiogram import Bot, Dispatcher, types, F
+from aiogram import Bot, Dispatcher, F, types
 from aiogram.filters import Command
-from aiogram.fsm.context import FSMContext
-from aiogram.fsm.state import State, StatesGroup
-from aiogram.fsm.storage.memory import MemoryStorage
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from aiohttp import web
+import requests
 
-# Telegram Bot Token
-API_TOKEN = '8760162640:AAGhmn9AtwtXIvk234ETV-gKA6aeCQKDPnY'
+# Bot tokeningizni shu yerga qo'ying
+API_TOKEN = "8760162640:AAGhmn9AtwtXIvk234ETV-gKA6aeCQKDPnY"
 
+# Loglarni sozlash
+logging.basicConfig(level=logging.INFO)
+
+# Bot va Dispatcher yaratish
 bot = Bot(token=API_TOKEN)
-dp = Dispatcher(storage=MemoryStorage())
-UZB_TZ = timezone(timedelta(hours=5))
+dp = Dispatcher()
 
-# Ma'lumotlar bazasini sozlash (SQLite)
-def init_db():
-    conn = sqlite3.connect("reminders.db")
-    cursor = conn.cursor()
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS reminders (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER,
-            text TEXT,
-            remind_time TEXT
-        )
-    """)
-    conn.commit()
-    conn.close()
+# --- Ma'lumotlar bazasi (SQLite) ---
+conn = sqlite3.connect("reminders.db", check_same_thread=False)
+cursor = conn.cursor()
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS reminders (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER,
+    text TEXT,
+    remind_time TEXT
+)
+""")
+conn.commit()
 
-init_db()
 
-class Form(StatesGroup):
-    waiting_for_text = State()
-    waiting_for_time = State()
+# --- Asosiy Menyudagi Tugmalar ---
+def get_main_keyboard():
+  return InlineKeyboardMarkup(
+      inline_keyboard=[
+          [
+              InlineKeyboardButton(
+                  text="📝 Eslatmalarim", callback_data="list_reminders"
+              )
+          ],
+          [
+              InlineKeyboardButton(
+                  text="💵 Valyuta kursi", callback_data="valyuta"
+              ),
+              InlineKeyboardButton(text="🌤 Ob-havo", callback_data="obhavo"),
+          ],
+      ]
+  )
 
-# Asosiy menyu tugmalari
-def main_menu():
-    keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="➕ Yangi eslatma", callback_data="add_reminder")],
-        [InlineKeyboardButton(text="📋 Eslatmalarim", callback_data="list_reminders")],
-        [InlineKeyboardButton(text="ℹ️ Bot haqida", callback_data="about")]
-    ])
-    return keyboard
 
+# --- /start komandasi ---
 @dp.message(Command("start"))
-async def start_handler(message: types.Message):
-    await message.answer(
-        f"👋 Salom, **{message.from_user.first_name}**!\n\n"
-        "Men sizning shaxsiy rejalashtiruvchi yordamchingizman. Quyidagi tugmalardan birini tanlang:",
-        reply_markup=main_menu()
+async def send_welcome(message: types.Message):
+  await message.answer(
+      f"Assalomu alaykum, {message.from_user.first_name}!\n\n"
+      "Men sizning ko'p funksiyali yordamchingizman. "
+      "Quyidagi bo'limlardan birini tanlang:",
+      reply_markup=get_main_keyboard(),
+  )
+
+
+# --- Valyuta kurslarini olish ---
+@dp.callback_query(F.data == "valyuta")
+async def get_currency(callback: types.CallbackQuery):
+  try:
+    url = "https://cbu.uz/uz/arkhiv-kursov-valyut/json/"
+    res = requests.get(url).json()
+
+    usd = next(item for item in res if item["Ccy"] == "USD")["Rate"]
+    eur = next(item for item in res if item["Ccy"] == "EUR")["Rate"]
+    rub = next(item for item in res if item["Ccy"] == "RUB")["Rate"]
+
+    text = (
+        f"💵 **Bugungi valyuta kurslari (MB):**\n\n"
+        f"🇺🇸 1 USD = {usd} so'm\n"
+        f"🇪🇺 1 EUR = {eur} so'm\n"
+        f"🇷🇺 1 RUB = {rub} so'm"
     )
-
-@dp.callback_query(F.data == "about")
-async def about_handler(callback: types.CallbackQuery):
-    await callback.message.edit_text(
-        "🤖 **Pro Rejalashtiruvchi Bot**\n\n"
-        "Ushbu bot sizga muhim topshiriqlar va uchrashuvlarni o'z vaqtida eslatib turadi.",
-        reply_markup=main_menu()
+    await callback.message.answer(
+        text, parse_mode="Markdown", reply_markup=get_main_keyboard()
     )
+  except Exception as e:
+    await callback.message.answer(
+        "Valyuta kurslarini olishda xatolik yuz berdi."
+    )
+  await callback.answer()
 
-@dp.callback_query(F.data == "add_reminder")
-async def add_reminder_start(callback: types.CallbackQuery, state: FSMContext):
-    await callback.message.edit_text("📝 Nima haqida eslatishim kerak? Matnni kiriting:")
-    await state.set_state(Form.waiting_for_text)
 
-@dp.message(Form.waiting_for_text)
-async def process_text(message: types.Message, state: FSMContext):
-    await state.update_data(text=message.text)
-    await message.answer("⏰ Soat nechada eslatay? (Format: **HH:MM**, masalan: 14:30):")
-    await state.set_state(Form.waiting_for_time)
+# --- Ob-havo ma'lumotlarini olish ---
+@dp.callback_query(F.data == "obhavo")
+async def get_weather(callback: types.CallbackQuery):
+  try:
+    # Toshkent koordinatalari uchun bepul ob-havo API
+    url = "https://api.open-meteo.com/v1/forecast?latitude=41.2646&longitude=69.2163&current_weather=true"
+    res = requests.get(url).json()
+    temp = res["current_weather"]["temperature"]
+    wind = res["current_weather"]["windspeed"]
 
-@dp.message(Form.waiting_for_time)
-async def process_time(message: types.Message, state: FSMContext):
-    user_time_str = message.text.strip()
-    try:
-        now = datetime.now(UZB_TZ)
-        parsed_time = datetime.strptime(user_time_str, "%H:%M").time()
-        target_time = datetime.combine(now.date(), parsed_time).replace(tzinfo=UZB_TZ)
-        
-        if target_time <= now:
-            target_time += timedelta(days=1)
-            
-        delay = (target_time - now).total_seconds()
-        data = await state.get_data()
-        reminder_text = data.get('text')
-        
-        # Bazasiga saqlash
-        conn = sqlite3.connect("reminders.db")
-        cursor = conn.cursor()
-        cursor.execute("INSERT INTO reminders (user_id, text, remind_time) VALUES (?, ?, ?)", 
-                       (message.from_user.id, reminder_text, target_time.strftime("%Y-%m-%d %H:%M")))
-        conn.commit()
-        conn.close()
+    text = (
+        f"🌤 **Toshkent shahridagi hozirgi ob-havo:**\n\n"
+        f"🌡 Harorat: **{temp}°C**\n"
+        f"💨 Shamol tezligi: **{wind} km/h**"
+    )
+    await callback.message.answer(
+        text, parse_mode="Markdown", reply_markup=get_main_keyboard()
+    )
+  except Exception as e:
+    await callback.message.answer("Ob-havoni olishda xatolik yuz berdi.")
+  await callback.answer()
 
-        await state.clear()
-        await message.answer(
-            f"✅ **Eslatma saqlandi!**\n\n📌 **Matn:** {reminder_text}\n🕒 **Vaqt:** {user_time_str}",
-            reply_markup=main_menu()
-        )
-        
-        await asyncio.sleep(delay)
-        await message.answer(f"🔔 **ESLATMA!**\n\n📌 {reminder_text}")
-        
-    except ValueError:
-        await message.answer("❌ Noto'g'ri vaqt kiritildi. Iltimos, **HH:MM** formatida yozing (masalan: 09:15).")
 
+# --- Eslatmalarni ko'rish ---
 @dp.callback_query(F.data == "list_reminders")
 async def list_reminders(callback: types.CallbackQuery):
-    conn = sqlite3.connect("reminders.db")
-    cursor = conn.cursor()
-    cursor.execute("SELECT text, remind_time FROM reminders WHERE user_id = ?", (callback.from_user.id,))
-    rows = cursor.fetchall()
-    conn.close()
+  cursor.execute(
+      "SELECT text, remind_time FROM reminders WHERE user_id = ?",
+      (callback.from_user.id,),
+  )
+  rows = cursor.fetchall()
+  if not rows:
+    await callback.message.answer(
+        "Sizda hozircha eslatmalar yo'q.", reply_markup=get_main_keyboard()
+    )
+  else:
+    msg = "📝 **Sizning eslatmalaringiz:**\n\n"
+    for row in rows:
+      msg += f"• {row[0]} — _{row[1]}_\n"
+    await callback.message.answer(
+        msg, parse_mode="Markdown", reply_markup=get_main_keyboard()
+    )
+  await callback.answer()
 
-    if not rows:
-        text = "📭 Sizda hozircha faol eslatmalar yo'q."
-    else:
-        text = "📋 **Sizning eslatmalaringiz:**\n\n"
-        for i, row in enumerate(rows, 1):
-            text += f"{i}. {row[0]} — 🕒 {row[1]}\n"
 
-    await callback.message.edit_text(text, reply_markup=main_menu())
-
-# Render o'chib qolmasligi uchun veb-server
+# --- Web-server (Render uxlab qolmasligi uchun) ---
 async def handle(request):
-    return web.Response(text="Bot faol ishlamoqda!")
+  return web.Response(text="Bot is running online 24/7!")
+
 
 async def start_web_server():
-    app = web.Application()
-    app.router.add_get('/', handle)
-    runner = web.AppRunner(app)
-    await runner.setup()
-    port = int(os.environ.get("PORT", 10000))
-    site = web.TCPSite(runner, "0.0.0.0", port)
-    await site.start()
+  app = web.Application()
+  app.router.add_get("/", handle)
+  runner = web.AppRunner(app)
+  await runner.setup()
+  site = web.TCPSite(runner, "0.0.0.0", 10000)
+  await site.start()
 
+
+# --- Asosiy ishga tushirish funksiyasi ---
 async def main():
-    await start_web_server()
-    await dp.start_polling(bot)
+  await start_web_server()
+  await dp.start_polling(bot)
+
 
 if __name__ == "__main__":
   asyncio.run(main())
