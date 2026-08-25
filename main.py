@@ -1,17 +1,18 @@
 import asyncio
+import os
 from datetime import datetime, timedelta, timezone
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.storage.memory import MemoryStorage
+from aiohttp import web
 
 API_TOKEN = '8760162640:AAGhmn9AtwtXIvk234ETV-gKA6aeCQKDPnY'
 
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher(storage=MemoryStorage())
 
-# O'zbekiston vaqt mintaqasi (UTC+5)
 UZB_TZ = timezone(timedelta(hours=5))
 
 class Form(StatesGroup):
@@ -52,13 +53,29 @@ async def process_time(message: types.Message, state: FSMContext):
         
         await message.answer(f"Kelishdik! O'zbekiston vaqti bilan {user_time_str} ga o'rnatildi.")
         
+        # Eslatmani kutish
         await asyncio.sleep(delay)
         await message.answer(f"🔔 **Eslatma:** {reminder_text}")
         
     except ValueError:
         await message.answer("Vaqt formati noto'g'ri. Iltimos, **HH:MM** ko'rinishida kiriting (masalan: 09:15 yoki 18:30).")
 
+# Render port talab qilgani uchun soxta veb-server
+async def handle(request):
+    return web.Response(text="Bot ishlamoqda!")
+
+async def start_web_server():
+    app = web.Application()
+    app.router.add_get('/', handle)
+    runner = web.AppRunner(app)
+    await runner.setup()
+    port = int(os.environ.get("PORT", 10000))
+    site = web.TCPSite(runner, "0.0.0.0", port)
+    await site.start()
+
 async def main():
+    # Veb serverni va botni bir vaqtda ishga tushirish
+    await start_web_server()
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
