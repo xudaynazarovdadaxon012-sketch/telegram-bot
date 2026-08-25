@@ -1,69 +1,59 @@
 import asyncio
-import os
-from aiogram import Bot, Dispatcher, F, types
-from aiogram.filters import CommandStart
+from datetime import datetime
+from aiogram import Bot, Dispatcher, types
+from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.storage.memory import MemoryStorage
-from aiogram.types import KeyboardButton, ReplyKeyboardMarkup
 
-BOT_TOKEN = "8760162640:AAECQSshZ5jA3goZUWx4rG8MIfLkrBrRk20"  # Bu yerga yangi tokeningizni qo'ying
+API_TOKEN = '8760162640:AAECQSshZ5jA3goZUWx4rG8MIfLkrBrRk20'  # BotFather'dan olingan token
 
-bot = Bot(token=BOT_TOKEN)
+bot = Bot(token=API_TOKEN)
 dp = Dispatcher(storage=MemoryStorage())
 
-class TaskState(StatesGroup):
-    waiting_for_task = State()
+class Form(StatesGroup):
+    waiting_for_text = State()
     waiting_for_time = State()
 
-def get_main_keyboard():
-    return ReplyKeyboardMarkup(
-        keyboard=[
-            [KeyboardButton(text="➕ Vazifa qo'shish")],
-        ],
-        resize_keyboard=True
-    )
+@dp.message(Command("start"))
+async def start_handler(message: types.Message):
+    await message.answer("Salom! Eslatma qo'shish uchun /remind buyrug'ini yuboring.")
 
-@dp.message(CommandStart())
-async def cmd_start(message: types.Message):
-    await message.answer(
-        "Xush kelibsiz! Vazifalaringiz va eslatmalaringizni boshqaruvchi botga hush kelibsiz.",
-        reply_markup=get_main_keyboard()
-    )
+@dp.message(Command("remind"))
+async def remind_handler(message: types.Message, state: FSMContext):
+    await message.answer("Nima haqida eslatib o'tay?")
+    await state.set_state(Form.waiting_for_text)
 
-@dp.message(F.text == "➕ Vazifa qo'shish")
-async def add_task_start(message: types.Message, state: FSMContext):
-    await message.answer("Vazifa nomini kiriting:")
-    await state.set_state(TaskState.waiting_for_task)
+@dp.message(Form.waiting_for_text)
+async def process_text(message: types.Message, state: FSMContext):
+    await state.update_data(text=message.text)
+    await message.answer("Soat nechada eslatay? (Format: HH:MM, masalan 14:30)")
+    await state.set_state(Form.waiting_for_time)
 
-@dp.message(TaskState.waiting_for_task)
-async def process_task_name(message: types.Message, state: FSMContext):
-    await state.update_data(task_name=message.text)
-    await message.answer("Necha soniyadan keyin eslatay? (Masalan: 10)")
-    await state.set_state(TaskState.waiting_for_time)
-
-async def send_reminder(chat_id: int, task_name: str, delay: int):
-    await asyncio.sleep(delay)
+@dp.message(Form.waiting_for_time)
+async def process_time(message: types.Message, state: FSMContext):
+    user_time_str = message.text.strip()
     try:
-        await bot.send_message(chat_id, f"⏰ **ESLATMA!**\n\nVazifa: {task_name}")
-    except Exception as e:
-        print(f"Xatolik: {e}")
+        now = datetime.now()
+        target_time = datetime.strptime(user_time_str, "%H:%M").replace(
+            year=now.year, month=now.month, day=now.day
+        )
+        
+        delay = (target_time - now).total_seconds()
+        if delay < 0:
+            delay += 86400  # Agar ko'rsatilgan vaqt o'tib ketgan bo'lsa, ertangi kunga o'tkazadi
 
-@dp.message(TaskState.waiting_for_time)
-async def process_task_time(message: types.Message, state: FSMContext):
-    if not message.text.isdigit():
-        await message.answer("Iltimos, faqat raqam kiriting (masalan: 10)!")
-        return
-    
-    seconds = int(message.text)
-    user_data = await state.get_data()
-    task_name = user_data.get("task_name")
-    
-    await message.answer(f"✅ Vazifa saqlandi! {seconds} soniyadan keyin eslataman.")
-    await state.clear()
-    
-    # Eslatmani orqa fonda (background task) yuritish
-    asyncio.create_task(send_reminder(message.chat.id, task_name, seconds))
+        data = await state.get_data()
+        reminder_text = data.get('text')
+        await state.clear()
+        
+        await message.answer(f"Kelishdik! Eslatma {user_time_str} ga o'rnatildi.")
+        
+        await asyncio.sleep(delay)
+        await message.answer(f"🔔 **Eslatma:** {reminder_text}")
+        
+    except ValueError:
+        await message.answer("Vaqt formati noto'g'ri. Iltimos, **HH:MM** ko'rinishida kiriting (masalan: 09:15 yoki 18:30).")
 
 async def main():
     await dp.start_polling(bot)
