@@ -2,756 +2,163 @@
 <html lang="uz">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Personal Yordamchi & 10 Mini Games</title>
-  
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ilon O'yini</title>
   <style>
-    * { box-sizing: border-box; }
     body {
-      font-family: 'Poppins', sans-serif;
-      background-color: #0f172a;
-      color: #f8fafc;
+      background: #0f172a;
+      color: white;
+      text-align: center;
+      font-family: sans-serif;
       margin: 0;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-      user-select: none;
+      padding: 10px;
     }
-
-    /* Splash Screen */
-    #splash-screen {
-      position: fixed;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background-color: #0f172a;
-      display: flex; flex-direction: column;
-      justify-content: center; align-items: center;
-      z-index: 100; opacity: 1; transition: opacity 0.8s ease-out;
+    #gameCanvas {
+      background: #1e293b;
+      border: 2px solid #38bdf8;
+      border-radius: 8px;
     }
-
-    #splash-logo {
-      font-size: 2.2rem; font-weight: bold; color: #38bdf8;
-      animation: pulse 2s infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { transform: scale(1); opacity: 0.8; }
-      50% { transform: scale(1.05); opacity: 1; }
-    }
-
-    /* Asosiy Container */
-    #main-content {
-      display: none; flex-direction: column; flex: 1;
-      opacity: 0; transition: opacity 0.5s ease-in;
-    }
-
-    /* Navigatsiya Menyusi */
-    .navbar {
-      display: flex; justify-content: space-around;
-      background: #1e293b; padding: 10px 5px;
-      border-bottom: 1px solid #334155; position: sticky; top: 0; z-index: 10;
-    }
-
-    .nav-btn {
-      background: none; border: none; color: #94a3b8;
-      font-size: 0.85rem; font-weight: 600; cursor: pointer;
-      padding: 8px 10px; border-radius: 8px; transition: all 0.3s ease;
-    }
-
-    .nav-btn.active {
-      color: #38bdf8; background: #334155;
-      box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);
-    }
-
-    .container { padding: 15px; flex: 1; }
-    .tab-content { display: none; }
-    .tab-content.active { display: block; }
-
-    .user-greeting {
-      font-size: 1.1rem; margin-bottom: 15px; text-align: center; color: #e2e8f0;
-    }
-
-    /* Ob-havo Card */
-    .weather-card {
-      background: linear-gradient(135deg, #1e293b, #0f172a);
-      border: 1px solid #334155; border-radius: 16px;
-      padding: 25px 20px; text-align: center;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-    }
-
-    .weather-icon-box {
-      width: 100px; height: 100px; margin: 0 auto 15px;
-      display: flex; justify-content: center; align-items: center;
-    }
-
-    .animated-icon { width: 80px; height: 80px; }
-    .spin-slow { animation: spin 12s linear infinite; }
-    @keyframes spin { 100% { transform: rotate(360deg); } }
-
-    .float-slow { animation: float 3s ease-in-out infinite; }
-    @keyframes float {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-8px); }
-    }
-
-    .weather-temp { font-size: 2.8rem; font-weight: bold; margin: 10px 0; color: #f8fafc; }
-    .weather-desc { color: #94a3b8; font-size: 1rem; text-transform: capitalize; }
-
-    /* Valyuta kartalari */
-    .currency-card {
-      background: #1e293b; border: 1px solid #334155;
-      border-radius: 12px; padding: 15px; margin-bottom: 12px;
-      display: flex; justify-content: space-between; align-items: center;
-      opacity: 0; transform: translateY(20px);
-    }
-
-    .currency-card.animate-slide { animation: fadeInUp 0.5s ease forwards; }
-    .currency-card:nth-child(1).animate-slide { animation-delay: 0.1s; }
-    .currency-card:nth-child(2).animate-slide { animation-delay: 0.3s; }
-    .currency-card:nth-child(3).animate-slide { animation-delay: 0.5s; }
-
-    @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
-    .currency-value { color: #38bdf8; font-size: 1.1rem; }
-
-    /* Eslatmalar */
-    .add-btn {
-      width: 100%; background: #38bdf8; color: #0f172a;
-      border: none; padding: 12px; border-radius: 10px;
-      font-weight: bold; font-size: 1rem; cursor: pointer; margin-top: 15px;
-    }
-
-    .reminder-list { list-style: none; padding: 0; margin: 0; }
-    .reminder-item {
-      background: #1e293b; border-left: 4px solid #38bdf8;
-      padding: 12px; border-radius: 6px; margin-bottom: 8px;
-    }
-
-    /* O'YINLAR STILI */
-    .games-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-      gap: 12px;
-      margin-top: 15px;
-    }
-
-    .game-card {
-      background: #1e293b; border: 1px solid #334155;
-      border-radius: 12px; padding: 12px; text-align: center;
-      cursor: pointer; transition: transform 0.2s;
-    }
-    .game-card:active { transform: scale(0.95); }
-    .game-icon { font-size: 2rem; margin-bottom: 5px; }
-    .game-title { font-weight: bold; font-size: 0.85rem; color: #f8fafc; }
-    .game-tag { font-size: 0.65rem; color: #38bdf8; background: rgba(56, 189, 248, 0.1); padding: 2px 6px; border-radius: 10px; }
-
-    /* Modallar */
     .modal {
-      display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: #0f172a; z-index: 200; flex-direction: column; align-items: center; justify-content: center;
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #1e293b;
       padding: 20px;
+      border-radius: 12px;
+      border: 2px solid #ef4444;
+      box-shadow: 0 0 20px rgba(0,0,0,0.5);
     }
-
-    .modal-header {
-      width: 100%; max-width: 320px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;
-    }
-
-    .close-btn {
-      background: #ef4444; color: white; border: none; padding: 6px 14px; border-radius: 8px; font-weight: bold; cursor: pointer;
-    }
-
-    /* SNAKE & BREAKOUT */
-    #snake-canvas, #breakout-canvas {
-      background: #1e293b; border: 2px solid #38bdf8; border-radius: 10px;
-    }
-    .snake-controls {
-      display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px; width: 180px;
-    }
-    .ctrl-btn {
-      background: #334155; color: white; border: none; padding: 15px; border-radius: 8px; font-weight: bold; font-size: 1.2rem;
-    }
-    .ctrl-btn:active { background: #38bdf8; color: #0f172a; }
-
-    /* TIC TAC TOE */
-    .ttt-board { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 270px; height: 270px; }
-    .ttt-cell {
-      background: #1e293b; border: 1px solid #334155; border-radius: 10px;
-      display: flex; justify-content: center; align-items: center;
-      font-size: 2rem; font-weight: bold; cursor: pointer; color: #38bdf8;
-    }
-    .ttt-cell.o { color: #f43f5e; }
-
-    /* MEMORY GAME */
-    .memory-board { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; width: 280px; }
-    .memory-card {
-      height: 65px; background: #1e293b; border: 1px solid #334155; border-radius: 8px;
-      display: flex; justify-content: center; align-items: center; font-size: 1.5rem; cursor: pointer;
-    }
-
-    /* CLICKER & RPS & REFLEX */
-    .action-circle {
-      width: 140px; height: 140px; border-radius: 50%; background: #38bdf8; color: #0f172a;
-      display: flex; justify-content: center; align-items: center; font-size: 1.5rem; font-weight: bold;
-      cursor: pointer; box-shadow: 0 0 20px rgba(56, 189, 248, 0.4); margin: 20px 0;
-    }
-
-    .rps-btns { display: flex; gap: 10px; margin-top: 15px; }
-    .rps-btn { font-size: 2rem; background: #1e293b; border: 1px solid #334155; padding: 15px; border-radius: 10px; cursor: pointer; }
-
-    .game-input {
-      background: #1e293b; border: 1px solid #334155; color: white; padding: 12px; border-radius: 8px; width: 200px; text-align: center; font-size: 1.2rem; margin-bottom: 10px;
+    .btn {
+      background: #0284c7;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-top: 10px;
     }
   </style>
 </head>
 <body>
 
-  <!-- Splash Screen -->
-  <div id="splash-screen">
-    <div id="splash-logo">⚡ Personal Assistant</div>
-    <p style="margin-top: 10px; color: #64748b;">Yuklanmoqda...</p>
-  </div>
+  <h2>Ilon O'yini</h2>
+  <canvas id="gameCanvas" width="300" height="300"></canvas>
 
-  <!-- Main Content -->
-  <div id="main-content">
-    
-    <!-- Navigatsiya Menyusi -->
-    <nav class="navbar">
-      <button class="nav-btn active" onclick="switchTab('weather', this)">☀️ Ob-havo</button>
-      <button class="nav-btn" onclick="switchTab('currency', this)">💱 Valyuta</button>
-      <button class="nav-btn" onclick="switchTab('games', this)">🎮 O'yinlar</button>
-      <button class="nav-btn" onclick="switchTab('reminder', this)">📝 Eslatmalar</button>
-    </nav>
-
-    <div class="container">
-      <div class="user-greeting">Xush kelibsiz, <span id="user-name" style="color:#38bdf8;">Foydalanuvchi</span>!</div>
-
-      <!-- 1. OB-HAVO BO'LIMI -->
-      <div id="tab-weather" class="tab-content active">
-        <div class="weather-card">
-          <div class="weather-icon-box" id="weather-icon-container"></div>
-          <div class="weather-temp" id="weather-temp">+24°C</div>
-          <div class="weather-desc" id="weather-status">Yuklanmoqda...</div>
-          <p style="font-size: 0.85rem; color: #64748b; margin-top: 15px;">Toshkent shahri bo'yicha</p>
-        </div>
-      </div>
-
-      <!-- 2. VALYUTA BO'LIMI -->
-      <div id="tab-currency" class="tab-content">
-        <h3 style="margin-top:0; color:#38bdf8; margin-bottom: 15px;">Markaziy Bank Kurslari</h3>
-        
-        <div class="currency-card">
-          <span>🇺🇸 USD / UZS</span>
-          <strong class="currency-value"><span class="counter" data-target="12850">0</span> UZS</strong>
-        </div>
-        
-        <div class="currency-card">
-          <span>🇪🇺 EUR / UZS</span>
-          <strong class="currency-value"><span class="counter" data-target="13900">0</span> UZS</strong>
-        </div>
-        
-        <div class="currency-card">
-          <span>🇷🇺 RUB / UZS</span>
-          <strong class="currency-value"><span class="counter" data-target="135">0</span> UZS</strong>
-        </div>
-      </div>
-
-      <!-- 3. O'YINLAR (GAMES) BO'LIMI - 10 TA O'YIN -->
-      <div id="tab-games" class="tab-content">
-        <h3 style="margin-top:0; color:#38bdf8; margin-bottom: 5px;">🎮 10 Mini O'yinlar</h3>
-        <p style="color:#94a3b8; font-size:0.85rem; margin-top:0;">Instant Play — Yuklamasdan o'ynang!</p>
-        
-        <div class="games-grid">
-          <div class="game-card" onclick="openSnakeGame()">
-            <div class="game-icon">🐍</div>
-            <div class="game-title">Snake Game</div>
-            <span class="game-tag">PLAY</span>
-          </div>
-
-          <div class="game-card" onclick="openTTTGame()">
-            <div class="game-icon">❌⭕</div>
-            <div class="game-title">Tic-Tac-Toe</div>
-            <span class="game-tag">PLAY</span>
-          </div>
-
-          <div class="game-card" onclick="openMemoryGame()">
-            <div class="game-icon">🧠</div>
-            <div class="game-title">Memory Cards</div>
-            <span class="game-tag">PLAY</span>
-          </div>
-
-          <div class="game-card" onclick="openClickerGame()">
-            <div class="game-icon">🎯</div>
-            <div class="game-title">Clicker 10s</div>
-            <span class="game-tag">PLAY</span>
-          </div>
-
-          <div class="game-card" onclick="openMathGame()">
-            <div class="game-icon">🧮</div>
-            <div class="game-title">Math Quiz</div>
-            <span class="game-tag">PLAY</span>
-          </div>
-
-          <div class="game-card" onclick="openColorGame()">
-            <div class="game-icon">🎨</div>
-            <div class="game-title">Color Match</div>
-            <span class="game-tag">PLAY</span>
-          </div>
-
-          <div class="game-card" onclick="openBreakoutGame()">
-            <div class="game-icon">🧱</div>
-            <div class="game-title">Breakout</div>
-            <span class="game-tag">PLAY</span>
-          </div>
-
-          <div class="game-card" onclick="openRPSGame()">
-            <div class="game-icon">🎲</div>
-            <div class="game-title">Rock Paper Scissors</div>
-            <span class="game-tag">PLAY</span>
-          </div>
-
-          <div class="game-card" onclick="openGuessGame()">
-            <div class="game-icon">🔢</div>
-            <div class="game-title">Guess Number</div>
-            <span class="game-tag">PLAY</span>
-          </div>
-
-          <div class="game-card" onclick="openReflexGame()">
-            <div class="game-icon">⚡</div>
-            <div class="game-title">Reflex Test</div>
-            <span class="game-tag">PLAY</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- 4. ESLATMALAR BO'LIMI -->
-      <div id="tab-reminder" class="tab-content">
-        <h3 style="margin-top:0; color:#38bdf8;">Mening Eslatmalarim</h3>
-        <ul class="reminder-list" id="reminder-items">
-          <li class="reminder-item">1. Mini App dizaynini yangilash</li>
-          <li class="reminder-item">2. Telegram bot kodini topshirish</li>
-        </ul>
-        <button class="add-btn" onclick="addNewReminder()">+ Yangi eslatma qo'shish</button>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- MODALLAR (10 TA O'YIN OYNALARI) -->
-
-  <!-- 1. SNAKE MODAL -->
-  <div id="snake-modal" class="modal">
-    <div class="modal-header">
-      <span style="font-weight:bold; color:#38bdf8;">Snake (Ochko: <span id="snake-score">0</span>)</span>
-      <button class="close-btn" onclick="closeSnakeGame()">X</button>
-    </div>
-    <canvas id="snake-canvas" width="280" height="280"></canvas>
-    <div class="snake-controls">
-      <div></div><button class="ctrl-btn" onclick="changeSnakeDir('UP')">▲</button><div></div>
-      <button class="ctrl-btn" onclick="changeSnakeDir('LEFT')">◀</button>
-      <button class="ctrl-btn" onclick="changeSnakeDir('DOWN')">▼</button>
-      <button class="ctrl-btn" onclick="changeSnakeDir('RIGHT')">▶</button>
-    </div>
-  </div>
-
-  <!-- 2. TIC TAC TOE MODAL -->
-  <div id="ttt-modal" class="modal">
-    <div class="modal-header">
-      <span id="ttt-status" style="font-weight:bold; color:#38bdf8;">Navbat: X</span>
-      <button class="close-btn" onclick="closeTTTGame()">X</button>
-    </div>
-    <div class="ttt-board" id="ttt-board">
-      <div class="ttt-cell" onclick="makeTTTMove(0)"></div><div class="ttt-cell" onclick="makeTTTMove(1)"></div><div class="ttt-cell" onclick="makeTTTMove(2)"></div>
-      <div class="ttt-cell" onclick="makeTTTMove(3)"></div><div class="ttt-cell" onclick="makeTTTMove(4)"></div><div class="ttt-cell" onclick="makeTTTMove(5)"></div>
-      <div class="ttt-cell" onclick="makeTTTMove(6)"></div><div class="ttt-cell" onclick="makeTTTMove(7)"></div><div class="ttt-cell" onclick="makeTTTMove(8)"></div>
-    </div>
-    <button class="add-btn" style="width:270px;" onclick="resetTTT()">Qaytadan boshlash</button>
-  </div>
-
-  <!-- 3. MEMORY GAME MODAL -->
-  <div id="memory-modal" class="modal">
-    <div class="modal-header">
-      <span style="font-weight:bold; color:#38bdf8;">Memory Game</span>
-      <button class="close-btn" onclick="closeMemoryGame()">X</button>
-    </div>
-    <div class="memory-board" id="memory-board"></div>
-  </div>
-
-  <!-- 4. CLICKER MODAL -->
-  <div id="clicker-modal" class="modal">
-    <div class="modal-header">
-      <span style="font-weight:bold; color:#38bdf8;">Vaqt: <span id="clicker-timer">10</span>s</span>
-      <button class="close-btn" onclick="closeClickerGame()">X</button>
-    </div>
-    <div class="action-circle" onclick="registerClick()">BOSING!</div>
-    <h3 style="color:#38bdf8;">Bosildi: <span id="clicker-count">0</span></h3>
-  </div>
-
-  <!-- 5. MATH QUIZ MODAL -->
-  <div id="math-modal" class="modal">
-    <div class="modal-header">
-      <span style="font-weight:bold; color:#38bdf8;">Ochko: <span id="math-score">0</span></span>
-      <button class="close-btn" onclick="closeMathGame()">X</button>
-    </div>
-    <h2 id="math-question" style="font-size: 2rem; margin-bottom: 20px;">5 + 7 = ?</h2>
-    <input type="number" id="math-answer" class="game-input" placeholder="Javob">
-    <button class="add-btn" style="width:200px;" onclick="checkMathAnswer()">Tekshirish</button>
-  </div>
-
-  <!-- 6. COLOR MATCH MODAL -->
-  <div id="color-modal" class="modal">
-    <div class="modal-header">
-      <span style="font-weight:bold; color:#38bdf8;">Ochko: <span id="color-score">0</span></span>
-      <button class="close-btn" onclick="closeColorGame()">X</button>
-    </div>
-    <h2 id="color-text" style="font-size:2.2rem; margin-bottom:10px;">QIZIL</h2>
-    <p style="color:#94a3b8; font-size:0.9rem; margin-bottom:20px;">Yozuv rangi va nomi mosmi?</p>
-    <div style="display:flex; gap:15px;">
-      <button class="add-btn" style="width:100px; background:#22c55e;" onclick="answerColor(true)">HA</button>
-      <button class="add-btn" style="width:100px; background:#ef4444;" onclick="answerColor(false)">YO'Q</button>
-    </div>
-  </div>
-
-  <!-- 7. BREAKOUT MODAL -->
-  <div id="breakout-modal" class="modal">
-    <div class="modal-header">
-      <span style="font-weight:bold; color:#38bdf8;">Breakout</span>
-      <button class="close-btn" onclick="closeBreakoutGame()">X</button>
-    </div>
-    <canvas id="breakout-canvas" width="280" height="320"></canvas>
-    <div style="display:flex; gap:20px; margin-top:15px;">
-      <button class="ctrl-btn" style="width:80px;" onclick="movePaddle(-30)">◀</button>
-      <button class="ctrl-btn" style="width:80px;" onclick="movePaddle(30)">▶</button>
-    </div>
-  </div>
-
-  <!-- 8. ROCK PAPER SCISSORS MODAL -->
-  <div id="rps-modal" class="modal">
-    <div class="modal-header">
-      <span style="font-weight:bold; color:#38bdf8;">Tosh Qog'oz Qaychi</span>
-      <button class="close-btn" onclick="closeRPSGame()">X</button>
-    </div>
-    <h3 id="rps-result" style="color:#e2e8f0; text-align:center;">Tanlang!</h3>
-    <div class="rps-btns">
-      <button class="rps-btn" onclick="playRPS('✊')">✊</button>
-      <button class="rps-btn" onclick="playRPS('✋')">✋</button>
-      <button class="rps-btn" onclick="playRPS('✌️')">✌️</button>
-    </div>
-  </div>
-
-  <!-- 9. GUESS NUMBER MODAL -->
-  <div id="guess-modal" class="modal">
-    <div class="modal-header">
-      <span style="font-weight:bold; color:#38bdf8;">Sonni Top! (1-100)</span>
-      <button class="close-btn" onclick="closeGuessGame()">X</button>
-    </div>
-    <p id="guess-hint" style="color:#94a3b8;">1 dan 100 gacha son o'yladim.</p>
-    <input type="number" id="guess-input" class="game-input" placeholder="Son kiriting">
-    <button class="add-btn" style="width:200px;" onclick="checkGuess()">Taxmin qilish</button>
-  </div>
-
-  <!-- 10. REFLEX TEST MODAL -->
-  <div id="reflex-modal" class="modal">
-    <div class="modal-header">
-      <span style="font-weight:bold; color:#38bdf8;">Reflex Test</span>
-      <button class="close-btn" onclick="closeReflexGame()">X</button>
-    </div>
-    <div id="reflex-box" class="action-circle" style="background:#ef4444; width:180px; height:180px; text-align:center;" onclick="clickReflex()">Kuting...</div>
+  <!-- YUTQIZGANDA CHIQADIGAN OYNA (ALERT O'RNIGA) -->
+  <div id="gameOverModal" class="modal">
+    <h3 style="color: #ef4444; margin: 0;">Yutqizdingiz! 😞</h3>
+    <p>Ochko: <span id="finalScore">0</span></p>
+    <button class="btn" onclick="restartGame()">Qayta o'ynash 🔄</button>
   </div>
 
   <script>
-    const tg = window.Telegram.WebApp;
-    tg.ready();
-    tg.expand();
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
 
-    let currencyAnimated = false;
+    const grid = 15;
+    let count = 0;
+    let score = 0;
+    let isGameOver = false; // Xatolikni oldini oluvchi bayroq
 
-    document.addEventListener('DOMContentLoaded', function() {
-      if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-        document.getElementById('user-name').innerText = tg.initDataUnsafe.user.first_name;
+    let snake = {
+      x: 150,
+      y: 150,
+      dx: grid,
+      dy: 0,
+      cells: [],
+      maxCells: 4
+    };
+
+    let apple = { x: 60, y: 60 };
+
+    function getRandomInt(min, max) {
+      return Math.floor(Math.random() * (max - min)) + min;
+    }
+
+    function loop() {
+      // Agar yutqizgan bo'lsa, siklni to'xtatamiz
+      if (isGameOver) return;
+
+      requestAnimationFrame(loop);
+
+      if (++count < 6) return; // O'yin tezligi
+      count = 0;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      snake.x += snake.dx;
+      snake.y += snake.dy;
+
+      // Devorga urilish
+      if (snake.x < 0 || snake.x >= canvas.width || snake.y < 0 || snake.y >= canvas.height) {
+        endGame();
+        return;
       }
 
-      setTimeout(() => {
-        const splash = document.getElementById('splash-screen');
-        const main = document.getElementById('main-content');
-        if (splash) splash.style.opacity = '0';
-        setTimeout(() => {
-          if (splash) splash.style.display = 'none';
-          if (main) {
-            main.style.display = 'flex';
-            setTimeout(() => { main.style.opacity = '1'; }, 10);
-          }
-        }, 800);
-      }, 1500);
+      snake.cells.unshift({ x: snake.x, y: snake.y });
 
-      initWeatherWidget();
-    });
-
-    function switchTab(tabName, btnElement) {
-      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-      document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
-      document.getElementById('tab-' + tabName).classList.add('active');
-      btnElement.classList.add('active');
-
-      if (tabName === 'currency' && !currencyAnimated) {
-        currencyAnimated = true;
-        startCurrencyAnimation();
+      if (snake.cells.length > snake.maxCells) {
+        snake.cells.pop();
       }
-    }
 
-    /* 1. SNAKE */
-    const snakeCanvas = document.getElementById("snake-canvas");
-    const sCtx = snakeCanvas.getContext("2d");
-    const box = 14;
-    let snake, dir, food, snakeScore, snakeInterval;
+      // Olmani chizish
+      ctx.fillStyle = '#ef4444';
+      ctx.fillRect(apple.x, apple.y, grid - 1, grid - 1);
 
-    function openSnakeGame() {
-      document.getElementById('snake-modal').style.display = 'flex';
-      snake = [{x: 9 * box, y: 10 * box}];
-      dir = "RIGHT";
-      food = { x: Math.floor(Math.random() * 19) * box, y: Math.floor(Math.random() * 19) * box };
-      snakeScore = 0;
-      document.getElementById("snake-score").innerText = snakeScore;
-      if (snakeInterval) clearInterval(snakeInterval);
-      snakeInterval = setInterval(drawSnake, 120);
-    }
-    function closeSnakeGame() { clearInterval(snakeInterval); document.getElementById('snake-modal').style.display = 'none'; }
-    function changeSnakeDir(d) {
-      if (d === "LEFT" && dir !== "RIGHT") dir = "LEFT";
-      if (d === "UP" && dir !== "DOWN") dir = "UP";
-      if (d === "RIGHT" && dir !== "LEFT") dir = "RIGHT";
-      if (d === "DOWN" && dir !== "UP") dir = "DOWN";
-    }
-    function drawSnake() {
-      sCtx.fillStyle = "#1e293b"; sCtx.fillRect(0, 0, snakeCanvas.width, snakeCanvas.height);
-      for (let i = 0; i < snake.length; i++) {
-        sCtx.fillStyle = i === 0 ? "#38bdf8" : "#94a3b8"; sCtx.fillRect(snake[i].x, snake[i].y, box, box);
-      }
-      sCtx.fillStyle = "#ef4444"; sCtx.fillRect(food.x, food.y, box, box);
-      let sX = snake[0].x, sY = snake[0].y;
-      if (dir === "LEFT") sX -= box; if (dir === "UP") sY -= box;
-      if (dir === "RIGHT") sX += box; if (dir === "DOWN") sY += box;
-      if (sX === food.x && sY === food.y) {
-        snakeScore++; document.getElementById("snake-score").innerText = snakeScore;
-        food = { x: Math.floor(Math.random() * 19) * box, y: Math.floor(Math.random() * 19) * box };
-      } else snake.pop();
-      let newHead = { x: sX, y: sY };
-      if (sX < 0 || sX >= snakeCanvas.width || sY < 0 || sY >= snakeCanvas.height || snakeColl(newHead, snake)) {
-        clearInterval(snakeInterval); alert("O'yin tugadi! Ochko: " + snakeScore); openSnakeGame();
-      }
-      snake.unshift(newHead);
-    }
-    function snakeColl(head, arr) { return arr.some(el => head.x === el.x && head.y === el.y); }
+      // Ilonni chizish
+      ctx.fillStyle = '#10b981';
+      snake.cells.forEach((cell, index) => {
+        ctx.fillRect(cell.x, cell.y, grid - 1, grid - 1);
 
-    /* 2. TIC TAC TOE */
-    let tttState = ["", "", "", "", "", "", "", "", ""], tttPlayer = "X", tttActive = true;
-    function openTTTGame() { document.getElementById('ttt-modal').style.display = 'flex'; resetTTT(); }
-    function closeTTTGame() { document.getElementById('ttt-modal').style.display = 'none'; }
-    function makeTTTMove(i) {
-      if (tttState[i] !== "" || !tttActive) return;
-      tttState[i] = tttPlayer;
-      const cells = document.querySelectorAll('.ttt-cell');
-      cells[i].innerText = tttPlayer; if (tttPlayer === "O") cells[i].classList.add('o');
-      if (checkTTTWin()) { document.getElementById('ttt-status').innerText = `G'olib: ${tttPlayer}! 🎉`; tttActive = false; return; }
-      if (!tttState.includes("")) { document.getElementById('ttt-status').innerText = "Durang! 🤝"; tttActive = false; return; }
-      tttPlayer = tttPlayer === "X" ? "O" : "X"; document.getElementById('ttt-status').innerText = `Navbat: ${tttPlayer}`;
-    }
-    function checkTTTWin() {
-      const p = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
-      return p.some(pat => pat.every(idx => tttState[idx] === tttPlayer));
-    }
-    function resetTTT() {
-      tttState = ["", "", "", "", "", "", "", "", ""]; tttPlayer = "X"; tttActive = true;
-      document.getElementById('ttt-status').innerText = "Navbat: X";
-      document.querySelectorAll('.ttt-cell').forEach(c => { c.innerText = ""; c.classList.remove('o'); });
-    }
+        // Olmani yeyish
+        if (cell.x === apple.x && cell.y === apple.y) {
+          snake.maxCells++;
+          score += 10;
+          apple.x = getRandomInt(0, 20) * grid;
+          apple.y = getRandomInt(0, 20) * grid;
+        }
 
-    /* 3. MEMORY GAME */
-    const icons = ['🐶','🐱','🐭','🐹','🐰','🦊','🐶','🐱','🐭','🐹','🐰','🦊'];
-    let flippedCards = [], matchedCount = 0;
-    function openMemoryGame() {
-      document.getElementById('memory-modal').style.display = 'flex';
-      const board = document.getElementById('memory-board'); board.innerHTML = '';
-      const shuffled = icons.sort(() => 0.5 - Math.random());
-      shuffled.forEach((icon, i) => {
-        const card = document.createElement('div'); card.className = 'memory-card'; card.dataset.icon = icon;
-        card.innerText = '❓'; card.onclick = () => flipMemoryCard(card); board.appendChild(card);
-      });
-      flippedCards = []; matchedCount = 0;
-    }
-    function closeMemoryGame() { document.getElementById('memory-modal').style.display = 'none'; }
-    function flipMemoryCard(card) {
-      if (flippedCards.length < 2 && card.innerText === '❓') {
-        card.innerText = card.dataset.icon; flippedCards.push(card);
-        if (flippedCards.length === 2) {
-          if (flippedCards[0].dataset.icon === flippedCards[1].dataset.icon) {
-            matchedCount += 2; flippedCards = [];
-            if (matchedCount === icons.length) setTimeout(() => alert("Tabriklaymiz! Topdingiz! 🎉"), 300);
-          } else {
-            setTimeout(() => { flippedCards[0].innerText = '❓'; flippedCards[1].innerText = '❓'; flippedCards = []; }, 800);
+        // O'ziga urilish
+        for (let i = index + 1; i < snake.cells.length; i++) {
+          if (cell.x === snake.cells[i].x && cell.y === snake.cells[i].y) {
+            endGame();
+            return;
           }
         }
-      }
+      });
     }
 
-    /* 4. CLICKER */
-    let clicks = 0, clickTimer = 10, clickInterval;
-    function openClickerGame() {
-      document.getElementById('clicker-modal').style.display = 'flex';
-      clicks = 0; clickTimer = 10;
-      document.getElementById('clicker-count').innerText = clicks;
-      document.getElementById('clicker-timer').innerText = clickTimer;
-      clearInterval(clickInterval);
-    }
-    function closeClickerGame() { clearInterval(clickInterval); document.getElementById('clicker-modal').style.display = 'none'; }
-    function registerClick() {
-      if (clicks === 0) {
-        clickInterval = setInterval(() => {
-          clickTimer--; document.getElementById('clicker-timer').innerText = clickTimer;
-          if (clickTimer <= 0) { clearInterval(clickInterval); alert(`Vaqt tugadi! Natijangiz: ${clicks} ta bosish!`); openClickerGame(); }
-        }, 1000);
-      }
-      if (clickTimer > 0) { clicks++; document.getElementById('clicker-count').innerText = clicks; }
+    function endGame() {
+      isGameOver = true; // Siklni to'xtatish
+      document.getElementById("finalScore").innerText = score;
+      document.getElementById("gameOverModal").style.display = "block";
     }
 
-    /* 5. MATH QUIZ */
-    let mathScore = 0, numA, numB, correctAns;
-    function openMathGame() { document.getElementById('math-modal').style.display = 'flex'; mathScore = 0; newMathQ(); }
-    function closeMathGame() { document.getElementById('math-modal').style.display = 'none'; }
-    function newMathQ() {
-      numA = Math.floor(Math.random() * 20) + 1; numB = Math.floor(Math.random() * 20) + 1;
-      correctAns = numA + numB;
-      document.getElementById('math-question').innerText = `${numA} + ${numB} = ?`;
-      document.getElementById('math-answer').value = '';
-    }
-    function checkMathAnswer() {
-      const val = parseInt(document.getElementById('math-answer').value);
-      if (val === correctAns) { mathScore += 10; document.getElementById('math-score').innerText = mathScore; newMathQ(); }
-      else { alert("Xato javob!"); }
+    function restartGame() {
+      snake.x = 150;
+      snake.y = 150;
+      snake.cells = [];
+      snake.maxCells = 4;
+      snake.dx = grid;
+      snake.dy = 0;
+      score = 0;
+      isGameOver = false;
+      document.getElementById("gameOverModal").style.display = "none";
+      requestAnimationFrame(loop);
     }
 
-    /* 6. COLOR MATCH */
-    const colorNames = ['QIZIL', 'KO\'K', 'YASHIL', 'SARIQ'];
-    const colorCodes = ['#ef4444', '#38bdf8', '#22c55e', '#facc15'];
-    let colorScore = 0, isMatch = false;
-    function openColorGame() { document.getElementById('color-modal').style.display = 'flex'; colorScore = 0; newColorQ(); }
-    function closeColorGame() { document.getElementById('color-modal').style.display = 'none'; }
-    function newColorQ() {
-      const nameIdx = Math.floor(Math.random() * colorNames.length);
-      const codeIdx = Math.random() > 0.5 ? nameIdx : Math.floor(Math.random() * colorCodes.length);
-      isMatch = nameIdx === codeIdx;
-      const el = document.getElementById('color-text');
-      el.innerText = colorNames[nameIdx]; el.style.color = colorCodes[codeIdx];
-    }
-    function answerColor(userAns) {
-      if (userAns === isMatch) { colorScore++; document.getElementById('color-score').innerText = colorScore; newColorQ(); }
-      else { alert("Xato! To'g'ri o'ylang."); }
-    }
+    // Boshqarish
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowLeft" && snake.dx === 0) { snake.dx = -grid; snake.dy = 0; }
+      else if (e.key === "ArrowUp" && snake.dy === 0) { snake.dy = -grid; snake.dx = 0; }
+      else if (e.key === "ArrowRight" && snake.dx === 0) { snake.dx = grid; snake.dy = 0; }
+      else if (e.key === "ArrowDown" && snake.dy === 0) { snake.dy = 0; snake.dx = grid; }
+    });
 
-    /* 7. BREAKOUT */
-    const bCanvas = document.getElementById('breakout-canvas'), bCtx = bCanvas.getContext('2d');
-    let paddleX = 110, ballX = 140, ballY = 200, dx = 2, dy = -2, bInterval;
-    function openBreakoutGame() {
-      document.getElementById('breakout-modal').style.display = 'flex';
-      paddleX = 110; ballX = 140; ballY = 200; dx = 2; dy = -2;
-      clearInterval(bInterval); bInterval = setInterval(drawBreakout, 15);
-    }
-    function closeBreakoutGame() { clearInterval(bInterval); document.getElementById('breakout-modal').style.display = 'none'; }
-    function movePaddle(dir) { paddleX = Math.max(0, Math.min(bCanvas.width - 60, paddleX + dir)); }
-    function drawBreakout() {
-      bCtx.fillStyle = '#1e293b'; bCtx.fillRect(0, 0, bCanvas.width, bCanvas.height);
-      bCtx.fillStyle = '#38bdf8'; bCtx.fillRect(paddleX, bCanvas.height - 15, 60, 10);
-      bCtx.beginPath(); bCtx.arc(ballX, ballY, 6, 0, Math.PI * 2); bCtx.fillStyle = '#ef4444'; bCtx.fill();
-      if (ballX + dx > bCanvas.width - 6 || ballX + dx < 6) dx = -dx;
-      if (ballY + dy < 6) dy = -dy;
-      else if (ballY + dy > bCanvas.height - 20) {
-        if (ballX > paddleX && ballX < paddleX + 60) dy = -dy;
-        else { clearInterval(bInterval); alert("Mag'lubiyat!"); openBreakoutGame(); }
-      }
-      ballX += dx; ballY += dy;
-    }
-
-    /* 8. ROCK PAPER SCISSORS */
-    function openRPSGame() { document.getElementById('rps-modal').style.display = 'flex'; }
-    function closeRPSGame() { document.getElementById('rps-modal').style.display = 'none'; }
-    function playRPS(user) {
-      const opts = ['✊', '✋', '✌️'];
-      const bot = opts[Math.floor(Math.random() * 3)];
-      let res = "";
-      if (user === bot) res = "Durang!";
-      else if ((user === '✊' && bot === '✌️') || (user === '✋' && bot === '✊') || (user === '✌️' && bot === '✋')) res = "Siz yutdingiz! 🎉";
-      else res = "Bot yutdi! 🤖";
-      document.getElementById('rps-result').innerText = `Siz: ${user} | Bot: ${bot}\n${res}`;
-    }
-
-    /* 9. GUESS NUMBER */
-    let secretNum;
-    function openGuessGame() { document.getElementById('guess-modal').style.display = 'flex'; secretNum = Math.floor(Math.random() * 100) + 1; }
-    function closeGuessGame() { document.getElementById('guess-modal').style.display = 'none'; }
-    function checkGuess() {
-      const g = parseInt(document.getElementById('guess-input').value);
-      if (g === secretNum) alert("Topdingiz! Urra! 🎉");
-      else if (g < secretNum) document.getElementById('guess-hint').innerText = "Kattaroq son kiriting! ⬆️";
-      else document.getElementById('guess-hint').innerText = "Kichikroq son kiriting! ⬇️";
-    }
-
-    /* 10. REFLEX TEST */
-    let reflexStart, reflexTimeout;
-    function openReflexGame() {
-      document.getElementById('reflex-modal').style.display = 'flex';
-      const box = document.getElementById('reflex-box');
-      box.style.background = '#ef4444'; box.innerText = 'Kuting...';
-      clearTimeout(reflexTimeout);
-      reflexTimeout = setTimeout(() => {
-        box.style.background = '#22c55e'; box.innerText = 'BOSING!';
-        reflexStart = Date.now();
-      }, Math.random() * 3000 + 2000);
-    }
-    function closeReflexGame() { clearTimeout(reflexTimeout); document.getElementById('reflex-modal').style.display = 'none'; }
-    function clickReflex() {
-      const box = document.getElementById('reflex-box');
-      if (box.style.background === 'rgb(34, 197, 94)') {
-        const ms = Date.now() - reflexStart;
-        alert(`Tezligingiz: ${ms} ms! ⚡`);
-        openReflexGame();
-      } else { alert("Barvaqt bosdingiz! Yashil bo'lishini kuting."); openReflexGame(); }
-    }
-
-    /* Valyuta & Weather logikasi */
-    function startCurrencyAnimation() {
-      const cards = document.querySelectorAll('.currency-card'); cards.forEach(c => c.classList.add('animate-slide'));
-      const counters = document.querySelectorAll('.counter');
-      const startTime = performance.now();
-      function updateCounters(currentTime) {
-        const progress = Math.min((currentTime - startTime) / 1000, 1);
-        counters.forEach(c => {
-          const t = +c.getAttribute('data-target');
-          c.innerText = Math.floor(progress * t).toLocaleString('ru-RU').replace(/,/g, ' ');
-        });
-        if (progress < 1) requestAnimationFrame(updateCounters);
-      }
-      requestAnimationFrame(updateCounters);
-    }
-
-    function initWeatherWidget() {
-      const currentHour = new Date().getHours();
-      const isNight = currentHour >= 22 || currentHour < 7;
-      document.getElementById('weather-status').innerText = isNight ? 'Tungi ochiq havo' : 'Quyoshli / Ochiq havo';
-      document.getElementById('weather-temp').innerText = isNight ? '+18°C' : '+28°C';
-      document.getElementById('weather-icon-container').innerHTML = isNight ?
-        `<svg class="animated-icon float-slow" viewBox="0 0 64 64"><path d="M42.81 39.54C34.2 39.54 27.22 32.56 27.22 23.95C27.22 18.23 30.33 13.23 34.96 10.5C21.94 11.23 11.64 22 11.64 35.19C11.64 49.07 22.89 60.32 36.77 60.32C47.96 60.32 57.34 52.93 60.27 42.59C55.43 45.45 49.33 46.5 42.81 39.54Z" fill="#facc15"/></svg>` :
-        `<svg class="animated-icon spin-slow" viewBox="0 0 64 64"><circle cx="32" cy="32" r="14" fill="#f59e0b"/><path d="M32 4V10M32 54V60M4 32H10M54 32H60M12.18 12.18L16.42 16.42M47.58 47.58L51.82 51.82M12.18 51.82L16.42 47.58M47.58 16.42L51.82 12.18" stroke="#f59e0b" stroke-width="4" stroke-linecap="round"/></svg>`;
-    }
-
-    function addNewReminder() {
-      const text = prompt("Yangi eslatma matnini kiriting:");
-      if (text && text.trim() !== "") {
-        const list = document.getElementById('reminder-items');
-        const li = document.createElement('li'); li.className = 'reminder-item';
-        li.innerText = `${list.children.length + 1}. ${text}`;
-        list.appendChild(li);
-      }
-    }
+    requestAnimationFrame(loop);
   </script>
 </body>
 </html>
