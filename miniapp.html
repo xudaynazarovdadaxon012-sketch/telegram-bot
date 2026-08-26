@@ -5,11 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Personal Yordamchi</title>
   
-  <!-- Telegram Mini App JS kutubxonasi -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   
   <style>
-    /* Asosiy Dizayn - Neon / Dark Theme */
     body {
       font-family: 'Poppins', sans-serif;
       background-color: #121212;
@@ -18,13 +16,11 @@
       padding: 0;
       display: flex;
       flex-direction: column;
-      justify-content: center;
       align-items: center;
       min-height: 100vh;
-      overflow: hidden;
+      overflow-x: hidden;
     }
 
-    /* Kirish ekrani animatsiyasi */
     #splash-screen {
       position: fixed;
       top: 0;
@@ -38,35 +34,35 @@
       align-items: center;
       z-index: 100;
       opacity: 1;
-      transition: opacity 1s ease-out;
+      transition: opacity 0.8s ease-out;
     }
 
     #splash-logo {
-      font-size: 3rem;
+      font-size: 2.5rem;
       color: #00e676;
-      text-shadow: 0 0 10px #00e676, 0 0 20px #00e676;
+      text-shadow: 0 0 10px #00e676;
       animation: pulse 2s infinite;
     }
 
     @keyframes pulse {
       0% { transform: scale(1); opacity: 0.8; }
-      50% { transform: scale(1.1); opacity: 1; }
+      50% { transform: scale(1.05); opacity: 1; }
       100% { transform: scale(1); opacity: 0.8; }
     }
 
-    /* Asosiy menyu */
     #main-content {
       display: none;
       flex-direction: column;
       align-items: center;
       width: 90%;
       max-width: 400px;
+      padding: 20px 0;
       opacity: 0;
-      transition: opacity 1s ease-in;
+      transition: opacity 0.5s ease-in;
     }
 
     .user-welcome {
-      font-size: 1.5rem;
+      font-size: 1.4rem;
       margin-bottom: 20px;
       text-align: center;
     }
@@ -75,45 +71,71 @@
       color: #00e676;
     }
 
-    /* Neon Tugmalar */
     .btn-container {
       width: 100%;
       display: flex;
       flex-direction: column;
-      gap: 15px;
+      gap: 12px;
+      margin-bottom: 25px;
     }
 
     .neon-button {
       background: transparent;
       color: #00e676;
       border: 2px solid #00e676;
-      padding: 15px 20px;
+      padding: 14px 20px;
       font-size: 1rem;
       font-weight: bold;
       border-radius: 12px;
       cursor: pointer;
-      box-shadow: 0 0 10px rgba(0, 230, 118, 0.3);
+      box-shadow: 0 0 8px rgba(0, 230, 118, 0.2);
       transition: all 0.2s ease;
       outline: none;
     }
 
-    .neon-button:active, .neon-button.active {
+    .neon-button:active {
       background: #00e676;
       color: #121212;
-      box-shadow: 0 0 20px #00e676;
+      box-shadow: 0 0 15px #00e676;
       transform: scale(0.98);
+    }
+
+    /* Bo'limlar oynasi */
+    .card {
+      display: none;
+      width: 100%;
+      background: #1e1e1e;
+      border: 1px solid #333;
+      border-radius: 12px;
+      padding: 15px;
+      box-sizing: border-box;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    }
+
+    .card h3 {
+      margin-top: 0;
+      color: #00e676;
+      border-bottom: 1px solid #333;
+      padding-bottom: 8px;
+    }
+
+    .info-item {
+      display: flex;
+      justify-content: space-between;
+      margin: 10px 0;
+      font-size: 0.95rem;
     }
   </style>
 </head>
 <body>
 
-  <!-- Kirish ekrani (Splash) -->
+  <!-- Splash Screen -->
   <div id="splash-screen">
     <div id="splash-logo">⚡ Personal Bot</div>
     <p style="margin-top: 15px; color: #888;">Yuklanmoqda...</p>
   </div>
 
-  <!-- Asosiy menyu -->
+  <!-- Asosiy Ekran -->
   <div id="main-content">
     <div class="user-welcome">
       Xush kelibsiz, <span id="user-name">Foydalanuvchi</span>!
@@ -122,31 +144,48 @@
     <div class="btn-container">
       <button class="neon-button" id="btn-weather">☀️ Ob-havo Ma'lumotlari</button>
       <button class="neon-button" id="btn-currency">💱 Valyuta Kurslari</button>
-      <button class="neon-button" id="btn-reminder">📝 Eslatma Qo'shish</button>
+      <button class="neon-button" id="btn-reminder">📝 Eslatmalar</button>
+    </div>
+
+    <!-- Ob-havo bo'limi -->
+    <div id="card-weather" class="card">
+      <h3>☀️ Toshkent Ob-havosi</h3>
+      <div class="info-item"><span>Harorat:</span> <strong>+28°C</strong></div>
+      <div class="info-item"><span>Holat:</span> <strong>Musiqiy / Ochiq</strong></div>
+      <div class="info-item"><span>Namlanganlik:</span> <strong>35%</strong></div>
+    </div>
+
+    <!-- Valyuta bo'limi -->
+    <div id="card-currency" class="card">
+      <h3>💱 Valyuta Kurslari (MB)</h3>
+      <div class="info-item"><span>1 USD:</span> <strong>12 850 UZS</strong></div>
+      <div class="info-item"><span>1 EUR:</span> <strong>13 900 UZS</strong></div>
+      <div class="info-item"><span>1 RUB:</span> <strong>135 UZS</strong></div>
+    </div>
+
+    <!-- Eslatma bo'limi -->
+    <div id="card-reminder" class="card">
+      <h3>📝 Bugungi Eslatmalar</h3>
+      <div class="info-item"><span>1. Python loyihani yakunlash</span></div>
+      <div class="info-item"><span>2. Telegram Mini App'ni ulash</span></div>
     </div>
   </div>
 
   <script>
-    // Telegram Web App ob'ektini olish
     const tg = window.Telegram.WebApp;
     tg.ready();
     tg.expand();
 
     document.addEventListener('DOMContentLoaded', function() {
-      // 1. Foydalanuvchi ismini chiqarish
+      // Foydalanuvchi ismini chiqarish
       if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-        const user = tg.initDataUnsafe.user;
-        const userNameElem = document.getElementById('user-name');
-        if (userNameElem) {
-          userNameElem.innerText = user.first_name;
-        }
+        document.getElementById('user-name').innerText = tg.initDataUnsafe.user.first_name;
       }
 
-      // 2. Splash ekranini yashirish animatsiyasi
+      // Splash ekranni yashirish
       setTimeout(function() {
         const splash = document.getElementById('splash-screen');
         const mainContent = document.getElementById('main-content');
-
         if (splash) splash.style.opacity = '0';
 
         setTimeout(function() {
@@ -155,30 +194,19 @@
             mainContent.style.display = 'flex';
             setTimeout(() => { mainContent.style.opacity = '1'; }, 10);
           }
-        }, 1000);
-      }, 2500);
+        }, 800);
+      }, 2000);
 
-      // 3. Tugmalar hodisalari (Endi tg.close() chaqirilmaydi, dastur yopilmaydi)
-      const btnWeather = document.getElementById('btn-weather');
-      if (btnWeather) {
-        btnWeather.addEventListener('click', () => {
-          alert("☀️ Ob-havo bo'limi tanlandi!");
-        });
+      // Bo'limlarni ko'rsatish funksiyasi
+      function showCard(cardId) {
+        document.querySelectorAll('.card').forEach(card => card.style.display = 'none');
+        document.getElementById(cardId).style.display = 'block';
       }
 
-      const btnCurrency = document.getElementById('btn-currency');
-      if (btnCurrency) {
-        btnCurrency.addEventListener('click', () => {
-          alert("💱 Valyuta kursi bo'limi tanlandi!");
-        });
-      }
-
-      const btnReminder = document.getElementById('btn-reminder');
-      if (btnReminder) {
-        btnReminder.addEventListener('click', () => {
-          alert("📝 Eslatma qo'shish bo'limi tanlandi!");
-        });
-      }
+      // Tugmalar bosilganda kartalarni ochish
+      document.getElementById('btn-weather').addEventListener('click', () => showCard('card-weather'));
+      document.getElementById('btn-currency').addEventListener('click', () => showCard('card-currency'));
+      document.getElementById('btn-reminder').addEventListener('click', () => showCard('card-reminder'));
     });
   </script>
 </body>
