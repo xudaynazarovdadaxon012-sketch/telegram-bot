@@ -4,7 +4,7 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 
 # --- SOZLAMALAR ---
 # 1. @BotFather bergan Bot Tokeningizni kiriting
-BOT_TOKEN = "YOUR_BOT_TOKEN_HERE"
+BOT_TOKEN = "8760162640:AAGhmn9AtwtXIvk234ETV-gKA6aeCQKDPnY"
 
 # 2. GitHub Pages taqdim etgan rasmiy havola (miniapp.html yoki index.html bo'lsin)
 MINI_APP_URL = "https://xudaynazarovdadaxon012-sketch.github.io/telegram-bot/miniapp.html"
