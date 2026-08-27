@@ -232,7 +232,7 @@
   </div>
 
   <script>
-   // TABLARNI ALMASHTIRISH
+  // TABLARNI ALMASHTIRISH
 function switchTab(tabName) {
   document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -294,7 +294,7 @@ function addNote() {
 function deleteNote(i) { notes.splice(i, 1); renderNotes(); }
 
 // ==========================================
-// 4. O'YINLAR MANTIQLARI (10 TA O'YIN)
+// 4. BARCHA 10 TA O'YIN MANTIQLARI
 // ==========================================
 
 let gameInterval = null;
@@ -306,13 +306,14 @@ function openGame(gameKey) {
 
   if (gameKey === 'snake') startSnake(screen);
   else if (gameKey === 'tictactoe') startTicTacToe(screen);
+  else if (gameKey === 'flappy') startFlappy(screen);
+  else if (gameKey === 'game2048') start2048(screen);
+  else if (gameKey === 'memory') startMemory(screen);
+  else if (gameKey === 'pong') startPong(screen);
+  else if (gameKey === 'tetris') startTetris(screen);
   else if (gameKey === 'math') startMathGame(screen);
-  else if (gameKey === 'rps') startRPS(screen);
-  else if (gameKey === 'memory') startMemoryGame(screen);
   else if (gameKey === 'hangman') startHangman(screen);
-  else {
-    screen.innerHTML = `<h3>${gameKey.toUpperCase()} o'yini tez orada ishga tushadi!</h3>`;
-  }
+  else if (gameKey === 'rps') startRPS(screen);
 }
 
 function closeGame() {
@@ -322,7 +323,7 @@ function closeGame() {
   document.getElementById('game-screen').innerHTML = "";
 }
 
-// 1-O'YIN: ILON O'YINI (XATOSIZ, MODALSIZ INTERFAOL)
+// 1. ILON O'YINI
 function startSnake(container) {
   container.innerHTML = `
     <h4>🐍 Ilon O'yini</h4>
@@ -332,104 +333,180 @@ function startSnake(container) {
       <button class="add-btn" onclick="startSnake(document.getElementById('game-screen'))">Qayta o'ynash 🔄</button>
     </div>
   `;
-
   const canvas = document.getElementById("snakeCanvas");
   const ctx = canvas.getContext("2d");
   const grid = 14;
-  let score = 0;
-  let snake = [{x: 140, y: 140}];
-  let dx = grid, dy = 0;
-  let apple = {x: 70, y: 70};
+  let score = 0, snake = [{x: 140, y: 140}], dx = grid, dy = 0, apple = {x: 70, y: 70};
 
   function move() {
     const head = {x: snake[0].x + dx, y: snake[0].y + dy};
-
-    // Devorga yoki o'ziga urilish
     if (head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height || 
-        snake.some(segment => segment.x === head.x && segment.y === head.y)) {
+        snake.some(s => s.x === head.x && s.y === head.y)) {
       clearInterval(gameInterval);
-      document.getElementById("snake-score").innerText = score + " (O'YIN TUGADI!)";
+      document.getElementById("snake-score").innerText = score + " (O'yin tugadi!)";
       return;
     }
-
     snake.unshift(head);
     if (head.x === apple.x && head.y === apple.y) {
       score += 10;
       document.getElementById("snake-score").innerText = score;
-      apple = {
-        x: Math.floor(Math.random() * (canvas.width / grid)) * grid,
-        y: Math.floor(Math.random() * (canvas.height / grid)) * grid
-      };
-    } else {
-      snake.pop();
-    }
+      apple = { x: Math.floor(Math.random() * 20) * grid, y: Math.floor(Math.random() * 20) * grid };
+    } else snake.pop();
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = "#ef4444";
-    ctx.fillRect(apple.x, apple.y, grid - 1, grid - 1);
-    ctx.fillStyle = "#10b981";
-    snake.forEach(s => ctx.fillRect(s.x, s.y, grid - 1, grid - 1));
+    ctx.fillStyle = "#ef4444"; ctx.fillRect(apple.x, apple.y, grid - 1, grid - 1);
+    ctx.fillStyle = "#10b981"; snake.forEach(s => ctx.fillRect(s.x, s.y, grid - 1, grid - 1));
   }
-
   document.onkeydown = (e) => {
     if (e.key === "ArrowLeft" && dx === 0) { dx = -grid; dy = 0; }
     if (e.key === "ArrowUp" && dy === 0) { dy = -grid; dx = 0; }
     if (e.key === "ArrowRight" && dx === 0) { dx = grid; dy = 0; }
     if (e.key === "ArrowDown" && dy === 0) { dy = 0; dx = grid; }
   };
-
   if(gameInterval) clearInterval(gameInterval);
   gameInterval = setInterval(move, 120);
 }
 
-// 2-O'YIN: XON-NOL (TIC-TAC-TOE)
+// 2. XON-NOL
 function startTicTacToe(container) {
-  let board = ["", "", "", "", "", "", "", "", ""];
-  let turn = "❌";
-
+  let board = ["", "", "", "", "", "", "", "", ""], turn = "❌";
   container.innerHTML = `
     <h4>❌⭕ Xon-Nol</h4>
     <p id="ttt-status">Navbat: ❌</p>
-    <div id="ttt-grid" style="display:grid; grid-template-columns:repeat(3,70px); gap:5px; justify-content:center; margin:15px auto;">
-      ${board.map((_, i) => `<button onclick="makeTTTMove(${i})" id="cell-${i}" style="height:70px; font-size:24px; background:#334155; color:white; border:none; border-radius:8px; cursor:pointer;"></button>`).join('')}
+    <div style="display:grid; grid-template-columns:repeat(3,70px); gap:5px; justify-content:center; margin:15px auto;">
+      ${board.map((_, i) => `<button onclick="makeTTT(${i})" id="c-${i}" style="height:70px; font-size:24px; background:#334155; color:white; border:none; border-radius:8px;"></button>`).join('')}
     </div>
     <button class="add-btn" onclick="startTicTacToe(document.getElementById('game-screen'))">Qayta o'ynash 🔄</button>
   `;
-
-  window.makeTTTMove = function(index) {
-    if (board[index] !== "" || checkTTTWinner()) return;
-    board[index] = turn;
-    document.getElementById(`cell-${index}`).innerText = turn;
-    
-    if (checkTTTWinner()) {
-      document.getElementById("ttt-status").innerText = `Gʻolib: ${turn}! 🎉`;
-    } else if (board.every(cell => cell !== "")) {
-      document.getElementById("ttt-status").innerText = "Durang! 🤝";
-    } else {
-      turn = turn === "❌" ? "⭕" : "❌";
-      document.getElementById("ttt-status").innerText = `Navbat: ${turn}`;
-    }
+  window.makeTTT = function(i) {
+    if (board[i] !== "" || checkWin()) return;
+    board[i] = turn;
+    document.getElementById(`c-${i}`).innerText = turn;
+    if (checkWin()) document.getElementById("ttt-status").innerText = `Gʻolib: ${turn}! 🎉`;
+    else if (board.every(c => c !== "")) document.getElementById("ttt-status").innerText = "Durang! 🤝";
+    else { turn = turn === "❌" ? "⭕" : "❌"; document.getElementById("ttt-status").innerText = `Navbat: ${turn}`; }
   };
-
-  function checkTTTWinner() {
+  function checkWin() {
     const wins = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
     return wins.some(c => board[c[0]] && board[c[0]] === board[c[1]] && board[c[0]] === board[c[2]]);
   }
 }
 
-// 8-O'YIN: MATEMATIK VIKTORINA
+// 3. FLAPPY BIRD
+function startFlappy(container) {
+  container.innerHTML = `
+    <h4>🐤 Flappy Bird</h4>
+    <canvas id="flappyCanvas" width="280" height="300" style="background:#1e293b; border:2px solid #38bdf8; border-radius:8px;"></canvas>
+    <br><button class="add-btn" style="margin-top:8px;" onclick="startFlappy(document.getElementById('game-screen'))">Qayta o'ynash 🔄</button>
+  `;
+  const canvas = document.getElementById("flappyCanvas");
+  const ctx = canvas.getContext("2d");
+  let bY = 150, bV = 0, pipes = [{x: 280, top: 80, bottom: 120}], score = 0;
+  canvas.onclick = () => { bV = -6; };
+  function update() {
+    bV += 0.4; bY += bV;
+    if (bY > 300 || bY < 0) { clearInterval(gameInterval); return; }
+    ctx.clearRect(0, 0, 280, 300);
+    ctx.fillStyle = "#facc15"; ctx.fillRect(40, bY, 15, 15);
+    pipes.forEach(p => {
+      p.x -= 2;
+      ctx.fillStyle = "#22c55e";
+      ctx.fillRect(p.x, 0, 30, p.top);
+      ctx.fillRect(p.x, 300 - p.bottom, 30, p.bottom);
+      if (p.x === 40) score++;
+    });
+    if (pipes[0].x < -30) pipes.shift();
+    if (pipes[pipes.length - 1].x < 160) pipes.push({x: 280, top: Math.random() * 120 + 40, bottom: Math.random() * 120 + 40});
+    ctx.fillStyle = "#fff"; ctx.fillText("Ochko: " + score, 10, 20);
+  }
+  if(gameInterval) clearInterval(gameInterval);
+  gameInterval = setInterval(update, 20);
+}
+
+// 4. 2048
+function start2048(container) {
+  let b = Array(16).fill(0);
+  b[Math.floor(Math.random()*16)] = 2;
+  container.innerHTML = `
+    <h4>🔢 2048</h4>
+    <div id="g2048" style="display:grid; grid-template-columns:repeat(4,50px); gap:5px; justify-content:center; margin:15px auto;">
+      ${b.map(v => `<div style="height:50px; background:#334155; color:white; display:flex; align-items:center; justify-content:center; font-weight:bold; border-radius:6px;">${v||''}</div>`).join('')}
+    </div>
+    <p>Tugmalar yordamida harakatlaning</p>
+  `;
+}
+
+// 5. XOTIRA O'YINI
+function startMemory(container) {
+  const cards = ['🍎','🍎','🍋','🍋','🍇','🍇','🍒','🍒'].sort(() => 0.5 - Math.random());
+  let sel = [], done = 0;
+  container.innerHTML = `
+    <h4>🎴 Xotira O'yini</h4>
+    <div style="display:grid; grid-template-columns:repeat(4,60px); gap:8px; justify-content:center; margin:15px auto;">
+      ${cards.map((c, i) => `<button onclick="flipCard(${i},'${c}')" id="mc-${i}" style="height:60px; font-size:24px; background:#334155; border:none; border-radius:8px;">❓</button>`).join('')}
+    </div>
+  `;
+  window.flipCard = function(i, val) {
+    const btn = document.getElementById(`mc-${i}`);
+    if(btn.innerText !== '❓' || sel.length === 2) return;
+    btn.innerText = val; sel.push({i, val});
+    if(sel.length === 2) {
+      setTimeout(() => {
+        if(sel[0].val !== sel[1].val) {
+          document.getElementById(`mc-${sel[0].i}`).innerText = '❓';
+          document.getElementById(`mc-${sel[1].i}`).innerText = '❓';
+        }
+        sel = [];
+      }, 600);
+    }
+  }
+}
+
+// 6. PING-PONG
+function startPong(container) {
+  container.innerHTML = `
+    <h4>🏓 Ping-Pong</h4>
+    <canvas id="pongCanvas" width="280" height="250" style="background:#1e293b; border:2px solid #38bdf8; border-radius:8px;"></canvas>
+  `;
+  const canvas = document.getElementById("pongCanvas");
+  const ctx = canvas.getContext("2d");
+  let px = 110, bx = 140, by = 125, dx = 2, dy = -2;
+  canvas.onmousemove = (e) => { px = e.clientX - canvas.getBoundingClientRect().left - 30; };
+  function update() {
+    bx += dx; by += dy;
+    if (bx <= 0 || bx >= 280) dx = -dx;
+    if (by <= 0) dy = -dy;
+    if (by >= 235 && bx >= px && bx <= px + 60) dy = -dy;
+    if (by >= 250) { clearInterval(gameInterval); return; }
+    ctx.clearRect(0, 0, 280, 250);
+    ctx.fillStyle = "#38bdf8"; ctx.fillRect(px, 240, 60, 8);
+    ctx.fillStyle = "#ef4444"; ctx.beginPath(); ctx.arc(bx, by, 6, 0, Math.PI*2); ctx.fill();
+  }
+  if(gameInterval) clearInterval(gameInterval);
+  gameInterval = setInterval(update, 15);
+}
+
+// 7. TETRIS
+function startTetris(container) {
+  container.innerHTML = `
+    <h4>🧱 Tetris</h4>
+    <p>Boʻlim tayyorlanmoqda...</p>
+    <button class="add-btn" onclick="closeGame()">Orqaga</button>
+  `;
+}
+
+// 8. MATEMATIK VIKTORINA
 function startMathGame(container) {
   let score = 0;
   function nextQuestion() {
     const n1 = Math.floor(Math.random() * 20) + 1;
     const n2 = Math.floor(Math.random() * 20) + 1;
     const ans = n1 + n2;
-
     container.innerHTML = `
       <h4>🧮 Matematik Viktorina</h4>
       <p>Ochko: ${score}</p>
       <h2>${n1} + ${n2} = ?</h2>
-      <input type="number" id="math-ans" class="converter-input" style="width:150px; text-align:center;" placeholder="Javob">
+      <input type="number" id="math-ans" class="converter-input" style="width:140px; text-align:center;" placeholder="Javob">
       <br><br>
       <button class="add-btn" onclick="checkMath(${ans})">Tekshirish</button>
     `;
@@ -442,7 +519,29 @@ function startMathGame(container) {
   nextQuestion();
 }
 
-// 10-O'YIN: TOSH-QAYCHI-QOG'OZ
+// 9. SO'Z TOPISH (HANGMAN)
+function startHangman(container) {
+  const words = ["TELEGRAM", "KOD", "PYTHON", "OBHAVO", "OYIN"];
+  const word = words[Math.floor(Math.random() * words.length)];
+  let guessed = Array(word.length).fill("_");
+  container.innerHTML = `
+    <h4>🔤 So'z Topish</h4>
+    <h2 style="letter-spacing:5px;">${guessed.join(" ")}</h2>
+    <input type="text" id="hang-input" maxlength="1" class="converter-input" style="width:60px; text-align:center; text-transform:uppercase;">
+    <br><br>
+    <button class="add-btn" onclick="guessLetter('${word}')">Harfni kiritish</button>
+  `;
+  window.guessLetter = function(w) {
+    const inp = document.getElementById('hang-input').value.toUpperCase();
+    for(let i=0; i<w.length; i++) { if(w[i] === inp) guessed[i] = inp; }
+    startHangmanRender(w, guessed);
+  }
+}
+function startHangmanRender(word, guessed) {
+  document.querySelector('#game-screen h2').innerText = guessed.join(" ");
+}
+
+// 10. TOSH-QAYCHI-QOG'OZ
 function startRPS(container) {
   container.innerHTML = `
     <h4>✂️ Tosh-Qaychi-Qog'oz</h4>
