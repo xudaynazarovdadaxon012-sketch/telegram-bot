@@ -3,162 +3,471 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ilon O'yini</title>
+  <title>Super Mini App</title>
   <style>
+    * { box-sizing: border-box; }
     body {
-      background: #0f172a;
-      color: white;
-      text-align: center;
-      font-family: sans-serif;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #0f172a;
+      color: #f8fafc;
       margin: 0;
-      padding: 10px;
+      padding: 0;
     }
-    #gameCanvas {
+
+    /* NAVIGATSIYA MENYUSI (TABS) */
+    .navbar {
+      display: flex;
+      justify-content: space-around;
       background: #1e293b;
-      border: 2px solid #38bdf8;
-      border-radius: 8px;
+      padding: 10px 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      border-bottom: 2px solid #334155;
     }
-    .modal {
-      display: none;
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: #1e293b;
-      padding: 20px;
-      border-radius: 12px;
-      border: 2px solid #ef4444;
-      box-shadow: 0 0 20px rgba(0,0,0,0.5);
-    }
-    .btn {
-      background: #0284c7;
-      color: white;
+
+    .nav-btn {
+      background: none;
       border: none;
-      padding: 10px 20px;
-      border-radius: 6px;
+      color: #94a3b8;
+      font-size: 14px;
+      font-weight: 600;
       cursor: pointer;
-      font-size: 16px;
-      margin-top: 10px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      transition: all 0.2s;
     }
+
+    .nav-btn.active {
+      color: #38bdf8;
+      background: #334155;
+    }
+
+    /* MAIN CONTAINER */
+    .container {
+      padding: 15px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+      animation: fadeIn 0.3s ease-in;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* 1. OB-HAVO BO'LIMI STYLES */
+    .weather-layout { display: flex; gap: 12px; height: 80vh; }
+    .sidebar { width: 35%; background: #1e293b; border-radius: 12px; padding: 10px; overflow-y: auto; }
+    .city-btn { display: block; width: 100%; background: #334155; color: white; border: none; padding: 10px; border-radius: 8px; margin-bottom: 6px; text-align: left; cursor: pointer; }
+    .city-btn.active { background: #0284c7; }
+    .main-weather { width: 65%; background: #1e293b; border-radius: 12px; padding: 15px; overflow-y: auto; }
+    .weather-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    .weather-table th, .weather-table td { padding: 8px; border-bottom: 1px solid #334155; text-align: left; font-size: 13px; }
+    .weather-table th { color: #38bdf8; }
+
+    /* 2. VALYUTA KURSI STYLES */
+    .card { background: #1e293b; border-radius: 12px; padding: 16px; margin-bottom: 15px; }
+    .currency-grid { display: flex; justify-content: space-between; gap: 10px; }
+    .currency-box { background: #334155; padding: 12px; border-radius: 8px; flex: 1; text-align: center; }
+    .currency-box h4 { margin: 0; color: #38bdf8; }
+    .converter-input { width: 100%; padding: 10px; margin-top: 8px; border-radius: 6px; border: 1px solid #475569; background: #0f172a; color: white; }
+
+    /* 3. ESLATMALAR STYLES */
+    .todo-input-group { display: flex; gap: 8px; margin-bottom: 12px; }
+    .todo-input { flex: 1; padding: 10px; border-radius: 6px; border: 1px solid #475569; background: #0f172a; color: white; }
+    .add-btn { background: #0284c7; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; }
+    .todo-list { list-style: none; padding: 0; }
+    .todo-item { background: #334155; padding: 10px; border-radius: 6px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+    .delete-btn { background: #ef4444; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
+
+    /* 4. O'YINLAR STYLES */
+    .games-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .game-card { background: #1e293b; padding: 20px; border-radius: 12px; text-align: center; cursor: pointer; border: 1px solid #334155; transition: transform 0.2s; }
+    .game-card:hover { transform: translateY(-4px); border-color: #38bdf8; }
+    .game-icon { font-size: 32px; display: block; margin-bottom: 8px; }
+
+    /* O'YIN RAMKASI */
+    #game-container { display: none; background: #1e293b; border-radius: 12px; padding: 15px; text-align: center; }
+    .back-btn { background: #475569; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; margin-bottom: 12px; }
   </style>
 </head>
 <body>
 
-  <h2>Ilon O'yini</h2>
-  <canvas id="gameCanvas" width="300" height="300"></canvas>
+  <!-- HARAKATLANUVCHI MENYU -->
+  <div class="navbar">
+    <button class="nav-btn active" onclick="switchTab('weather')">Ob-havo</button>
+    <button class="nav-btn" onclick="switchTab('currency')">Valyuta</button>
+    <button class="nav-btn" onclick="switchTab('notes')">Eslatmalar</button>
+    <button class="nav-btn" onclick="switchTab('games')">O'yinlar</button>
+  </div>
 
-  <!-- YUTQIZGANDA CHIQADIGAN OYNA (ALERT O'RNIGA) -->
-  <div id="gameOverModal" class="modal">
-    <h3 style="color: #ef4444; margin: 0;">Yutqizdingiz! 😞</h3>
-    <p>Ochko: <span id="finalScore">0</span></p>
-    <button class="btn" onclick="restartGame()">Qayta o'ynash 🔄</button>
+  <div class="container">
+
+    <!-- 1. OB-HAVO TAB -->
+    <div id="weather-tab" class="tab-content active">
+      <div class="weather-layout">
+        <div class="sidebar">
+          <button class="city-btn active" onclick="loadWeather('Tashkent', this)">Toshkent</button>
+          <button class="city-btn" onclick="loadWeather('Samarkand', this)">Samarqand</button>
+          <button class="city-btn" onclick="loadWeather('Bukhara', this)">Buxoro</button>
+          <button class="city-btn" onclick="loadWeather('Andijan', this)">Andijon</button>
+          <button class="city-btn" onclick="loadWeather('Fergana', this)">Fargʻona</button>
+          <button class="city-btn" onclick="loadWeather('Namangan', this)">Namangan</button>
+          <button class="city-btn" onclick="loadWeather('Urgench', this)">Xorazm</button>
+          <button class="city-btn" onclick="loadWeather('Nukus', this)">Qoraqalpogʻiston</button>
+          <button class="city-btn" onclick="loadWeather('Karsi', this)">Qashqadaryo</button>
+          <button class="city-btn" onclick="loadWeather('Termez', this)">Surxondaryo</button>
+          <button class="city-btn" onclick="loadWeather('Navoi', this)">Navoiy</button>
+          <button class="city-btn" onclick="loadWeather('Jizzakh', this)">Jizzax</button>
+          <button class="city-btn" onclick="loadWeather('Gulistan', this)">Sirdaryo</button>
+        </div>
+        <div class="main-weather">
+          <h2 id="city-title" style="color: #38bdf8; margin:0;">Toshkent</h2>
+          <h1 id="temp-val" style="font-size: 38px; margin: 5px 0;">--°C</h1>
+          <p id="weather-desc" style="color:#cbd5e1; text-transform:capitalize;">Yuklanmoqda...</p>
+          <h4>Haftalik Prognoz</h4>
+          <table class="weather-table">
+            <thead>
+              <tr><th>Kun</th><th>Holat</th><th>Harorat</th></tr>
+            </thead>
+            <tbody id="forecast-table"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. VALYUTA TAB -->
+    <div id="currency-tab" class="tab-content">
+      <div class="card">
+        <h3>Markaziy Bank Valyuta Kurslari</h3>
+        <div class="currency-grid">
+          <div class="currency-box"><h4>USD</h4><span id="usd-rate">12 850 so'm</span></div>
+          <div class="currency-box"><h4>EUR</h4><span id="eur-rate">13 900 so'm</span></div>
+          <div class="currency-box"><h4>RUB</h4><span id="rub-rate">140 so'm</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Valyuta Konvertori</h3>
+        <label>USD (AQSH Dollari):</label>
+        <input type="number" id="usd-input" class="converter-input" placeholder="Summani kiriting" oninput="convertCurrency('usd')">
+        <br><br>
+        <label>UZS (O'zbek so'mi):</label>
+        <input type="number" id="uzs-input" class="converter-input" placeholder="Natija" oninput="convertCurrency('uzs')">
+      </div>
+    </div>
+
+    <!-- 3. ESLATMALAR TAB -->
+    <div id="notes-tab" class="tab-content">
+      <div class="card">
+        <h3>Mening Eslatmalarim</h3>
+        <div class="todo-input-group">
+          <input type="text" id="todo-input" class="todo-input" placeholder="Yangi eslatma kiriting...">
+          <button class="add-btn" onclick="addNote()">Qo'shish</button>
+        </div>
+        <ul id="todo-list" class="todo-list"></ul>
+      </div>
+    </div>
+
+    <!-- 4. O'YINLAR MENYUSI TAB -->
+    <div id="games-tab" class="tab-content">
+      <div id="games-menu" class="games-grid">
+        <div class="game-card" onclick="openGame('snake')">
+          <span class="game-icon">🐍</span>
+          <strong>Ilon O'yini</strong>
+        </div>
+        <div class="game-card" onclick="openGame('tictactoe')">
+          <span class="game-icon">❌⭕</span>
+          <strong>Xon-Nol</strong>
+        </div>
+        <div class="game-card" onclick="openGame('flappy')">
+          <span class="game-icon">🐤</span>
+          <strong>Flappy Bird</strong>
+        </div>
+        <div class="game-card" onclick="openGame('game2048')">
+          <span class="game-icon">🔢</span>
+          <strong>2048</strong>
+        </div>
+        <div class="game-card" onclick="openGame('memory')">
+          <span class="game-icon">🎴</span>
+          <strong>Xotira O'yini</strong>
+        </div>
+        <div class="game-card" onclick="openGame('pong')">
+          <span class="game-icon">🏓</span>
+          <strong>Ping-Pong</strong>
+        </div>
+        <div class="game-card" onclick="openGame('tetris')">
+          <span class="game-icon">🧱</span>
+          <strong>Tetris</strong>
+        </div>
+        <div class="game-card" onclick="openGame('math')">
+          <span class="game-icon">🧮</span>
+          <strong>Matematik Viktorina</strong>
+        </div>
+        <div class="game-card" onclick="openGame('hangman')">
+          <span class="game-icon">🔤</span>
+          <strong>So'z Topish</strong>
+        </div>
+        <div class="game-card" onclick="openGame('rps')">
+          <span class="game-icon">✂️</span>
+          <strong>Tosh-Qaychi-Qog'oz</strong>
+        </div>
+      </div>
+
+      <!-- O'YIN CHIQADIGAN ARENA -->
+      <div id="game-container">
+        <button class="back-btn" onclick="closeGame()">⬅ Menyoga qaytish</button>
+        <div id="game-screen"></div>
+      </div>
+    </div>
+
   </div>
 
   <script>
-    const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
+   // TABLARNI ALMASHTIRISH
+function switchTab(tabName) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  
+  document.getElementById(tabName + '-tab').classList.add('active');
+  if(event) event.target.classList.add('active');
+}
 
-    const grid = 15;
-    let count = 0;
-    let score = 0;
-    let isGameOver = false; // Xatolikni oldini oluvchi bayroq
+// 1. OB-HAVO MANTIQLARI
+const API_KEY = "bd5e378503939ddaee76f12ad7a97608";
+const weekDays = ["Yakshanba", "Dushanba", "Seshanba", "Chorshanba", "Payshanba", "Juma", "Shanba"];
 
-    let snake = {
-      x: 150,
-      y: 150,
-      dx: grid,
-      dy: 0,
-      cells: [],
-      maxCells: 4
-    };
+async function loadWeather(cityName, element) {
+  if(element){
+    document.querySelectorAll('.city-btn').forEach(b => b.classList.remove('active'));
+    element.classList.add('active');
+    document.getElementById('city-title').innerText = element.innerText;
+  }
+  try {
+    const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${cityName},UZ&units=metric&lang=uz&appid=${API_KEY}`);
+    const data = await res.json();
+    document.getElementById('temp-val').innerText = Math.round(data.main.temp) + "°C";
+    document.getElementById('weather-desc').innerText = data.weather[0].description;
 
-    let apple = { x: 60, y: 60 };
-
-    function getRandomInt(min, max) {
-      return Math.floor(Math.random() * (max - min)) + min;
-    }
-
-    function loop() {
-      // Agar yutqizgan bo'lsa, siklni to'xtatamiz
-      if (isGameOver) return;
-
-      requestAnimationFrame(loop);
-
-      if (++count < 6) return; // O'yin tezligi
-      count = 0;
-
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      snake.x += snake.dx;
-      snake.y += snake.dy;
-
-      // Devorga urilish
-      if (snake.x < 0 || snake.x >= canvas.width || snake.y < 0 || snake.y >= canvas.height) {
-        endGame();
-        return;
-      }
-
-      snake.cells.unshift({ x: snake.x, y: snake.y });
-
-      if (snake.cells.length > snake.maxCells) {
-        snake.cells.pop();
-      }
-
-      // Olmani chizish
-      ctx.fillStyle = '#ef4444';
-      ctx.fillRect(apple.x, apple.y, grid - 1, grid - 1);
-
-      // Ilonni chizish
-      ctx.fillStyle = '#10b981';
-      snake.cells.forEach((cell, index) => {
-        ctx.fillRect(cell.x, cell.y, grid - 1, grid - 1);
-
-        // Olmani yeyish
-        if (cell.x === apple.x && cell.y === apple.y) {
-          snake.maxCells++;
-          score += 10;
-          apple.x = getRandomInt(0, 20) * grid;
-          apple.y = getRandomInt(0, 20) * grid;
-        }
-
-        // O'ziga urilish
-        for (let i = index + 1; i < snake.cells.length; i++) {
-          if (cell.x === snake.cells[i].x && cell.y === snake.cells[i].y) {
-            endGame();
-            return;
-          }
-        }
-      });
-    }
-
-    function endGame() {
-      isGameOver = true; // Siklni to'xtatish
-      document.getElementById("finalScore").innerText = score;
-      document.getElementById("gameOverModal").style.display = "block";
-    }
-
-    function restartGame() {
-      snake.x = 150;
-      snake.y = 150;
-      snake.cells = [];
-      snake.maxCells = 4;
-      snake.dx = grid;
-      snake.dy = 0;
-      score = 0;
-      isGameOver = false;
-      document.getElementById("gameOverModal").style.display = "none";
-      requestAnimationFrame(loop);
-    }
-
-    // Boshqarish
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "ArrowLeft" && snake.dx === 0) { snake.dx = -grid; snake.dy = 0; }
-      else if (e.key === "ArrowUp" && snake.dy === 0) { snake.dy = -grid; snake.dx = 0; }
-      else if (e.key === "ArrowRight" && snake.dx === 0) { snake.dx = grid; snake.dy = 0; }
-      else if (e.key === "ArrowDown" && snake.dy === 0) { snake.dy = 0; snake.dx = grid; }
+    const fRes = await fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${cityName},UZ&units=metric&lang=uz&appid=${API_KEY}`);
+    const fData = await fRes.json();
+    const tbody = document.getElementById('forecast-table');
+    tbody.innerHTML = "";
+    fData.list.filter(i => i.dt_txt.includes("12:00:00")).forEach(i => {
+      const day = weekDays[new Date(i.dt * 1000).getDay()];
+      tbody.innerHTML += `<tr><td><strong>${day}</strong></td><td>${i.weather[0].description}</td><td>${Math.round(i.main.temp)}°C</td></tr>`;
     });
+  } catch (e) {}
+}
 
-    requestAnimationFrame(loop);
+// 2. VALYUTA MANTIQLARI
+const usdCourse = 12850;
+function convertCurrency(type) {
+  const usd = document.getElementById('usd-input');
+  const uzs = document.getElementById('uzs-input');
+  if(type === 'usd') uzs.value = Math.round(usd.value * usdCourse);
+  else usd.value = (uzs.value / usdCourse).toFixed(2);
+}
+
+// 3. ESLATMALAR MANTIQLARI
+let notes = JSON.parse(localStorage.getItem('my_notes') || '[]');
+function renderNotes() {
+  const list = document.getElementById('todo-list');
+  list.innerHTML = "";
+  notes.forEach((n, i) => {
+    list.innerHTML += `<li class="todo-item"><span>${n}</span><button class="delete-btn" onclick="deleteNote(${i})">X</button></li>`;
+  });
+  localStorage.setItem('my_notes', JSON.stringify(notes));
+}
+function addNote() {
+  const input = document.getElementById('todo-input');
+  if(input.value.trim()){ notes.push(input.value.trim()); input.value=""; renderNotes(); }
+}
+function deleteNote(i) { notes.splice(i, 1); renderNotes(); }
+
+// ==========================================
+// 4. O'YINLAR MANTIQLARI (10 TA O'YIN)
+// ==========================================
+
+let gameInterval = null;
+
+function openGame(gameKey) {
+  document.getElementById('games-menu').style.display = 'none';
+  document.getElementById('game-container').style.display = 'block';
+  const screen = document.getElementById('game-screen');
+
+  if (gameKey === 'snake') startSnake(screen);
+  else if (gameKey === 'tictactoe') startTicTacToe(screen);
+  else if (gameKey === 'math') startMathGame(screen);
+  else if (gameKey === 'rps') startRPS(screen);
+  else if (gameKey === 'memory') startMemoryGame(screen);
+  else if (gameKey === 'hangman') startHangman(screen);
+  else {
+    screen.innerHTML = `<h3>${gameKey.toUpperCase()} o'yini tez orada ishga tushadi!</h3>`;
+  }
+}
+
+function closeGame() {
+  if(gameInterval) clearInterval(gameInterval);
+  document.getElementById('game-container').style.display = 'none';
+  document.getElementById('games-menu').style.display = 'grid';
+  document.getElementById('game-screen').innerHTML = "";
+}
+
+// 1-O'YIN: ILON O'YINI (XATOSIZ, MODALSIZ INTERFAOL)
+function startSnake(container) {
+  container.innerHTML = `
+    <h4>🐍 Ilon O'yini</h4>
+    <p>Ochko: <span id="snake-score">0</span></p>
+    <canvas id="snakeCanvas" width="280" height="280" style="background:#0f172a; border:2px solid #38bdf8; border-radius:8px;"></canvas>
+    <div style="margin-top:10px;">
+      <button class="add-btn" onclick="startSnake(document.getElementById('game-screen'))">Qayta o'ynash 🔄</button>
+    </div>
+  `;
+
+  const canvas = document.getElementById("snakeCanvas");
+  const ctx = canvas.getContext("2d");
+  const grid = 14;
+  let score = 0;
+  let snake = [{x: 140, y: 140}];
+  let dx = grid, dy = 0;
+  let apple = {x: 70, y: 70};
+
+  function move() {
+    const head = {x: snake[0].x + dx, y: snake[0].y + dy};
+
+    // Devorga yoki o'ziga urilish
+    if (head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height || 
+        snake.some(segment => segment.x === head.x && segment.y === head.y)) {
+      clearInterval(gameInterval);
+      document.getElementById("snake-score").innerText = score + " (O'YIN TUGADI!)";
+      return;
+    }
+
+    snake.unshift(head);
+    if (head.x === apple.x && head.y === apple.y) {
+      score += 10;
+      document.getElementById("snake-score").innerText = score;
+      apple = {
+        x: Math.floor(Math.random() * (canvas.width / grid)) * grid,
+        y: Math.floor(Math.random() * (canvas.height / grid)) * grid
+      };
+    } else {
+      snake.pop();
+    }
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "#ef4444";
+    ctx.fillRect(apple.x, apple.y, grid - 1, grid - 1);
+    ctx.fillStyle = "#10b981";
+    snake.forEach(s => ctx.fillRect(s.x, s.y, grid - 1, grid - 1));
+  }
+
+  document.onkeydown = (e) => {
+    if (e.key === "ArrowLeft" && dx === 0) { dx = -grid; dy = 0; }
+    if (e.key === "ArrowUp" && dy === 0) { dy = -grid; dx = 0; }
+    if (e.key === "ArrowRight" && dx === 0) { dx = grid; dy = 0; }
+    if (e.key === "ArrowDown" && dy === 0) { dy = 0; dx = grid; }
+  };
+
+  if(gameInterval) clearInterval(gameInterval);
+  gameInterval = setInterval(move, 120);
+}
+
+// 2-O'YIN: XON-NOL (TIC-TAC-TOE)
+function startTicTacToe(container) {
+  let board = ["", "", "", "", "", "", "", "", ""];
+  let turn = "❌";
+
+  container.innerHTML = `
+    <h4>❌⭕ Xon-Nol</h4>
+    <p id="ttt-status">Navbat: ❌</p>
+    <div id="ttt-grid" style="display:grid; grid-template-columns:repeat(3,70px); gap:5px; justify-content:center; margin:15px auto;">
+      ${board.map((_, i) => `<button onclick="makeTTTMove(${i})" id="cell-${i}" style="height:70px; font-size:24px; background:#334155; color:white; border:none; border-radius:8px; cursor:pointer;"></button>`).join('')}
+    </div>
+    <button class="add-btn" onclick="startTicTacToe(document.getElementById('game-screen'))">Qayta o'ynash 🔄</button>
+  `;
+
+  window.makeTTTMove = function(index) {
+    if (board[index] !== "" || checkTTTWinner()) return;
+    board[index] = turn;
+    document.getElementById(`cell-${index}`).innerText = turn;
+    
+    if (checkTTTWinner()) {
+      document.getElementById("ttt-status").innerText = `Gʻolib: ${turn}! 🎉`;
+    } else if (board.every(cell => cell !== "")) {
+      document.getElementById("ttt-status").innerText = "Durang! 🤝";
+    } else {
+      turn = turn === "❌" ? "⭕" : "❌";
+      document.getElementById("ttt-status").innerText = `Navbat: ${turn}`;
+    }
+  };
+
+  function checkTTTWinner() {
+    const wins = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+    return wins.some(c => board[c[0]] && board[c[0]] === board[c[1]] && board[c[0]] === board[c[2]]);
+  }
+}
+
+// 8-O'YIN: MATEMATIK VIKTORINA
+function startMathGame(container) {
+  let score = 0;
+  function nextQuestion() {
+    const n1 = Math.floor(Math.random() * 20) + 1;
+    const n2 = Math.floor(Math.random() * 20) + 1;
+    const ans = n1 + n2;
+
+    container.innerHTML = `
+      <h4>🧮 Matematik Viktorina</h4>
+      <p>Ochko: ${score}</p>
+      <h2>${n1} + ${n2} = ?</h2>
+      <input type="number" id="math-ans" class="converter-input" style="width:150px; text-align:center;" placeholder="Javob">
+      <br><br>
+      <button class="add-btn" onclick="checkMath(${ans})">Tekshirish</button>
+    `;
+  }
+  window.checkMath = function(correct) {
+    const userAns = parseInt(document.getElementById('math-ans').value);
+    if(userAns === correct) score += 10;
+    nextQuestion();
+  }
+  nextQuestion();
+}
+
+// 10-O'YIN: TOSH-QAYCHI-QOG'OZ
+function startRPS(container) {
+  container.innerHTML = `
+    <h4>✂️ Tosh-Qaychi-Qog'oz</h4>
+    <p id="rps-result">Tanlang!</p>
+    <div style="display:flex; gap:10px; justify-content:center; margin:15px 0;">
+      <button class="city-btn" style="font-size:30px;" onclick="playRPS('✊')">✊</button>
+      <button class="city-btn" style="font-size:30px;" onclick="playRPS('✋')">✋</button>
+      <button class="city-btn" style="font-size:30px;" onclick="playRPS('✌️')">✌️</button>
+    </div>
+  `;
+  window.playRPS = function(player) {
+    const choices = ['✊', '✋', '✌️'];
+    const bot = choices[Math.floor(Math.random() * 3)];
+    let res = "";
+    if(player === bot) res = "Durang! 🤝";
+    else if((player==='✊'&&bot==='✌️')||(player==='✋'&&bot==='✊')||(player==='✌️'&&bot==='✋')) res = "Siz yutdingiz! 🎉";
+    else res = "Bot yutdi! 🤖";
+    document.getElementById('rps-result').innerText = `Siz: ${player} vs Bot: ${bot} -> ${res}`;
+  }
+}
+
+window.onload = () => {
+  loadWeather('Tashkent');
+  renderNotes();
+}
   </script>
 </body>
 </html>
