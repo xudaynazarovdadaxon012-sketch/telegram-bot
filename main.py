@@ -1,6 +1,7 @@
 import logging
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command
+from aiogram.types import ReplyKeyboardRemove
 
 # Bot tokeningizni kiriting
 BOT_TOKEN = "8760162640:AAFJ3U60hJC3XzpQb2IJYTCy23qmtuiv79M"
@@ -10,14 +11,15 @@ dp = Dispatcher()
 
 logging.basicConfig(level=logging.INFO)
 
-# /start buyrug'i uchun handler (Mini App tugmasisiz)
+# /start buyrug'i (yashil tugmani butkul o'chirib tashlaydi)
 @dp.message(Command("start"))
 async def start_handler(message: types.Message):
     await message.answer(
         "Assalomu alaykum! Eslatma o'rnatish uchun buyruqni quyidagicha yuboring:\n\n"
         "<code>/eslat HH:MM [matn]</code>\n\n"
         "Misol: <code>/eslat 18:30 Dars qilish</code>",
-        parse_mode="HTML"
+        parse_mode="HTML",
+        reply_markup=ReplyKeyboardRemove()  # <- Ushbu qator ekrandagi yashil tugmani darhol yo'qotadi
     )
 
 # Oddiy matnli xabarlar uchun handler
