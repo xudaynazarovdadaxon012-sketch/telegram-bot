@@ -1,572 +1,361 @@
 <!DOCTYPE html>
 <html lang="uz">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Super Mini App</title>
-  <style>
-    * { box-sizing: border-box; }
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #0f172a;
-      color: #f8fafc;
-      margin: 0;
-      padding: 0;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mini App Arena - Ultimate Edition</title>
+    <!-- Telegram WebApp SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --bg: #090a0f;
+            --surface: rgba(255, 255, 255, 0.04);
+            --surface-border: rgba(255, 255, 255, 0.08);
+            --text-primary: #ffffff;
+            --text-muted: #808a9d;
+            --accent-cyan: #00f2fe;
+            --accent-pink: #ff007f;
+            --accent-violet: #7928ca;
+            --radius-main: 20px;
+        }
 
-    /* NAVIGATSIYA MENYUSI (TABS) */
-    .navbar {
-      display: flex;
-      justify-content: space-around;
-      background: #1e293b;
-      padding: 10px 0;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      border-bottom: 2px solid #334155;
-    }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', Roboto, sans-serif;
+            user-select: none;
+        }
 
-    .nav-btn {
-      background: none;
-      border: none;
-      color: #94a3b8;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      padding: 8px 12px;
-      border-radius: 8px;
-      transition: all 0.2s;
-    }
+        body {
+            background-color: var(--bg);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(0, 242, 254, 0.12) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(121, 40, 202, 0.12) 0px, transparent 50%);
+            background-attachment: fixed;
+            color: var(--text-primary);
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
 
-    .nav-btn.active {
-      color: #38bdf8;
-      background: #334155;
-    }
+        /* HEADER */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
-    /* MAIN CONTAINER */
-    .container {
-      padding: 15px;
-      max-width: 800px;
-      margin: 0 auto;
-    }
+        .profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
 
-    .tab-content {
-      display: none;
-    }
+        .avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-violet));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 16px;
+        }
 
-    .tab-content.active {
-      display: block;
-      animation: fadeIn 0.3s ease-in;
-    }
+        .user-details h3 {
+            font-size: 15px;
+            font-weight: 600;
+        }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
+        .user-details p {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
 
-    /* 1. OB-HAVO BO'LIMI STYLES */
-    .weather-layout { display: flex; gap: 12px; height: 80vh; }
-    .sidebar { width: 35%; background: #1e293b; border-radius: 12px; padding: 10px; overflow-y: auto; }
-    .city-btn { display: block; width: 100%; background: #334155; color: white; border: none; padding: 10px; border-radius: 8px; margin-bottom: 6px; text-align: left; cursor: pointer; }
-    .city-btn.active { background: #0284c7; }
-    .main-weather { width: 65%; background: #1e293b; border-radius: 12px; padding: 15px; overflow-y: auto; }
-    .weather-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-    .weather-table th, .weather-table td { padding: 8px; border-bottom: 1px solid #334155; text-align: left; font-size: 13px; }
-    .weather-table th { color: #38bdf8; }
+        /* METRICS GRID */
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
 
-    /* 2. VALYUTA KURSI STYLES */
-    .card { background: #1e293b; border-radius: 12px; padding: 16px; margin-bottom: 15px; }
-    .currency-grid { display: flex; justify-content: space-between; gap: 10px; }
-    .currency-box { background: #334155; padding: 12px; border-radius: 8px; flex: 1; text-align: center; }
-    .currency-box h4 { margin: 0; color: #38bdf8; }
-    .converter-input { width: 100%; padding: 10px; margin-top: 8px; border-radius: 6px; border: 1px solid #475569; background: #0f172a; color: white; }
+        .metric-card {
+            background: var(--surface);
+            border: 1px solid var(--surface-border);
+            backdrop-filter: blur(20px);
+            border-radius: var(--radius-main);
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
 
-    /* 3. ESLATMALAR STYLES */
-    .todo-input-group { display: flex; gap: 8px; margin-bottom: 12px; }
-    .todo-input { flex: 1; padding: 10px; border-radius: 6px; border: 1px solid #475569; background: #0f172a; color: white; }
-    .add-btn { background: #0284c7; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; }
-    .todo-list { list-style: none; padding: 0; }
-    .todo-item { background: #334155; padding: 10px; border-radius: 6px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
-    .delete-btn { background: #ef4444; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
+        .metric-card span {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
 
-    /* 4. O'YINLAR STYLES */
-    .games-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-    .game-card { background: #1e293b; padding: 20px; border-radius: 12px; text-align: center; cursor: pointer; border: 1px solid #334155; transition: transform 0.2s; }
-    .game-card:hover { transform: translateY(-4px); border-color: #38bdf8; }
-    .game-icon { font-size: 32px; display: block; margin-bottom: 8px; }
+        .metric-card h2 {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--accent-cyan);
+        }
 
-    /* O'YIN RAMKASI */
-    #game-container { display: none; background: #1e293b; border-radius: 12px; padding: 15px; text-align: center; }
-    .back-btn { background: #475569; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; margin-bottom: 12px; }
-  </style>
+        /* CLICKER SECTION */
+        .tap-area {
+            background: var(--surface);
+            border: 1px solid var(--surface-border);
+            backdrop-filter: blur(20px);
+            border-radius: var(--radius-main);
+            padding: 30px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            text-align: center;
+        }
+
+        .tap-button {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-pink));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            box-shadow: 0 0 30px rgba(0, 242, 254, 0.4);
+            cursor: pointer;
+            transition: transform 0.1s ease;
+        }
+
+        .tap-button:active {
+            transform: scale(0.92);
+        }
+
+        /* CARD SECTION */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--surface-border);
+            backdrop-filter: blur(20px);
+            border-radius: var(--radius-main);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .task-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--surface-border);
+        }
+
+        .task-item:last-child {
+            border-bottom: none;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 14px;
+            background: #ffffff;
+            color: #000000;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+        }
+
+        .btn:active {
+            opacity: 0.85;
+        }
+
+        .btn-small {
+            width: auto;
+            padding: 8px 16px;
+            font-size: 12px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-violet));
+            color: #ffffff;
+        }
+
+        /* NAVBAR */
+        .navbar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(9, 10, 15, 0.85);
+            backdrop-filter: blur(24px);
+            border-top: 1px solid var(--surface-border);
+            display: flex;
+            justify-content: space-around;
+            padding: 14px 0 24px 0;
+        }
+
+        .nav-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .nav-link.active {
+            color: var(--text-primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+    </style>
 </head>
 <body>
 
-  <!-- HARAKATLANUVCHI MENYU -->
-  <div class="navbar">
-    <button class="nav-btn active" onclick="switchTab('weather')">Ob-havo</button>
-    <button class="nav-btn" onclick="switchTab('currency')">Valyuta</button>
-    <button class="nav-btn" onclick="switchTab('notes')">Eslatmalar</button>
-    <button class="nav-btn" onclick="switchTab('games')">O'yinlar</button>
-  </div>
-
-  <div class="container">
-
-    <!-- 1. OB-HAVO TAB -->
-    <div id="weather-tab" class="tab-content active">
-      <div class="weather-layout">
-        <div class="sidebar">
-          <button class="city-btn active" onclick="loadWeather('Tashkent', this)">Toshkent</button>
-          <button class="city-btn" onclick="loadWeather('Samarkand', this)">Samarqand</button>
-          <button class="city-btn" onclick="loadWeather('Bukhara', this)">Buxoro</button>
-          <button class="city-btn" onclick="loadWeather('Andijan', this)">Andijon</button>
-          <button class="city-btn" onclick="loadWeather('Fergana', this)">Fargʻona</button>
-          <button class="city-btn" onclick="loadWeather('Namangan', this)">Namangan</button>
-          <button class="city-btn" onclick="loadWeather('Urgench', this)">Xorazm</button>
-          <button class="city-btn" onclick="loadWeather('Nukus', this)">Qoraqalpogʻiston</button>
-          <button class="city-btn" onclick="loadWeather('Karsi', this)">Qashqadaryo</button>
-          <button class="city-btn" onclick="loadWeather('Termez', this)">Surxondaryo</button>
-          <button class="city-btn" onclick="loadWeather('Navoi', this)">Navoiy</button>
-          <button class="city-btn" onclick="loadWeather('Jizzakh', this)">Jizzax</button>
-          <button class="city-btn" onclick="loadWeather('Gulistan', this)">Sirdaryo</button>
+    <header class="header">
+        <div class="profile">
+            <div class="avatar" id="user-avatar">U</div>
+            <div class="user-details">
+                <h3 id="user-name">Yuklanmoqda...</h3>
+                <p id="user-id">ID: ---</p>
+            </div>
         </div>
-        <div class="main-weather">
-          <h2 id="city-title" style="color: #38bdf8; margin:0;">Toshkent</h2>
-          <h1 id="temp-val" style="font-size: 38px; margin: 5px 0;">--°C</h1>
-          <p id="weather-desc" style="color:#cbd5e1; text-transform:capitalize;">Yuklanmoqda...</p>
-          <h4>Haftalik Prognoz</h4>
-          <table class="weather-table">
-            <thead>
-              <tr><th>Kun</th><th>Holat</th><th>Harorat</th></tr>
-            </thead>
-            <tbody id="forecast-table"></tbody>
-          </table>
-        </div>
-      </div>
+    </header>
+
+    <!-- BOSH SAHIFA TAB -->
+    <div id="tab-home" class="tab-content active">
+        <section class="metrics">
+            <div class="metric-card">
+                <span>Jami Balans</span>
+                <h2 id="balance-val">0 $</h2>
+            </div>
+            <div class="metric-card">
+                <span>Reyting</span>
+                <h2>#12</h2>
+            </div>
+        </section>
+
+        <!-- CLICKER FUNKSIYASI -->
+        <section class="tap-area">
+            <h3>Bosing va Tangalar Yig'ing!</h3>
+            <div class="tap-button" id="tap-btn" onclick="doTap()">⚡</div>
+            <p style="font-size: 12px; color: var(--text-muted);">Har bir bosish: +1 Tanga</p>
+        </section>
     </div>
 
-    <!-- 2. VALYUTA TAB -->
-    <div id="currency-tab" class="tab-content">
-      <div class="card">
-        <h3>Markaziy Bank Valyuta Kurslari</h3>
-        <div class="currency-grid">
-          <div class="currency-box"><h4>USD</h4><span id="usd-rate">12 850 so'm</span></div>
-          <div class="currency-box"><h4>EUR</h4><span id="eur-rate">13 900 so'm</span></div>
-          <div class="currency-box"><h4>RUB</h4><span id="rub-rate">140 so'm</span></div>
-        </div>
-      </div>
-      <div class="card">
-        <h3>Valyuta Konvertori</h3>
-        <label>USD (AQSH Dollari):</label>
-        <input type="number" id="usd-input" class="converter-input" placeholder="Summani kiriting" oninput="convertCurrency('usd')">
-        <br><br>
-        <label>UZS (O'zbek so'mi):</label>
-        <input type="number" id="uzs-input" class="converter-input" placeholder="Natija" oninput="convertCurrency('uzs')">
-      </div>
+    <!-- VAZIFALAR TAB -->
+    <div id="tab-tasks" class="tab-content">
+        <main class="card">
+            <h4>Kunlik Vazifalar</h4>
+            
+            <div class="task-item">
+                <div>
+                    <h5 style="font-size: 14px;">Telegram kanalga obuna bo'lish</h5>
+                    <p style="font-size: 11px; color: var(--text-muted);">Mukofot: +100 Tanga</p>
+                </div>
+                <button class="btn btn-small" onclick="completeTask(this, 100)">Bajarish</button>
+            </div>
+
+            <div class="task-item">
+                <div>
+                    <h5 style="font-size: 14px;">Do'stlarni taklif qilish</h5>
+                    <p style="font-size: 11px; color: var(--text-muted);">Mukofot: +50 Tanga</p>
+                </div>
+                <button class="btn btn-small" onclick="shareRefLink()">Taklif qilish</button>
+            </div>
+        </main>
     </div>
 
-    <!-- 3. ESLATMALAR TAB -->
-    <div id="notes-tab" class="tab-content">
-      <div class="card">
-        <h3>Mening Eslatmalarim</h3>
-        <div class="todo-input-group">
-          <input type="text" id="todo-input" class="todo-input" placeholder="Yangi eslatma kiriting...">
-          <button class="add-btn" onclick="addNote()">Qo'shish</button>
-        </div>
-        <ul id="todo-list" class="todo-list"></ul>
-      </div>
+    <!-- SOZLAMALAR TAB -->
+    <div id="tab-settings" class="tab-content">
+        <main class="card">
+            <h4>Profil Sozlamalari</h4>
+            <p style="font-size: 13px; color: var(--text-muted);">Bot versiyasi: v3.0 Ultra Pro</p>
+            <button class="btn" style="background: rgba(239, 68, 68, 0.2); color: #ef4444;" onclick="tg.close()">Ilovani yopish</button>
+        </main>
     </div>
 
-    <!-- 4. O'YINLAR MENYUSI TAB -->
-    <div id="games-tab" class="tab-content">
-      <div id="games-menu" class="games-grid">
-        <div class="game-card" onclick="openGame('snake')">
-          <span class="game-icon">🐍</span>
-          <strong>Ilon O'yini</strong>
-        </div>
-        <div class="game-card" onclick="openGame('tictactoe')">
-          <span class="game-icon">❌⭕</span>
-          <strong>Xon-Nol</strong>
-        </div>
-        <div class="game-card" onclick="openGame('flappy')">
-          <span class="game-icon">🐤</span>
-          <strong>Flappy Bird</strong>
-        </div>
-        <div class="game-card" onclick="openGame('game2048')">
-          <span class="game-icon">🔢</span>
-          <strong>2048</strong>
-        </div>
-        <div class="game-card" onclick="openGame('memory')">
-          <span class="game-icon">🎴</span>
-          <strong>Xotira O'yini</strong>
-        </div>
-        <div class="game-card" onclick="openGame('pong')">
-          <span class="game-icon">🏓</span>
-          <strong>Ping-Pong</strong>
-        </div>
-        <div class="game-card" onclick="openGame('tetris')">
-          <span class="game-icon">🧱</span>
-          <strong>Tetris</strong>
-        </div>
-        <div class="game-card" onclick="openGame('math')">
-          <span class="game-icon">🧮</span>
-          <strong>Matematik Viktorina</strong>
-        </div>
-        <div class="game-card" onclick="openGame('hangman')">
-          <span class="game-icon">🔤</span>
-          <strong>So'z Topish</strong>
-        </div>
-        <div class="game-card" onclick="openGame('rps')">
-          <span class="game-icon">✂️</span>
-          <strong>Tosh-Qaychi-Qog'oz</strong>
-        </div>
-      </div>
+    <div style="height: 70px;"></div>
 
-      <!-- O'YIN CHIQADIGAN ARENA -->
-      <div id="game-container">
-        <button class="back-btn" onclick="closeGame()">⬅ Menyoga qaytish</button>
-        <div id="game-screen"></div>
-      </div>
-    </div>
+    <!-- BOTTOM NAVBAR -->
+    <nav class="navbar">
+        <a class="nav-link active" onclick="switchTab('tab-home', this)">Bosh sahifa</a>
+        <a class="nav-link" onclick="switchTab('tab-tasks', this)">Vazifalar</a>
+        <a class="nav-link" onclick="switchTab('tab-settings', this)">Sozlamalar</a>
+    </nav>
 
-  </div>
+    <script>
+        // Telegram API
+        const tg = window.Telegram.WebApp;
+        tg.expand();
 
-  <script>
-  // TABLARNI ALMASHTIRISH
-function switchTab(tabName) {
-  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  
-  document.getElementById(tabName + '-tab').classList.add('active');
-  if(event) event.target.classList.add('active');
-}
+        let balance = 0;
 
-// 1. OB-HAVO MANTIQLARI
-const API_KEY = "bd5e378503939ddaee76f12ad7a97608";
-const weekDays = ["Yakshanba", "Dushanba", "Seshanba", "Chorshanba", "Payshanba", "Juma", "Shanba"];
-
-async function loadWeather(cityName, element) {
-  if(element){
-    document.querySelectorAll('.city-btn').forEach(b => b.classList.remove('active'));
-    element.classList.add('active');
-    document.getElementById('city-title').innerText = element.innerText;
-  }
-  try {
-    const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${cityName},UZ&units=metric&lang=uz&appid=${API_KEY}`);
-    const data = await res.json();
-    document.getElementById('temp-val').innerText = Math.round(data.main.temp) + "°C";
-    document.getElementById('weather-desc').innerText = data.weather[0].description;
-
-    const fRes = await fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${cityName},UZ&units=metric&lang=uz&appid=${API_KEY}`);
-    const fData = await fRes.json();
-    const tbody = document.getElementById('forecast-table');
-    tbody.innerHTML = "";
-    fData.list.filter(i => i.dt_txt.includes("12:00:00")).forEach(i => {
-      const day = weekDays[new Date(i.dt * 1000).getDay()];
-      tbody.innerHTML += `<tr><td><strong>${day}</strong></td><td>${i.weather[0].description}</td><td>${Math.round(i.main.temp)}°C</td></tr>`;
-    });
-  } catch (e) {}
-}
-
-// 2. VALYUTA MANTIQLARI
-const usdCourse = 12850;
-function convertCurrency(type) {
-  const usd = document.getElementById('usd-input');
-  const uzs = document.getElementById('uzs-input');
-  if(type === 'usd') uzs.value = Math.round(usd.value * usdCourse);
-  else usd.value = (uzs.value / usdCourse).toFixed(2);
-}
-
-// 3. ESLATMALAR MANTIQLARI
-let notes = JSON.parse(localStorage.getItem('my_notes') || '[]');
-function renderNotes() {
-  const list = document.getElementById('todo-list');
-  list.innerHTML = "";
-  notes.forEach((n, i) => {
-    list.innerHTML += `<li class="todo-item"><span>${n}</span><button class="delete-btn" onclick="deleteNote(${i})">X</button></li>`;
-  });
-  localStorage.setItem('my_notes', JSON.stringify(notes));
-}
-function addNote() {
-  const input = document.getElementById('todo-input');
-  if(input.value.trim()){ notes.push(input.value.trim()); input.value=""; renderNotes(); }
-}
-function deleteNote(i) { notes.splice(i, 1); renderNotes(); }
-
-// ==========================================
-// 4. BARCHA 10 TA O'YIN MANTIQLARI
-// ==========================================
-
-let gameInterval = null;
-
-function openGame(gameKey) {
-  document.getElementById('games-menu').style.display = 'none';
-  document.getElementById('game-container').style.display = 'block';
-  const screen = document.getElementById('game-screen');
-
-  if (gameKey === 'snake') startSnake(screen);
-  else if (gameKey === 'tictactoe') startTicTacToe(screen);
-  else if (gameKey === 'flappy') startFlappy(screen);
-  else if (gameKey === 'game2048') start2048(screen);
-  else if (gameKey === 'memory') startMemory(screen);
-  else if (gameKey === 'pong') startPong(screen);
-  else if (gameKey === 'tetris') startTetris(screen);
-  else if (gameKey === 'math') startMathGame(screen);
-  else if (gameKey === 'hangman') startHangman(screen);
-  else if (gameKey === 'rps') startRPS(screen);
-}
-
-function closeGame() {
-  if(gameInterval) clearInterval(gameInterval);
-  document.getElementById('game-container').style.display = 'none';
-  document.getElementById('games-menu').style.display = 'grid';
-  document.getElementById('game-screen').innerHTML = "";
-}
-
-// 1. ILON O'YINI
-function startSnake(container) {
-  container.innerHTML = `
-    <h4>🐍 Ilon O'yini</h4>
-    <p>Ochko: <span id="snake-score">0</span></p>
-    <canvas id="snakeCanvas" width="280" height="280" style="background:#0f172a; border:2px solid #38bdf8; border-radius:8px;"></canvas>
-    <div style="margin-top:10px;">
-      <button class="add-btn" onclick="startSnake(document.getElementById('game-screen'))">Qayta o'ynash 🔄</button>
-    </div>
-  `;
-  const canvas = document.getElementById("snakeCanvas");
-  const ctx = canvas.getContext("2d");
-  const grid = 14;
-  let score = 0, snake = [{x: 140, y: 140}], dx = grid, dy = 0, apple = {x: 70, y: 70};
-
-  function move() {
-    const head = {x: snake[0].x + dx, y: snake[0].y + dy};
-    if (head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height || 
-        snake.some(s => s.x === head.x && s.y === head.y)) {
-      clearInterval(gameInterval);
-      document.getElementById("snake-score").innerText = score + " (O'yin tugadi!)";
-      return;
-    }
-    snake.unshift(head);
-    if (head.x === apple.x && head.y === apple.y) {
-      score += 10;
-      document.getElementById("snake-score").innerText = score;
-      apple = { x: Math.floor(Math.random() * 20) * grid, y: Math.floor(Math.random() * 20) * grid };
-    } else snake.pop();
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = "#ef4444"; ctx.fillRect(apple.x, apple.y, grid - 1, grid - 1);
-    ctx.fillStyle = "#10b981"; snake.forEach(s => ctx.fillRect(s.x, s.y, grid - 1, grid - 1));
-  }
-  document.onkeydown = (e) => {
-    if (e.key === "ArrowLeft" && dx === 0) { dx = -grid; dy = 0; }
-    if (e.key === "ArrowUp" && dy === 0) { dy = -grid; dx = 0; }
-    if (e.key === "ArrowRight" && dx === 0) { dx = grid; dy = 0; }
-    if (e.key === "ArrowDown" && dy === 0) { dy = 0; dx = grid; }
-  };
-  if(gameInterval) clearInterval(gameInterval);
-  gameInterval = setInterval(move, 120);
-}
-
-// 2. XON-NOL
-function startTicTacToe(container) {
-  let board = ["", "", "", "", "", "", "", "", ""], turn = "❌";
-  container.innerHTML = `
-    <h4>❌⭕ Xon-Nol</h4>
-    <p id="ttt-status">Navbat: ❌</p>
-    <div style="display:grid; grid-template-columns:repeat(3,70px); gap:5px; justify-content:center; margin:15px auto;">
-      ${board.map((_, i) => `<button onclick="makeTTT(${i})" id="c-${i}" style="height:70px; font-size:24px; background:#334155; color:white; border:none; border-radius:8px;"></button>`).join('')}
-    </div>
-    <button class="add-btn" onclick="startTicTacToe(document.getElementById('game-screen'))">Qayta o'ynash 🔄</button>
-  `;
-  window.makeTTT = function(i) {
-    if (board[i] !== "" || checkWin()) return;
-    board[i] = turn;
-    document.getElementById(`c-${i}`).innerText = turn;
-    if (checkWin()) document.getElementById("ttt-status").innerText = `Gʻolib: ${turn}! 🎉`;
-    else if (board.every(c => c !== "")) document.getElementById("ttt-status").innerText = "Durang! 🤝";
-    else { turn = turn === "❌" ? "⭕" : "❌"; document.getElementById("ttt-status").innerText = `Navbat: ${turn}`; }
-  };
-  function checkWin() {
-    const wins = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
-    return wins.some(c => board[c[0]] && board[c[0]] === board[c[1]] && board[c[0]] === board[c[2]]);
-  }
-}
-
-// 3. FLAPPY BIRD
-function startFlappy(container) {
-  container.innerHTML = `
-    <h4>🐤 Flappy Bird</h4>
-    <canvas id="flappyCanvas" width="280" height="300" style="background:#1e293b; border:2px solid #38bdf8; border-radius:8px;"></canvas>
-    <br><button class="add-btn" style="margin-top:8px;" onclick="startFlappy(document.getElementById('game-screen'))">Qayta o'ynash 🔄</button>
-  `;
-  const canvas = document.getElementById("flappyCanvas");
-  const ctx = canvas.getContext("2d");
-  let bY = 150, bV = 0, pipes = [{x: 280, top: 80, bottom: 120}], score = 0;
-  canvas.onclick = () => { bV = -6; };
-  function update() {
-    bV += 0.4; bY += bV;
-    if (bY > 300 || bY < 0) { clearInterval(gameInterval); return; }
-    ctx.clearRect(0, 0, 280, 300);
-    ctx.fillStyle = "#facc15"; ctx.fillRect(40, bY, 15, 15);
-    pipes.forEach(p => {
-      p.x -= 2;
-      ctx.fillStyle = "#22c55e";
-      ctx.fillRect(p.x, 0, 30, p.top);
-      ctx.fillRect(p.x, 300 - p.bottom, 30, p.bottom);
-      if (p.x === 40) score++;
-    });
-    if (pipes[0].x < -30) pipes.shift();
-    if (pipes[pipes.length - 1].x < 160) pipes.push({x: 280, top: Math.random() * 120 + 40, bottom: Math.random() * 120 + 40});
-    ctx.fillStyle = "#fff"; ctx.fillText("Ochko: " + score, 10, 20);
-  }
-  if(gameInterval) clearInterval(gameInterval);
-  gameInterval = setInterval(update, 20);
-}
-
-// 4. 2048
-function start2048(container) {
-  let b = Array(16).fill(0);
-  b[Math.floor(Math.random()*16)] = 2;
-  container.innerHTML = `
-    <h4>🔢 2048</h4>
-    <div id="g2048" style="display:grid; grid-template-columns:repeat(4,50px); gap:5px; justify-content:center; margin:15px auto;">
-      ${b.map(v => `<div style="height:50px; background:#334155; color:white; display:flex; align-items:center; justify-content:center; font-weight:bold; border-radius:6px;">${v||''}</div>`).join('')}
-    </div>
-    <p>Tugmalar yordamida harakatlaning</p>
-  `;
-}
-
-// 5. XOTIRA O'YINI
-function startMemory(container) {
-  const cards = ['🍎','🍎','🍋','🍋','🍇','🍇','🍒','🍒'].sort(() => 0.5 - Math.random());
-  let sel = [], done = 0;
-  container.innerHTML = `
-    <h4>🎴 Xotira O'yini</h4>
-    <div style="display:grid; grid-template-columns:repeat(4,60px); gap:8px; justify-content:center; margin:15px auto;">
-      ${cards.map((c, i) => `<button onclick="flipCard(${i},'${c}')" id="mc-${i}" style="height:60px; font-size:24px; background:#334155; border:none; border-radius:8px;">❓</button>`).join('')}
-    </div>
-  `;
-  window.flipCard = function(i, val) {
-    const btn = document.getElementById(`mc-${i}`);
-    if(btn.innerText !== '❓' || sel.length === 2) return;
-    btn.innerText = val; sel.push({i, val});
-    if(sel.length === 2) {
-      setTimeout(() => {
-        if(sel[0].val !== sel[1].val) {
-          document.getElementById(`mc-${sel[0].i}`).innerText = '❓';
-          document.getElementById(`mc-${sel[1].i}`).innerText = '❓';
+        // User ma'lumotlari
+        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+            const user = tg.initDataUnsafe.user;
+            document.getElementById('user-name').innerText = `${user.first_name} ${user.last_name || ''}`;
+            document.getElementById('user-id').innerText = `ID: ${user.id}`;
+            document.getElementById('user-avatar').innerText = user.first_name.charAt(0).toUpperCase();
+        } else {
+            document.getElementById('user-name').innerText = "Mehmon Foydalanuvchi";
         }
-        sel = [];
-      }, 600);
-    }
-  }
-}
 
-// 6. PING-PONG
-function startPong(container) {
-  container.innerHTML = `
-    <h4>🏓 Ping-Pong</h4>
-    <canvas id="pongCanvas" width="280" height="250" style="background:#1e293b; border:2px solid #38bdf8; border-radius:8px;"></canvas>
-  `;
-  const canvas = document.getElementById("pongCanvas");
-  const ctx = canvas.getContext("2d");
-  let px = 110, bx = 140, by = 125, dx = 2, dy = -2;
-  canvas.onmousemove = (e) => { px = e.clientX - canvas.getBoundingClientRect().left - 30; };
-  function update() {
-    bx += dx; by += dy;
-    if (bx <= 0 || bx >= 280) dx = -dx;
-    if (by <= 0) dy = -dy;
-    if (by >= 235 && bx >= px && bx <= px + 60) dy = -dy;
-    if (by >= 250) { clearInterval(gameInterval); return; }
-    ctx.clearRect(0, 0, 280, 250);
-    ctx.fillStyle = "#38bdf8"; ctx.fillRect(px, 240, 60, 8);
-    ctx.fillStyle = "#ef4444"; ctx.beginPath(); ctx.arc(bx, by, 6, 0, Math.PI*2); ctx.fill();
-  }
-  if(gameInterval) clearInterval(gameInterval);
-  gameInterval = setInterval(update, 15);
-}
+        // Clicker Mantiqi
+        function doTap() {
+            balance += 1;
+            document.getElementById('balance-val').innerText = `${balance} $`;
+            
+            // Tugma animatsiyasi va Telegram Haptic Vibratsiya
+            if (tg.HapticFeedback) {
+                tg.HapticFeedback.impactOccurred('light');
+            }
+        }
 
-// 7. TETRIS
-function startTetris(container) {
-  container.innerHTML = `
-    <h4>🧱 Tetris</h4>
-    <p>Boʻlim tayyorlanmoqda...</p>
-    <button class="add-btn" onclick="closeGame()">Orqaga</button>
-  `;
-}
+        // Tablarni almashtirish mantiqi
+        function switchTab(tabId, element) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
 
-// 8. MATEMATIK VIKTORINA
-function startMathGame(container) {
-  let score = 0;
-  function nextQuestion() {
-    const n1 = Math.floor(Math.random() * 20) + 1;
-    const n2 = Math.floor(Math.random() * 20) + 1;
-    const ans = n1 + n2;
-    container.innerHTML = `
-      <h4>🧮 Matematik Viktorina</h4>
-      <p>Ochko: ${score}</p>
-      <h2>${n1} + ${n2} = ?</h2>
-      <input type="number" id="math-ans" class="converter-input" style="width:140px; text-align:center;" placeholder="Javob">
-      <br><br>
-      <button class="add-btn" onclick="checkMath(${ans})">Tekshirish</button>
-    `;
-  }
-  window.checkMath = function(correct) {
-    const userAns = parseInt(document.getElementById('math-ans').value);
-    if(userAns === correct) score += 10;
-    nextQuestion();
-  }
-  nextQuestion();
-}
+            document.getElementById(tabId).classList.add('active');
+            element.classList.add('active');
+        }
 
-// 9. SO'Z TOPISH (HANGMAN)
-function startHangman(container) {
-  const words = ["TELEGRAM", "KOD", "PYTHON", "OBHAVO", "OYIN"];
-  const word = words[Math.floor(Math.random() * words.length)];
-  let guessed = Array(word.length).fill("_");
-  container.innerHTML = `
-    <h4>🔤 So'z Topish</h4>
-    <h2 style="letter-spacing:5px;">${guessed.join(" ")}</h2>
-    <input type="text" id="hang-input" maxlength="1" class="converter-input" style="width:60px; text-align:center; text-transform:uppercase;">
-    <br><br>
-    <button class="add-btn" onclick="guessLetter('${word}')">Harfni kiritish</button>
-  `;
-  window.guessLetter = function(w) {
-    const inp = document.getElementById('hang-input').value.toUpperCase();
-    for(let i=0; i<w.length; i++) { if(w[i] === inp) guessed[i] = inp; }
-    startHangmanRender(w, guessed);
-  }
-}
-function startHangmanRender(word, guessed) {
-  document.querySelector('#game-screen h2').innerText = guessed.join(" ");
-}
+        // Vazifa bajarish
+        function completeTask(btn, reward) {
+            balance += reward;
+            document.getElementById('balance-val').innerText = `${balance} $`;
+            btn.innerText = "Bajarildi";
+            btn.disabled = true;
+            btn.style.opacity = "0.5";
+        }
 
-// 10. TOSH-QAYCHI-QOG'OZ
-function startRPS(container) {
-  container.innerHTML = `
-    <h4>✂️ Tosh-Qaychi-Qog'oz</h4>
-    <p id="rps-result">Tanlang!</p>
-    <div style="display:flex; gap:10px; justify-content:center; margin:15px 0;">
-      <button class="city-btn" style="font-size:30px;" onclick="playRPS('✊')">✊</button>
-      <button class="city-btn" style="font-size:30px;" onclick="playRPS('✋')">✋</button>
-      <button class="city-btn" style="font-size:30px;" onclick="playRPS('✌️')">✌️</button>
-    </div>
-  `;
-  window.playRPS = function(player) {
-    const choices = ['✊', '✋', '✌️'];
-    const bot = choices[Math.floor(Math.random() * 3)];
-    let res = "";
-    if(player === bot) res = "Durang! 🤝";
-    else if((player==='✊'&&bot==='✌️')||(player==='✋'&&bot==='✊')||(player==='✌️'&&bot==='✋')) res = "Siz yutdingiz! 🎉";
-    else res = "Bot yutdi! 🤖";
-    document.getElementById('rps-result').innerText = `Siz: ${player} vs Bot: ${bot} -> ${res}`;
-  }
-}
-
-window.onload = () => {
-  loadWeather('Tashkent');
-  renderNotes();
-}
-  </script>
+        // Referral havolasi
+        function shareRefLink() {
+            if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+                const userId = tg.initDataUnsafe.user.id;
+                const botUsername = "SizningBotUsername"; 
+                const refLink = `https://t.me/${botUsername}?start=ref_${userId}`;
+                const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(refLink)}&text=${encodeURIComponent("Mini App'ga qo'shiling va bonuslarga ega bo'ling!")}`;
+                tg.openTelegramLink(shareUrl);
+            }
+        }
+    </script>
 </body>
 </html>
