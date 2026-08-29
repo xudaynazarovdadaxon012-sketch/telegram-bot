@@ -14,7 +14,7 @@ import aiohttp
 
 logging.basicConfig(level=logging.INFO)
 
-TOKEN = os.getenv("BOT_TOKEN", "8760162640:AAFJ3U60hJC3XzpQb2IJYTCy23qmtuiv79M")
+TOKEN = os.getenv("BOT_TOKEN", "8760162640:AAHCVZH2bz5XIaVszG6OwJo2V2-tnuzPWWA")
 WEBAPP_URL = "https://telegram-bot-7n6t.onrender.com"
 
 bot = Bot(token=TOKEN)
