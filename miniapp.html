@@ -3,246 +3,181 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Telegram Premium Mini App</title>
+    <title>O'yinlar Hub - Mini App</title>
+    <!-- Telegram WebApp Script -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        :root {
-            --primary: #0088cc;
-            --primary-glow: rgba(0, 136, 204, 0.4);
-            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
-            --card-bg: rgba(255, 255, 255, 0.05);
-            --card-border: rgba(255, 255, 255, 0.1);
-            --text-main: #f8fafc;
-            --text-sub: #94a3b8;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            user-select: none;
-            -webkit-user-select: none;
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
-        }
-
         body {
-            background: var(--bg-gradient);
-            color: var(--text-main);
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             min-height: 100vh;
-            padding: 20px 15px 40px;
-            overflow-x: hidden;
+            user-select: none;
         }
-
-        /* HEADER ANIMATSIYASI */
-        .header {
-            text-align: center;
-            margin-bottom: 25px;
-            animation: fadeInDown 0.8s ease-out;
-        }
-
-        .header h1 {
-            font-size: 24px;
-            font-weight: 800;
-            background: linear-gradient(90deg, #38bdf8, #818cf8, #c084fc);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 6px;
-            text-shadow: 0 0 20px rgba(56, 189, 248, 0.3);
-        }
-
-        .header p {
-            font-size: 13px;
-            color: var(--text-sub);
-            letter-spacing: 0.5px;
-        }
-
-        /* GRID ZAMONAVIY TUZILISHI */
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-        }
-
-        /* CARD ANIMATSIYA VA GLASSMORPHISM */
-        .card {
-            background: var(--card-bg);
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
-            border: 1px solid var(--card-border);
-            border-radius: 20px;
-            padding: 20px 15px;
-            text-align: center;
-            cursor: pointer;
-            position: relative;
-            overflow: hidden;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            animation: fadeInUp 0.6s ease-out backwards;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
-
-        .card::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-            transform: scale(0);
-            transition: transform 0.6s ease;
-        }
-
-        .card:active::before, .card:hover::before {
-            transform: scale(1);
-        }
-
-        .card:active {
-            transform: scale(0.94);
-            border-color: rgba(56, 189, 248, 0.5);
-            box-shadow: 0 0 25px var(--primary-glow);
-        }
-
-        /* ICON ANIMATION */
-        .icon-box {
-            width: 55px;
-            height: 55px;
-            margin: 0 auto 12px;
-            border-radius: 16px;
-            background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.02));
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 26px;
-            color: #38bdf8;
-            box-shadow: inset 0 1px 1px rgba(255,255,255,0.2);
-            transition: transform 0.3s ease;
-        }
-
-        .card:hover .icon-box {
-            transform: rotate(8deg) scale(1.1);
-            color: #818cf8;
-        }
-
-        .card h3 {
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--text-main);
-        }
-
-        /* FULLSCREEN MODAL & IFRAME */
-        #game-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: #000;
-            z-index: 99999;
-            animation: zoomIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        #game-frame {
+        .game-frame {
             width: 100%;
-            height: calc(100% - 50px);
+            height: calc(100vh - 70px);
             border: none;
         }
-
-        .close-btn {
-            height: 50px;
-            width: 100%;
-            background: linear-gradient(90deg, #ef4444, #dc2626);
-            color: white;
-            border: none;
-            font-weight: 700;
-            font-size: 15px;
-            letter-spacing: 1px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            cursor: pointer;
-            box-shadow: 0 -4px 20px rgba(239, 68, 68, 0.4);
-        }
-
-        /* KEYFRAME ANIMATIONLARI */
-        @keyframes fadeInDown {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        @keyframes zoomIn {
-            from { opacity: 0; transform: scale(0.9); }
-            to { opacity: 1; transform: scale(1); }
-        }
-
-        /* GRID STAGGERED ANIMATION DELAY */
-        .card:nth-child(1) { animation-delay: 0.1s; }
-        .card:nth-child(2) { animation-delay: 0.2s; }
-        .card:nth-child(3) { animation-delay: 0.3s; }
-        .card:nth-child(4) { animation-delay: 0.4s; }
-        .card:nth-child(5) { animation-delay: 0.5s; }
-        .card:nth-child(6) { animation-delay: 0.6s; }
     </style>
 </head>
-<body>
+<body class="p-4 flex flex-col justify-between">
 
-    <div class="header">
-        <h1><i class="fa-solid fa-gamepad"></i> GameHub Premium</h1>
-        <p>Telegram Mini App O'yin Portali</p>
+    <!-- HEADER / USER INFO -->
+    <div id="main-content">
+        <div class="flex items-center justify-between mb-6 p-4 glass-card rounded-2xl">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center font-bold text-lg" id="user-avatar">
+                    U
+                </div>
+                <div>
+                    <h1 class="font-bold text-base leading-tight" id="user-name">Foydalanuvchi</h1>
+                    <p class="text-xs text-indigo-300">Premium Game Zone</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-1 bg-amber-500/20 px-3 py-1 rounded-full border border-amber-500/30">
+                <i data-lucide="trophy" class="w-4 h-4 text-amber-400"></i>
+                <span class="text-xs font-semibold text-amber-300">Pro Gamer</span>
+            </div>
+        </div>
+
+        <!-- TITLE -->
+        <div class="mb-4">
+            <h2 class="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-pink-400">
+                🎮 TOP O'YINLAR HABI
+            </h2>
+            <p class="text-xs text-slate-400 mt-1">O'zingizga yoqgan o'yinni tanlang va bot ichida o'ynang!</p>
+        </div>
+
+        <!-- GAME LIST -->
+        <div class="grid grid-cols-1 gap-4 mb-6">
+            
+            <!-- GAME 1: SUBWAY SURFERS -->
+            <div onclick="openGame('https://play.famobi.com/subway-surfers')" class="glass-card p-4 rounded-2xl flex items-center justify-between active:scale-95 transition-transform cursor-pointer hover:border-indigo-500/50">
+                <div class="flex items-center space-x-4">
+                    <div class="w-14 h-14 rounded-xl bg-gradient-to-tr from-amber-500 to-red-500 flex items-center justify-center text-2xl shadow-lg">
+                        🏃
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-base">Subway Surfers</h3>
+                        <p class="text-xs text-slate-400">Poyga & Sarguzasht</p>
+                    </div>
+                </div>
+                <button class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-xs font-semibold shadow-md">
+                    O'ynash
+                </button>
+            </div>
+
+            <!-- GAME 2: 2048 -->
+            <div onclick="openGame('https://play2048.co/')" class="glass-card p-4 rounded-2xl flex items-center justify-between active:scale-95 transition-transform cursor-pointer hover:border-indigo-500/50">
+                <div class="flex items-center space-x-4">
+                    <div class="w-14 h-14 rounded-xl bg-gradient-to-tr from-yellow-400 to-amber-600 flex items-center justify-center text-2xl shadow-lg">
+                        🔢
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-base">2048 Puzzle</h3>
+                        <p class="text-xs text-slate-400">Mantiqiy o'yin</p>
+                    </div>
+                </div>
+                <button class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-xs font-semibold shadow-md">
+                    O'ynash
+                </button>
+            </div>
+
+            <!-- GAME 3: PAC-MAN -->
+            <div onclick="openGame('https://macosko.github.io/PAC-MAN/')" class="glass-card p-4 rounded-2xl flex items-center justify-between active:scale-95 transition-transform cursor-pointer hover:border-indigo-500/50">
+                <div class="flex items-center space-x-4">
+                    <div class="w-14 h-14 rounded-xl bg-gradient-to-tr from-yellow-300 to-yellow-500 flex items-center justify-center text-2xl shadow-lg">
+                        🟡
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-base">Pac-Man Classic</h3>
+                        <p class="text-xs text-slate-400">Afsonaviy Arkani o'yin</p>
+                    </div>
+                </div>
+                <button class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-xs font-semibold shadow-md">
+                    O'ynash
+                </button>
+            </div>
+
+            <!-- GAME 4: TOWER BUILDER -->
+            <div onclick="openGame('https://html5.gamedistribution.com/rvvAS394/c77467c6451a44139e802ee6d41be2a0/')" class="glass-card p-4 rounded-2xl flex items-center justify-between active:scale-95 transition-transform cursor-pointer hover:border-indigo-500/50">
+                <div class="flex items-center space-x-4">
+                    <div class="w-14 h-14 rounded-xl bg-gradient-to-tr from-cyan-400 to-blue-600 flex items-center justify-center text-2xl shadow-lg">
+                        🏙
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-base">Tower Master</h3>
+                        <p class="text-xs text-slate-400">Minora qurish</p>
+                    </div>
+                </div>
+                <button class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-xs font-semibold shadow-md">
+                    O'ynash
+                </button>
+            </div>
+
+        </div>
     </div>
 
-    <div class="grid">
-        <div class="card" onclick="openGame('https://games.famobi.com/om-nom-run')">
-            <div class="icon-box"><i class="fa-solid fa-person-running"></i></div>
-            <h3>Om Nom Run</h3>
+    <!-- GAME IFRAME CONTAINER (HIDE BY DEFAULT) -->
+    <div id="game-container" class="hidden fixed inset-0 bg-slate-950 z-50 flex flex-col">
+        <div class="p-3 bg-slate-900 border-b border-slate-800 flex justify-between items-center">
+            <button onclick="closeGame()" class="flex items-center space-x-1 text-slate-300 bg-slate-800 px-3 py-1.5 rounded-lg text-xs font-semibold">
+                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                <span>Chiqish</span>
+            </button>
+            <span class="text-xs font-bold text-indigo-400">Mini App Game Zone</span>
+            <div class="w-16"></div>
         </div>
-        <div class="card" onclick="openGame('https://games.famobi.com/cut-the-rope')">
-            <div class="icon-box"><i class="fa-solid fa-frog"></i></div>
-            <h3>Cut the Rope</h3>
-        </div>
-        <div class="card" onclick="openGame('https://games.famobi.com/bubble-tower-3d')">
-            <div class="icon-box"><i class="fa-solid fa-cubes-stacked"></i></div>
-            <h3>Bubble Tower 3D</h3>
-        </div>
-        <div class="card" onclick="openGame('https://games.famobi.com/element-blocks')">
-            <div class="icon-box"><i class="fa-solid fa-shapes"></i></div>
-            <h3>Element Blocks</h3>
-        </div>
-        <div class="card" onclick="openGame('https://games.famobi.com/cannon-balls-3d')">
-            <div class="icon-box"><i class="fa-solid fa-bomb"></i></div>
-            <h3>Cannon Balls 3D</h3>
-        </div>
-        <div class="card" onclick="openGame('https://games.famobi.com/table-tennis-world-tour')">
-            <div class="icon-box"><i class="fa-solid fa-table-tennis-paddle-ball"></i></div>
-            <h3>Table Tennis</h3>
-        </div>
-    </div>
-
-    <div id="game-modal">
-        <button class="close-btn" onclick="closeGame()"><i class="fa-solid fa-xmark"></i> O'YINDAN CHIQISH</button>
-        <iframe id="game-frame" src=""></iframe>
+        <iframe id="game-iframe" class="game-frame" src="" allowfullscreen></iframe>
     </div>
 
     <script>
-        const tg = window.Telegram.WebApp;
-        tg.ready();
-        tg.expand();
+        // Telegram WebApp obyektini yuklash
+        const tg = window.Telegram ? window.Telegram.WebApp : null;
 
-        function openGame(url) {
-            document.getElementById('game-frame').src = url;
-            document.getElementById('game-modal').style.display = 'block';
+        if (tg) {
+            tg.ready();
+            tg.expand(); // Ekran bo'ylab yoyish
+            
+            // Foydalanuvchi ma'lumotlarini olish
+            if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+                const user = tg.initDataUnsafe.user;
+                document.getElementById('user-name').innerText = user.first_name + (user.last_name ? ' ' + user.last_name : '');
+                document.getElementById('user-avatar').innerText = user.first_name.charAt(0).toUpperCase();
+            }
         }
 
+        // Lucide belgilarni faollashtirish
+        lucide.createIcons();
+
+        // O'yinni ochish
+        function openGame(url) {
+            document.getElementById('game-iframe').src = url;
+            document.getElementById('game-container').classList.remove('hidden');
+            if (tg && tg.BackButton) {
+                tg.BackButton.show();
+                tg.BackButton.onClick(closeGame);
+            }
+        }
+
+        // O'yinni yopish
         function closeGame() {
-            document.getElementById('game-modal').style.display = 'none';
-            document.getElementById('game-frame').src = '';
+            document.getElementById('game-iframe').src = '';
+            document.getElementById('game-container').classList.add('hidden');
+            if (tg && tg.BackButton) {
+                tg.BackButton.hide();
+            }
         }
     </script>
 </body>
