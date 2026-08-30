@@ -14,7 +14,7 @@ from aiogram.types import (
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.storage.memory import MemoryStorage
-from aiohttp import web
+from aiohttp import ClientSession, ClientTimeout
 import aiohttp
 import qrcode
 
@@ -119,7 +119,8 @@ async def ai_prompt(message: types.Message, state: FSMContext):
 async def process_ai(message: types.Message, state: FSMContext):
     msg = await message.answer("🔄 _AI o'ylamoqda..._")
     try:
-        async with aiohttp.ClientSession() as session:
+        timeout = aiohttp.ClientTimeout(total=25)
+        async with aiohttp.ClientSession(timeout=timeout) as session:
             async with session.get(f"https://api.popcat.xyz/chatbot?msg={urllib.parse.quote(message.text)}&owner=User&botname=AI") as resp:
                 data = await resp.json()
                 reply = data.get("response", "Kechirasiz, javob topilmadi.")
