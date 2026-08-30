@@ -218,7 +218,7 @@ async def process_translate(message: types.Message, state: FSMContext):
     except Exception:
         await message.answer("❌ Tarjima servisi bilan bog'lanishda xatolik bo'ldi.")
     await state.clear()
-
+    
 # --- 6. RASMDAN MATN O'QISH (OCR API) ---
 @dp.message(Command("ocr"))
 @dp.message(F.text == "📄 Rasmdan Matn O'qish")
