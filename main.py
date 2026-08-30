@@ -201,18 +201,18 @@ async def process_shorten(message: types.Message, state: FSMContext):
 async def translate_prompt(message: types.Message, state: FSMContext):
     await state.set_state(BotStates.waiting_for_translate)
     await message.answer("🔤 Tarjima qilmoqchi bo'lgan matningizni yozib yuboring:")
-
 @dp.message(BotStates.waiting_for_translate)
 async def process_translate(message: types.Message, state: FSMContext):
     try:
-        url = f"https://api.mymemory.translated.net/get?q={urllib.parse.quote(message.text)}&langpair=autodetect|uz"
+        url = f"https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=uz&dt=t&q={urllib.parse.quote(message.text)}"
         async with aiohttp.ClientSession() as session:
             async with session.get(url) as resp:
                 data = await resp.json()
-                trans = data.get("responseData", {}).get("translatedText", "Tarjima topilmadi.")
-                await message.answer(f"🇺🇿 **O'zbekcha Tarjima:**\n\n{trans}")
+                translated_text = "".join([item[0] for item in data[0] if item[0]])
+                await message.answer(f"🇺🇿 **O'zbekcha Tarjima:**\n\n{translated_text}")
     except Exception:
-        await message.answer("❌ Tarjimada xatolik yuz berdi.")
+        await message.answer("❌ Tarjima qilishda xatolik bo'ldi.")
+    await state.clear()
     await state.clear()
 
 # --- 6. RASMDAN MATN O'QISH (OCR API) ---
