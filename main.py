@@ -201,7 +201,7 @@ async def process_shorten(message: types.Message, state: FSMContext):
 async def translate_prompt(message: types.Message, state: FSMContext):
     await state.set_state(BotStates.waiting_for_translate)
     await message.answer("🔤 Tarjima qilmoqchi bo'lgan matningizni yozib yuboring:")
-   @dp.message(BotStates.waiting_for_translate)
+@dp.message(BotStates.waiting_for_translate)
 async def process_translate(message: types.Message, state: FSMContext):
     try:
         prompt = f"Translate the following text into Uzbek accurately. Return ONLY the Uzbek translation without extra notes: {message.text}"
