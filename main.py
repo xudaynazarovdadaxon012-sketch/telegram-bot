@@ -117,11 +117,11 @@ async def ai_prompt(message: types.Message, state: FSMContext):
 
 @dp.message(BotStates.waiting_for_ai)
 async def process_ai(message: types.Message, state: FSMContext):
-    msg = await message.answer("🔄 _AI o'ylamoqda..._")
-   try:
+    msg = await message.answer("🔄 AI o'ylamoqda...")
+    try:
         url = f"https://text.pollinations.ai/{urllib.parse.quote(message.text)}"
         timeout = aiohttp.ClientTimeout(total=20)
-
+        
         async with aiohttp.ClientSession(timeout=timeout) as session:
             async with session.get(url) as resp:
                 if resp.status == 200:
@@ -132,7 +132,7 @@ async def process_ai(message: types.Message, state: FSMContext):
     except Exception:
         await msg.edit_text("❌ AI servisi bilan bog'lanishda xatolik bo'ldi.")
     await state.clear()
-
+    
 # --- 2. AI RASM GENERATORI (Text-to-Image) ---
 @dp.message(Command("draw"))
 @dp.message(F.text == "🎨 AI Rasm Yaratish")
