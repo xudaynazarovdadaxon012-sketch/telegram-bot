@@ -201,18 +201,22 @@ async def process_shorten(message: types.Message, state: FSMContext):
 async def translate_prompt(message: types.Message, state: FSMContext):
     await state.set_state(BotStates.waiting_for_translate)
     await message.answer("🔤 Tarjima qilmoqchi bo'lgan matningizni yozib yuboring:")
-@dp.message(BotStates.waiting_for_translate)
+   @dp.message(BotStates.waiting_for_translate)
 async def process_translate(message: types.Message, state: FSMContext):
     try:
-        url = f"https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=uz&dt=t&q={urllib.parse.quote(message.text)}"
-        async with aiohttp.ClientSession() as session:
+        prompt = f"Translate the following text into Uzbek accurately. Return ONLY the Uzbek translation without extra notes: {message.text}"
+        url = f"https://text.pollinations.ai/{urllib.parse.quote(prompt)}"
+        timeout = aiohttp.ClientTimeout(total=20)
+        
+        async with aiohttp.ClientSession(timeout=timeout) as session:
             async with session.get(url) as resp:
-                data = await resp.json()
-                translated_text = "".join([item[0] for item in data[0] if item[0]])
-                await message.answer(f"🇺🇿 **O'zbekcha Tarjima:**\n\n{translated_text}")
+                if resp.status == 200:
+                    translated_text = await resp.text()
+                    await message.answer(f"🇺🇿 **O'zbekcha Tarjima:**\n\n{translated_text}")
+                else:
+                    await message.answer("❌ Tarjima qilishda xatolik bo'ldi.")
     except Exception:
-        await message.answer("❌ Tarjima qilishda xatolik bo'ldi.")
-    await state.clear()
+        await message.answer("❌ Tarjima servisi bilan bog'lanishda xatolik bo'ldi.")
     await state.clear()
 
 # --- 6. RASMDAN MATN O'QISH (OCR API) ---
