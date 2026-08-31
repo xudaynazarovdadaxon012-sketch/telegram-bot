@@ -245,25 +245,29 @@ async def process_ocr(message: types.Message, state: FSMContext):
 # 5. KRIPTO & OLTIN
 @dp.message(F.text == "📈 Kripto & Oltin")
 async def crypto_rates(message: types.Message):
-    wait_msg = await message.answer("🔄 Narxlar yangilanmoqda...")
+    wait_msg = await message.answer("🔄 Bozor narxlari olinmoqda...")
     try:
         async with aiohttp.ClientSession() as session:
-            async with session.get("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,binancecoin,gold&vs_currencies=usd") as resp:
+            # Binance API orqali kripto narxlari
+            async with session.get("https://api.binance.com/api/v3/ticker/price?symbols=%5B%22BTCUSDT%22,%22ETHUSDT%22,%22BNBUSDT%22%5D") as resp:
                 data = await resp.json()
-                btc = data.get("bitcoin", {}).get("usd", "N/A")
-                eth = data.get("ethereum", {}).get("usd", "N/A")
-                bnb = data.get("binancecoin", {}).get("usd", "N/A")
+                
+                prices = {item['symbol']: float(item['price']) for item in data}
+                btc = prices.get("BTCUSDT", 0)
+                eth = prices.get("ETHUSDT", 0)
+                bnb = prices.get("BNBUSDT", 0)
                 
                 text = (
                     "📈 **Bozor Narxlari (USD):**\n\n"
-                    f"🪙 **Bitcoin (BTC):** ${btc:,}\n"
-                    f"🔷 **Ethereum (ETH):** ${eth:,}\n"
-                    f"🟡 **Binance Coin (BNB):** ${bnb:,}\n"
+                    f"🪙 **Bitcoin (BTC):** ${btc:,.2f}\n"
+                    f"🔷 **Ethereum (ETH):** ${eth:,.2f}\n"
+                    f"🟡 **Binance Coin (BNB):** ${bnb:,.2f}\n"
                     "👑 **Oltin (XAU 1 oz):** ~$2,500+"
                 )
                 await wait_msg.edit_text(text, parse_mode="Markdown")
-    except Exception:
-        await wait_msg.edit_text("❌ Bozor narxlarini olishda xatolik.")
+    except Exception as e:
+        logging.error(f"Crypto error: {e}")
+        await wait_msg.edit_text("❌ Bozor narxlarini olishda xatolik yuz berdi. Qayta urinib ko'ring.")
 
 # 6. LINK QISQARTIRISH
 @dp.message(F.text == "🔗 Link Qisqartirish")
