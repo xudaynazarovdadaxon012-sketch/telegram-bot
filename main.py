@@ -431,12 +431,16 @@ async def process_note(message: types.Message, state: FSMContext):
 async def handle_ping(request):
     return web.Response(text="Bot runs successfully!")
 
+async def handle_ping(request):
+    return web.Response(text="Bot runs successfully!")
+
 async def main():
     await bot.set_my_commands([
         BotCommand(command="start", description="Botni qayta ishga tushirish"),
         BotCommand(command="admin", description="Admin statistikasi")
     ], scope=BotCommandScopeDefault())
     
+    # Web server yaratish
     app = web.Application()
     app.router.add_get("/", handle_ping)
     runner = web.AppRunner(app)
@@ -444,8 +448,11 @@ async def main():
     
     port = int(os.getenv("PORT", 10000))
     site = web.TCPSite(runner, "0.0.0.0", port)
-    await site.start()
+    await site.start()  # Portni darhol ochadi
     
+    logging.info(f"Web server started on port {port}")
+    
+    # Pollingni HTTP server bilan birga parallel ishga tushirish
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
