@@ -2,183 +2,315 @@
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>O'yinlar Hub - Mini App</title>
-    <!-- Telegram WebApp Script -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Mega Dashboard</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
+        :root {
+            --bg: #0b0f19;
+            --card-bg: rgba(255, 255, 255, 0.04);
+            --border: rgba(255, 255, 255, 0.08);
+            --accent: #38bdf8;
+            --text: #f8fafc;
+            --muted: #94a3b8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
         body {
-            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
-            color: #ffffff;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #0b0f19 100%);
+            color: var(--text);
+            padding: 16px;
             min-height: 100vh;
-            user-select: none;
         }
-        .glass-card {
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 22px;
+            font-weight: 800;
+            background: linear-gradient(90deg, #38bdf8, #818cf8, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header p { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+        .section-label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--accent);
+            margin: 20px 0 10px 4px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            backdrop-filter: blur(12px);
+            border-radius: 16px;
+            padding: 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+        }
+
+        .card:active {
+            transform: scale(0.96);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
             background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--border);
+            flex-shrink: 0;
         }
-        .game-frame {
-            width: 100%;
-            height: calc(100vh - 70px);
-            border: none;
+
+        .card-info .title { font-size: 13px; font-weight: 600; }
+        .card-info .desc { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+        /* Modal styling */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(11, 15, 25, 0.95);
+            backdrop-filter: blur(16px);
+            z-index: 1000;
+            flex-direction: column;
+        }
+
+        .modal-header {
+            height: 50px;
+            padding: 0 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .modal-title { font-size: 15px; font-weight: 700; }
+        .close-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none; color: #fff;
+            padding: 6px 12px; border-radius: 8px; font-size: 12px;
+        }
+
+        .modal-body {
+            flex: 1; padding: 16px; display: flex;
+            flex-direction: column; gap: 10px; overflow-y: auto;
+        }
+
+        input, textarea, button.action-btn {
+            width: 100%; padding: 12px; border-radius: 10px;
+            border: 1px solid var(--border); background: rgba(255,255,255,0.05);
+            color: white; font-size: 14px; outline: none;
+        }
+
+        button.action-btn {
+            background: linear-gradient(90deg, #38bdf8, #818cf8);
+            color: #000; font-weight: 700; border: none; margin-top: 5px;
         }
     </style>
 </head>
-<body class="p-4 flex flex-col justify-between">
+<body>
 
-    <!-- HEADER / USER INFO -->
-    <div id="main-content">
-        <div class="flex items-center justify-between mb-6 p-4 glass-card rounded-2xl">
-            <div class="flex items-center space-x-3">
-                <div class="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center font-bold text-lg" id="user-avatar">
-                    U
-                </div>
-                <div>
-                    <h1 class="font-bold text-base leading-tight" id="user-name">Foydalanuvchi</h1>
-                    <p class="text-xs text-indigo-300">Premium Game Zone</p>
-                </div>
-            </div>
-            <div class="flex items-center space-x-1 bg-amber-500/20 px-3 py-1 rounded-full border border-amber-500/30">
-                <i data-lucide="trophy" class="w-4 h-4 text-amber-400"></i>
-                <span class="text-xs font-semibold text-amber-300">Pro Gamer</span>
+    <div class="header">
+        <h1>🚀 Mega Assistant App</h1>
+        <p>Barcha bot funksiyalari va tayyor o'yinlar markazi</p>
+    </div>
+
+    <div class="section-label">🤖 Sun'iy Intellekt & Vositalar</div>
+    <div class="grid">
+        <div class="card" onclick="openModal('ai-modal')">
+            <div class="icon">🤖</div>
+            <div class="card-info">
+                <div class="title">AI Yordamchi</div>
+                <div class="desc">Savollarga javob</div>
             </div>
         </div>
 
-        <!-- TITLE -->
-        <div class="mb-4">
-            <h2 class="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-pink-400">
-                🎮 TOP O'YINLAR HABI
-            </h2>
-            <p class="text-xs text-slate-400 mt-1">O'zingizga yoqgan o'yinni tanlang va bot ichida o'ynang!</p>
+        <div class="card" onclick="openModal('calc-modal')">
+            <div class="icon">🧮</div>
+            <div class="card-info">
+                <div class="title">Kalkulyator</div>
+                <div class="desc">Tezkor hisob</div>
+            </div>
         </div>
 
-        <!-- GAME LIST -->
-        <div class="grid grid-cols-1 gap-4 mb-6">
-            
-            <!-- GAME 1: SUBWAY SURFERS -->
-            <div onclick="openGame('https://play.famobi.com/subway-surfers')" class="glass-card p-4 rounded-2xl flex items-center justify-between active:scale-95 transition-transform cursor-pointer hover:border-indigo-500/50">
-                <div class="flex items-center space-x-4">
-                    <div class="w-14 h-14 rounded-xl bg-gradient-to-tr from-amber-500 to-red-500 flex items-center justify-center text-2xl shadow-lg">
-                        🏃
-                    </div>
-                    <div>
-                        <h3 class="font-bold text-base">Subway Surfers</h3>
-                        <p class="text-xs text-slate-400">Poyga & Sarguzasht</p>
-                    </div>
-                </div>
-                <button class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-xs font-semibold shadow-md">
-                    O'ynash
-                </button>
+        <div class="card" onclick="openModal('qr-modal')">
+            <div class="icon">📲</div>
+            <div class="card-info">
+                <div class="title">QR Generator</div>
+                <div class="desc">QR-kod yaratish</div>
             </div>
+        </div>
 
-            <!-- GAME 2: 2048 -->
-            <div onclick="openGame('https://play2048.co/')" class="glass-card p-4 rounded-2xl flex items-center justify-between active:scale-95 transition-transform cursor-pointer hover:border-indigo-500/50">
-                <div class="flex items-center space-x-4">
-                    <div class="w-14 h-14 rounded-xl bg-gradient-to-tr from-yellow-400 to-amber-600 flex items-center justify-center text-2xl shadow-lg">
-                        🔢
-                    </div>
-                    <div>
-                        <h3 class="font-bold text-base">2048 Puzzle</h3>
-                        <p class="text-xs text-slate-400">Mantiqiy o'yin</p>
-                    </div>
-                </div>
-                <button class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-xs font-semibold shadow-md">
-                    O'ynash
-                </button>
+        <div class="card" onclick="openModal('notes-modal')">
+            <div class="icon">📝</div>
+            <div class="card-info">
+                <div class="title">Eslatmalar</div>
+                <div class="desc">Shaxsiy bloknot</div>
             </div>
-
-            <!-- GAME 3: PAC-MAN -->
-            <div onclick="openGame('https://macosko.github.io/PAC-MAN/')" class="glass-card p-4 rounded-2xl flex items-center justify-between active:scale-95 transition-transform cursor-pointer hover:border-indigo-500/50">
-                <div class="flex items-center space-x-4">
-                    <div class="w-14 h-14 rounded-xl bg-gradient-to-tr from-yellow-300 to-yellow-500 flex items-center justify-center text-2xl shadow-lg">
-                        🟡
-                    </div>
-                    <div>
-                        <h3 class="font-bold text-base">Pac-Man Classic</h3>
-                        <p class="text-xs text-slate-400">Afsonaviy Arkani o'yin</p>
-                    </div>
-                </div>
-                <button class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-xs font-semibold shadow-md">
-                    O'ynash
-                </button>
-            </div>
-
-            <!-- GAME 4: TOWER BUILDER -->
-            <div onclick="openGame('https://html5.gamedistribution.com/rvvAS394/c77467c6451a44139e802ee6d41be2a0/')" class="glass-card p-4 rounded-2xl flex items-center justify-between active:scale-95 transition-transform cursor-pointer hover:border-indigo-500/50">
-                <div class="flex items-center space-x-4">
-                    <div class="w-14 h-14 rounded-xl bg-gradient-to-tr from-cyan-400 to-blue-600 flex items-center justify-center text-2xl shadow-lg">
-                        🏙
-                    </div>
-                    <div>
-                        <h3 class="font-bold text-base">Tower Master</h3>
-                        <p class="text-xs text-slate-400">Minora qurish</p>
-                    </div>
-                </div>
-                <button class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-xs font-semibold shadow-md">
-                    O'ynash
-                </button>
-            </div>
-
         </div>
     </div>
 
-    <!-- GAME IFRAME CONTAINER (HIDE BY DEFAULT) -->
-    <div id="game-container" class="hidden fixed inset-0 bg-slate-950 z-50 flex flex-col">
-        <div class="p-3 bg-slate-900 border-b border-slate-800 flex justify-between items-center">
-            <button onclick="closeGame()" class="flex items-center space-x-1 text-slate-300 bg-slate-800 px-3 py-1.5 rounded-lg text-xs font-semibold">
-                <i data-lucide="arrow-left" class="w-4 h-4"></i>
-                <span>Chiqish</span>
-            </button>
-            <span class="text-xs font-bold text-indigo-400">Mini App Game Zone</span>
-            <div class="w-16"></div>
+    <div class="section-label">🎮 Tayyor Online O'yinlar</div>
+    <div class="grid">
+        <div class="card" onclick="openGame('https://ellisonleao.github.io/clumsy-bird/')">
+            <div class="icon">🐦</div>
+            <div class="card-info">
+                <div class="title">Clumsy Bird</div>
+                <div class="desc">Tayyor Flappy Bird</div>
+            </div>
         </div>
-        <iframe id="game-iframe" class="game-frame" src="" allowfullscreen></iframe>
+
+        <div class="card" onclick="openGame('https://pacman-canvas.js.org/')">
+            <div class="icon">👾</div>
+            <div class="card-info">
+                <div class="title">Pacman</div>
+                <div class="desc">Klassik Pacman</div>
+            </div>
+        </div>
+
+        <div class="card" onclick="openGame('https://play2048.co/')">
+            <div class="icon">🧩</div>
+            <div class="card-info">
+                <div class="title">2048 Game</div>
+                <div class="desc">Mantiqiy o'yin</div>
+            </div>
+        </div>
+
+        <div class="card" onclick="openGame('https://hextris.io/')">
+            <div class="icon">🔷</div>
+            <div class="card-info">
+                <div class="title">Hextris</div>
+                <div class="desc">Tetris puzzle</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="ai-modal" class="modal">
+        <div class="modal-header">
+            <div class="modal-title">🤖 AI Chat</div>
+            <button class="close-btn" onclick="closeModal('ai-modal')">Yopish</button>
+        </div>
+        <div class="modal-body">
+            <textarea id="aiInput" rows="3" placeholder="Savolingizni yozing..."></textarea>
+            <button class="action-btn" onclick="sendToBot('AI Chat')">Savol yuborish</button>
+        </div>
+    </div>
+
+    <div id="calc-modal" class="modal">
+        <div class="modal-header">
+            <div class="modal-title">🧮 Kalkulyator</div>
+            <button class="close-btn" onclick="closeModal('calc-modal')">Yopish</button>
+        </div>
+        <div class="modal-body">
+            <input type="text" id="calcVal" placeholder="Misolni kiriting (masalan: 12*5)" style="text-align:right;">
+            <button class="action-btn" onclick="calcResult()">Hisoblash</button>
+        </div>
+    </div>
+
+    <div id="qr-modal" class="modal">
+        <div class="modal-header">
+            <div class="modal-title">📲 QR Yaratish</div>
+            <button class="close-btn" onclick="closeModal('qr-modal')">Yopish</button>
+        </div>
+        <div class="modal-body">
+            <input type="text" id="qrText" placeholder="Matn yoki link kiriting...">
+            <button class="action-btn" onclick="generateQR()">QR Kod Yasash</button>
+            <div id="qrResult" style="text-align:center; margin-top:10px;"></div>
+        </div>
+    </div>
+
+    <div id="notes-modal" class="modal">
+        <div class="modal-header">
+            <div class="modal-title">📝 Eslatmalar</div>
+            <button class="close-btn" onclick="closeModal('notes-modal')">Yopish</button>
+        </div>
+        <div class="modal-body">
+            <textarea id="noteText" rows="3" placeholder="Eslatma yozing..."></textarea>
+            <button class="action-btn" onclick="saveNote()">Saqlash</button>
+            <div id="notesList" style="margin-top:10px;"></div>
+        </div>
     </div>
 
     <script>
-        // Telegram WebApp obyektini yuklash
-        const tg = window.Telegram ? window.Telegram.WebApp : null;
+        const tg = window.Telegram.WebApp;
+        tg.expand();
 
-        if (tg) {
-            tg.ready();
-            tg.expand(); // Ekran bo'ylab yoyish
-            
-            // Foydalanuvchi ma'lumotlarini olish
-            if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-                const user = tg.initDataUnsafe.user;
-                document.getElementById('user-name').innerText = user.first_name + (user.last_name ? ' ' + user.last_name : '');
-                document.getElementById('user-avatar').innerText = user.first_name.charAt(0).toUpperCase();
-            }
-        }
+        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
-        // Lucide belgilarni faollashtirish
-        lucide.createIcons();
-
-        // O'yinni ochish
+        // Tayyor o'yinlarni Telegram brauzerida xatosiz ochish
         function openGame(url) {
-            document.getElementById('game-iframe').src = url;
-            document.getElementById('game-container').classList.remove('hidden');
-            if (tg && tg.BackButton) {
-                tg.BackButton.show();
-                tg.BackButton.onClick(closeGame);
-            }
+            tg.openLink(url);
         }
 
-        // O'yinni yopish
-        function closeGame() {
-            document.getElementById('game-iframe').src = '';
-            document.getElementById('game-container').classList.add('hidden');
-            if (tg && tg.BackButton) {
-                tg.BackButton.hide();
-            }
+        function sendToBot(action) {
+            tg.sendData(JSON.stringify({action: action}));
+            tg.close();
         }
+
+        function calcResult() {
+            try {
+                let v = document.getElementById('calcVal').value;
+                document.getElementById('calcVal').value = eval(v);
+            } catch(e) { document.getElementById('calcVal').value = 'Xato'; }
+        }
+
+        function generateQR() {
+            let t = document.getElementById('qrText').value;
+            if(!t) return;
+            document.getElementById('qrResult').innerHTML = 
+                `<img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(t)}" style="border-radius:10px;">`;
+        }
+
+        function saveNote() {
+            let val = document.getElementById('noteText').value;
+            if(!val) return;
+            let list = JSON.parse(localStorage.getItem('app_notes') || '[]');
+            list.push(val);
+            localStorage.setItem('app_notes', JSON.stringify(list));
+            document.getElementById('noteText').value = '';
+            renderNotes();
+        }
+
+        function renderNotes() {
+            let list = JSON.parse(localStorage.getItem('app_notes') || '[]');
+            let html = '';
+            list.forEach(n => {
+                html += `<div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:8px; margin-bottom:6px; font-size:13px;">${n}</div>`;
+            });
+            document.getElementById('notesList').innerHTML = html;
+        }
+        renderNotes();
     </script>
 </body>
 </html>
