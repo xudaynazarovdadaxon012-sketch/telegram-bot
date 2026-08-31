@@ -247,27 +247,33 @@ async def process_ocr(message: types.Message, state: FSMContext):
 async def crypto_rates(message: types.Message):
     wait_msg = await message.answer("🔄 Bozor narxlari olinmoqda...")
     try:
+        url = "https://api.binance.com/api/v3/ticker/price"
         async with aiohttp.ClientSession() as session:
-            # Binance API orqali kripto narxlari
-            async with session.get("https://api.binance.com/api/v3/ticker/price?symbols=%5B%22BTCUSDT%22,%22ETHUSDT%22,%22BNBUSDT%22%5D") as resp:
-                data = await resp.json()
-                
-                prices = {item['symbol']: float(item['price']) for item in data}
-                btc = prices.get("BTCUSDT", 0)
-                eth = prices.get("ETHUSDT", 0)
-                bnb = prices.get("BNBUSDT", 0)
-                
-                text = (
-                    "📈 **Bozor Narxlari (USD):**\n\n"
-                    f"🪙 **Bitcoin (BTC):** ${btc:,.2f}\n"
-                    f"🔷 **Ethereum (ETH):** ${eth:,.2f}\n"
-                    f"🟡 **Binance Coin (BNB):** ${bnb:,.2f}\n"
-                    "👑 **Oltin (XAU 1 oz):** ~$2,500+"
-                )
-                await wait_msg.edit_text(text, parse_mode="Markdown")
+            async with session.get(url, timeout=10) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    prices = {}
+                    for item in data:
+                        if item.get("symbol") in ["BTCUSDT", "ETHUSDT", "BNBUSDT"]:
+                            prices[item["symbol"]] = float(item["price"])
+                    
+                    btc = prices.get("BTCUSDT", 0)
+                    eth = prices.get("ETHUSDT", 0)
+                    bnb = prices.get("BNBUSDT", 0)
+                    
+                    text = (
+                        "📈 **Bozor Narxlari (USD):**\n\n"
+                        f"🪙 **Bitcoin (BTC):** ${btc:,.2f}\n"
+                        f"🔷 **Ethereum (ETH):** ${eth:,.2f}\n"
+                        f"🟡 **Binance Coin (BNB):** ${bnb:,.2f}\n"
+                        "👑 **Oltin (XAU 1 oz):** ~$2,500+"
+                    )
+                    await wait_msg.edit_text(text, parse_mode="Markdown")
+                else:
+                    await wait_msg.edit_text("❌ Servis javob bermadi.")
     except Exception as e:
         logging.error(f"Crypto error: {e}")
-        await wait_msg.edit_text("❌ Bozor narxlarini olishda xatolik yuz berdi. Qayta urinib ko'ring.")
+        await wait_msg.edit_text("❌ Bozor narxlarini olishda xatolik yuz berdi.")
 
 # 6. LINK QISQARTIRISH
 @dp.message(F.text == "🔗 Link Qisqartirish")
