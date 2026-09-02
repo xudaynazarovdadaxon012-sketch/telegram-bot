@@ -1,92 +1,78 @@
+import os
 import asyncio
-import logging
-from aiogram import Bot, Dispatcher, F, types
-from aiogram.filters import CommandStart, Command
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, LabeledPrice, PreCheckoutQuery, WebAppInfo
+from aiohttp import web
+from aiogram import Bot, Dispatcher, Router, F, types
+from aiogram.filters import Command
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 
-BOT_TOKEN = os.getenv("BOT_TOKEN")
-MINI_APP_URL = "https://telegram-bot-7n6t.onrender.com"  # Render'dagi HTML havola
-SPONSOR_CHANNEL = "@your_channel"
+router = Router()
 
-bot = Bot(token=BOT_TOKEN)
-dp = Dispatcher()
-
-# Narxlar (Telegram Stars)
-PRICES = {
-    "day": 15,
-    "month": 99,
-    "year": 699
-}
-
-def main_menu():
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="🎮 Mini App (Games Hub)", web_app=WebAppInfo(url=MINI_APP_URL))],
-        [InlineKeyboardButton(text="⚡ PRO Obuna (Stars)", callback_data="open_pro")],
-        [InlineKeyboardButton(text="📢 Homiy Kanal", url=f"https://t.me/{SPONSOR_CHANNEL[1:]}")]
-    ])
-
-def pro_menu():
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="1 Kunlik — 15 ⭐", callback_data="buy_day")],
-        [InlineKeyboardButton(text="1 Oylik — 99 ⭐ (TOP)", callback_data="buy_month")],
-        [InlineKeyboardButton(text="1 Yillik — 699 ⭐", callback_data="buy_year")]
-    ])
-
-@dp.message(CommandStart())
-async def start_cmd(message: types.Message):
-    await message.answer(
-        "👋 Xush kelibsiz! Mini App va PRO imkoniyatlardan foydalanishingiz mumkin:",
-        reply_markup=main_menu()
+# 1. Rasmda ko'rsatilgan Inline Menyu (Tugmalar)
+def get_main_keyboard():
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="🎮 Mini App (O'yinlar Hub)", web_app=WebAppInfo(url="https://sizning-miniapp-url.com"))],
+            [
+                InlineKeyboardButton(text="🤖 Sun'iy Intellekt (AI)", callback_data="ai_chat"),
+                InlineKeyboardButton(text="🎨 AI Rasm Yaratish", callback_data="ai_image")
+            ],
+            [
+                InlineKeyboardButton(text="📥 Video Yuklagich", callback_data="video_downloader"),
+                InlineKeyboardButton(text="📈 Kripto & Oltin", callback_data="crypto_gold")
+            ],
+            [
+                InlineKeyboardButton(text="🔗 Link Qisqartirish", callback_data="link_shortener"),
+                InlineKeyboardButton(text="🔤 Matn Tarjimon", callback_data="translator")
+            ],
+            [
+                InlineKeyboardButton(text="📲 QR-Kod Yaratish", callback_data="qr_code"),
+                InlineKeyboardButton(text="🧮 Aqlli Kalkulyator", callback_data="calculator")
+            ],
+            [
+                InlineKeyboardButton(text="🌤 Aniq Ob-havo", callback_data="weather"),
+                InlineKeyboardButton(text="💎 Valyuta kurslari", callback_data="currency")
+            ],
+            [InlineKeyboardButton(text="📝 Shaxsiy Eslatmalar", callback_data="notes")],
+            [InlineKeyboardButton(text="⚙️ Admin Panel", callback_data="admin_panel")]
+        ]
     )
+    return keyboard
 
-@dp.callback_query(F.data == "open_pro")
-async def show_pro(callback: types.CallbackQuery):
-    await callback.message.answer(
-        "💎 **PRO Obuna imkoniyatlari:**\n"
-        "• Cheksiz AI Chat va HD Rasm Yaratish\n"
-        "• 4K Video Yuklash va Tezkor Ishlov\n"
-        "• Reklamasiz foydalanish\n\n"
-        "Tarifni tanlang:",
-        parse_mode="Markdown",
-        reply_markup=pro_menu()
-    )
-    await callback.answer()
+# Start buyrug'i kelganda menyuni chiqarish
+@router.message(Command("start"))
+async def start_command(message: types.Message):
+    await message.answer("Asosiy menyu:", reply_markup=get_main_keyboard())
 
-@dp.callback_query(F.data.startswith("buy_"))
-async def process_payment(callback: types.CallbackQuery):
-    plan = callback.data.split("_")[1]
-    if plan in PRICES:
-        await bot.send_invoice(
-            chat_id=callback.from_user.id,
-            title=f"PRO {plan.capitalize()} Obuna",
-            description=f"Botdagi cheksiz PRO imkoniyatlarni {plan} muddatga faollashtirish.",
-            payload=f"pro_subscription_{plan}_{callback.from_user.id}",
-            currency="XTR",  # Telegram Stars
-            prices=[LabeledPrice(label=f"PRO {plan}", amount=PRICES[plan])]
-        )
-    await callback.answer()
+# Har bir tugma uchun Callback Handler'lar
+@router.callback_query(F.data == "ai_chat")
+async def ai_chat_handler(call: types.CallbackQuery):
+    await call.message.answer("Sun'iy Intellekt bo'limi tanlandi.")
+    await call.answer()
 
-@dp.pre_checkout_query()
-async def pre_checkout_handler(pre_query: PreCheckoutQuery):
-    # To'lov tayyorgarligini tasdiqlash
-    await bot.answer_pre_checkout_query(pre_query.id, ok=True)
+# (Boshqa barcha tugmalaringiz uchun handler'lar shu tarzda davom etadi...)
 
-@dp.message(F.successful_payment)
-async def success_pay(message: types.Message):
-    payload = message.successful_payment.invoice_payload
-    await message.answer("🎉 Tabriklaymiz! To'lov muvaffaqiyatli amalga oshirildi va PRO status faollashtirildi.")
 
-# WebApp'dan kelgan ma'lumotlarni qabul qilish
-@dp.message(F.web_app_data)
-async def web_app_data_handler(message: types.Message):
-    data = message.web_app_data.data
-    if data == "open_pro":
-        await message.answer("💎 PRO bo'limi:", reply_markup=pro_menu())
-    else:
-        await message.answer(f"Natija: {data}")
+# 2. Render uyquga ketmasligi uchun Health-Check web-server
+async def handle_ping(request):
+    return web.Response(text="Bot is running active!")
 
 async def main():
-    logging.basicConfig(level=logging.INFO)
+    bot = Bot(token=os.getenv("BOT_TOKEN"))
+    dp = Dispatcher()
+    dp.include_router(router)
+
+    # aiohttp serverini ishga tushirish
+    app = web.Application()
+    app.router.add_get("/", handle_ping)
+    
+    runner = web.AppRunner(app)
+    await runner.setup()
+    
+    port = int(os.environ.get("PORT", 10000))
+    site = web.TCPSite(runner, "0.0.0.0", port)
+    await site.start()
+
+    # Botni ishga tushirish
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
