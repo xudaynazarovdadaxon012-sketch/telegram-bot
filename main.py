@@ -8,7 +8,7 @@ from aiogram.filters import CommandStart
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
 
 BOT_TOKEN = os.getenv("BOT_TOKEN", "8760162640:AAExYGsmAdvlR4t9VQ61XVEQgNxjc2FpPAA")
-WEBAPP_URL = os.getenv("https://telegram-bot-7n6t.onrender.com")
+WEBAPP_URL = os.getenv("WEBAPP_URL", "https://telegram-bot-7n6t.onrender.com")
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
@@ -21,10 +21,11 @@ def home():
     return send_file('miniapp.html')
 
 def run_flask():
-    port = int(os.environ.get("PORT", 8080))
+    # Render avto-belgilaydigan PORT'ni olish va ishga tushirish
+    port = int(os.environ.get("PORT", 10000))
     app.run(host='0.0.0.0', port=port)
 
-# MAIN KEYBOARD
+# ASOSIY KLAVIATURA
 def get_main_keyboard():
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="🎮 Mini App (O'yinlar Hub)", web_app=WebAppInfo(url=WEBAPP_URL))],
@@ -34,7 +35,6 @@ def get_main_keyboard():
         ],
         [
             InlineKeyboardButton(text="📥 Video Yuklagich", callback_data="btn_video"),
-            InlineKeyboardButton(text="📄 Rasmdan Matn O'qish", callback_data="btn_ocr")
         ],
         [
             InlineKeyboardButton(text="📈 Kripto & Oltin", callback_data="btn_crypto"),
@@ -86,7 +86,12 @@ async def handle_buttons(callback: types.CallbackQuery):
     await callback.answer()
 
 async def main():
-    Thread(target=run_flask, daemon=True).start()
+    # Web serverni fonda alohida oqimda yurgizamiz
+    flask_thread = Thread(target=run_flask)
+    flask_thread.daemon = True
+    flask_thread.start()
+
+    # Botingizni ishga tushiramiz
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
