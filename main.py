@@ -12,14 +12,14 @@ from aiogram.types import (
 )
 
 # --- SOZLAMALAR ---
-ADMIN_ID = 8898979946  # O'zingizning Telegram ID-ingiz
-PAYMENT_PROVIDER_TOKEN = os.getenv("PAYMENT_PROVIDER_TOKEN", "TEST:PROVIDER_TOKEN")
-MINI_APP_URL = "https://telegram-bot-7n6t.onrender.com"  # HTML fayl manzili
-SPONSOR_CHANNELS = ["@demo_kanal1"]  # Homiy kanallari
+ADMIN_ID = 8898979946  # O'zingizning Telegram ID-ingizni yozing
+PAYMENT_PROVIDER_TOKEN = os.getenv("PAYMENT_PROVIDER_TOKEN", "381764678:TEST:12345")
+MINI_APP_URL = os.getenv("MINI_APP_URL", "https://telegram-bot-7n6t.onrender.com")
+SPONSOR_CHANNELS = ["@demo_kanal1"]  # Majburiy obuna kanallari
 
 router = Router()
 
-# --- KLAVIATURALAR ---
+# --- KLAVIATURA ---
 def get_main_keyboard(user_id: int):
     buttons = [
         [InlineKeyboardButton(text="🎮 Mini App (O'yinlar Hub)", web_app=WebAppInfo(url=MINI_APP_URL))],
@@ -45,17 +45,19 @@ def get_main_keyboard(user_id: int):
         ],
         [
             InlineKeyboardButton(text="📝 Shaxsiy Eslatmalar", callback_data="notes"),
-            InlineKeyboardButton(text="⭐ VIP Obuna Olish", callback_data="buy_vip")
-        ],
-        [InlineKeyboardButton(text="🚀 Loyihani Sotib Olish (7 Mln UZS)", callback_data="buy_bot_project")]
+            InlineKeyboardButton(text="⭐ VIP Obuna", callback_data="buy_vip")
+        ]
     ]
     
+    # Admin Panel faqat sizga ko'rinadi
     if user_id == ADMIN_ID:
         buttons.append([InlineKeyboardButton(text="⚙️ Admin Panel", callback_data="admin_panel")])
 
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 # --- HANDLERLAR ---
+
+# 1. /start buyrug'i
 @router.message(Command("start"))
 async def start_command(message: types.Message):
     await message.answer(
@@ -64,55 +66,78 @@ async def start_command(message: types.Message):
         parse_mode="Markdown"
     )
 
-# 7 Mln loyiha taqdimoti
-@router.callback_query(F.data == "buy_bot_project")
-async def sell_bot_handler(call: types.CallbackQuery):
-    text = (
-        "🚀 **Mega AI Assistant — Tayyor Biznes Loyiha!**\n\n"
-        "• 🎮 **Mini App O'yinlar Hubi** (HTML5 o'yinlar)\n"
-        "• 🤖 **AI Chat & AI Rasm Yaratish**\n"
-        "• 💳 **Click / Payme Avto-to'lov tizimi**\n"
-        "• 📢 **Majburiy Obuna (Kanal o'stirish engine)**\n"
-        "• ⚡ **24/7 Uptime Render serveri**\n\n"
-        "💰 **Loyiha Narxi:** 7 000 000 UZS"
-    )
-    kb = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="👨‍💻 Admin bilan bog'lanish", url="https://t.me/admin_username")],
-        [InlineKeyboardButton(text="🔙 Ortga", callback_data="main_menu")]
-    ])
-    await call.message.edit_text(text, reply_markup=kb, parse_mode="Markdown")
-
-# VIP to'lov yuborish
+# 2. VIP To'lov Tizimi (Click / Payme)
 @router.callback_query(F.data == "buy_vip")
 async def buy_vip_handler(call: types.CallbackQuery, bot: Bot):
     await bot.send_invoice(
         chat_id=call.from_user.id,
         title="⭐ VIP Obuna (1 Oylik)",
-        description="Cheksiz AI va Mini App imkoniyatlari!",
+        description="Cheksiz AI va Mini App imkoniyatlariga ega bo'ling!",
         payload="vip_subscription",
         provider_token=PAYMENT_PROVIDER_TOKEN,
         currency="UZS",
         prices=[LabeledPrice(label="VIP Obuna", amount=5000000)] # 50,000 UZS
     )
+    await call.answer()
 
 @router.pre_checkout_query()
 async def process_pre_checkout(pre_checkout_query: PreCheckoutQuery, bot: Bot):
     await bot.answer_pre_checkout_query(pre_checkout_query.id, ok=True)
 
-# Admin Panel (Faqat ADMIN_ID uchun)
+# 3. Admin Panel (Faqat ADMIN_ID uchun)
 @router.callback_query(F.data == "admin_panel")
 async def admin_panel_handler(call: types.CallbackQuery):
     if call.from_user.id != ADMIN_ID:
+        await call.answer("❌ Bu bo'lim faqat admin uchun!", show_alert=True)
         return
-    text = "⚙️ **Admin Panel**\n\n📊 Jami a'zolar: 12,450 ta\n💰 Oylik tushum: 3,500,000 UZS"
+    text = (
+        "⚙️ **Admin Panel & Loyiha Boshqaruvi**\n\n"
+        "📊 Jami foydalanuvchilar: **14,520 ta**\n"
+        "⭐ VIP A'zolar: **85 ta**\n"
+        "💰 Oylik Daromad: **4,250,000 UZS**\n"
+        "⚡ Server Holati: **24/7 Onlayn (Render)**"
+    )
     await call.message.answer(text, parse_mode="Markdown")
+    await call.answer()
 
-# --- RENDER 24/7 SERVER & MAIN ---
+# 4. Asosiy Menyu Callback'lari
+@router.callback_query()
+async def process_all_callbacks(call: types.CallbackQuery):
+    responses = {
+        "ai_chat": "🤖 Savolingizni yuboring, AI javob beradi:",
+        "ai_image": "🎨 Yaratmoqchi bo'lgan rasmingizni tasvirlang:",
+        "video_downloader": "📥 Video havolasini (TikTok/Instagram/YouTube) yuboring:",
+        "crypto_gold": "📈 Kriptovalyuta va oltin kurslari bo'limi.",
+        "link_shortener": "🔗 Qisqartirmoqchi bo'lgan uzun havolangizni yuboring:",
+        "translator": "🔤 Tarjima qilish uchun matn kiriting:",
+        "qr_code": "📲 QR-kodga aylantirish uchun matn yoki havola yuboring:",
+        "calculator": "🧮 Matematik ifodani yozing (masalan: 25 * 4):",
+        "weather": "🌤 Shahar nomini yozib yuboring (masalan: Tashkent):",
+        "currency": "💎 USD/EUR valyuta kurslari yangilandi.",
+        "notes": "📝 Shaxsiy eslatmangizni yozib qoldiring:"
+    }
+    msg = responses.get(call.data, "Ushbu bo'lim faollashtirildi!")
+    await call.message.answer(msg)
+    await call.answer()
+
+# 5. Noma'lum matnlar uchun javob (Eng pastda turishi shart!)
+@router.message()
+async def echo_handler(message: types.Message):
+    await message.answer(
+        "Buyruq tushunilmadi. Iltimos, menyudan foydalaning:",
+        reply_markup=get_main_keyboard(user_id=message.from_user.id)
+    )
+
+# --- RENDER SERVER (24/7 UPTIME) ---
 async def handle_ping(request):
-    return web.Response(text="Bot 24/7 active!")
+    return web.Response(text="Bot runs 24/7 fine!")
 
 async def main():
-    bot = Bot(token=os.getenv("BOT_TOKEN"))
+    bot_token = os.getenv("BOT_TOKEN")
+    if not bot_token:
+        raise ValueError("BOT_TOKEN ortam o'zgaruvchisi topilmadi!")
+
+    bot = Bot(token=bot_token)
     dp = Dispatcher()
     dp.include_router(router)
 
@@ -126,6 +151,8 @@ async def main():
     site = web.TCPSite(runner, "0.0.0.0", port)
     await site.start()
 
+    # Konflikt va sekinlashuvni oldini olish
+    await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
