@@ -4,7 +4,7 @@ from aiogram import Bot, Dispatcher, F, types
 from aiogram.filters import CommandStart, Command
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, LabeledPrice, PreCheckoutQuery, WebAppInfo
 
-BOT_TOKEN = "8760162640:AAExYGsmAdvlR4t9VQ61XVEQgNxjc2FpPAA"
+BOT_TOKEN = os.getenv("BOT_TOKEN")
 MINI_APP_URL = "https://telegram-bot-7n6t.onrender.com"  # Render'dagi HTML havola
 SPONSOR_CHANNEL = "@your_channel"
 
