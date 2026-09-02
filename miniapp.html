@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Mega Dashboard</title>
+    <title>Mega App Hub</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
@@ -94,7 +94,6 @@
         .card-info .title { font-size: 13px; font-weight: 600; }
         .card-info .desc { font-size: 10px; color: var(--muted); margin-top: 2px; }
 
-        /* Modal styling */
         .modal {
             display: none;
             position: fixed;
@@ -119,6 +118,7 @@
             background: rgba(255, 255, 255, 0.1);
             border: none; color: #fff;
             padding: 6px 12px; border-radius: 8px; font-size: 12px;
+            cursor: pointer;
         }
 
         .modal-body {
@@ -135,6 +135,7 @@
         button.action-btn {
             background: linear-gradient(90deg, #38bdf8, #818cf8);
             color: #000; font-weight: 700; border: none; margin-top: 5px;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -142,42 +143,7 @@
 
     <div class="header">
         <h1>🚀 Mega Assistant App</h1>
-        <p>Barcha bot funksiyalari va tayyor o'yinlar markazi</p>
-    </div>
-
-    <div class="section-label">🤖 Sun'iy Intellekt & Vositalar</div>
-    <div class="grid">
-        <div class="card" onclick="openModal('ai-modal')">
-            <div class="icon">🤖</div>
-            <div class="card-info">
-                <div class="title">AI Yordamchi</div>
-                <div class="desc">Savollarga javob</div>
-            </div>
-        </div>
-
-        <div class="card" onclick="openModal('calc-modal')">
-            <div class="icon">🧮</div>
-            <div class="card-info">
-                <div class="title">Kalkulyator</div>
-                <div class="desc">Tezkor hisob</div>
-            </div>
-        </div>
-
-        <div class="card" onclick="openModal('qr-modal')">
-            <div class="icon">📲</div>
-            <div class="card-info">
-                <div class="title">QR Generator</div>
-                <div class="desc">QR-kod yaratish</div>
-            </div>
-        </div>
-
-        <div class="card" onclick="openModal('notes-modal')">
-            <div class="icon">📝</div>
-            <div class="card-info">
-                <div class="title">Eslatmalar</div>
-                <div class="desc">Shaxsiy bloknot</div>
-            </div>
-        </div>
+        <p>Barcha vositalar va tayyor o'yinlar markazi</p>
     </div>
 
     <div class="section-label">🎮 Tayyor Online O'yinlar</div>
@@ -186,7 +152,7 @@
             <div class="icon">🐦</div>
             <div class="card-info">
                 <div class="title">Clumsy Bird</div>
-                <div class="desc">Tayyor Flappy Bird</div>
+                <div class="desc">Flappy Bird analogi</div>
             </div>
         </div>
 
@@ -202,7 +168,7 @@
             <div class="icon">🧩</div>
             <div class="card-info">
                 <div class="title">2048 Game</div>
-                <div class="desc">Mantiqiy o'yin</div>
+                <div class="desc">Mantiqiy puzzle</div>
             </div>
         </div>
 
@@ -215,14 +181,30 @@
         </div>
     </div>
 
-    <div id="ai-modal" class="modal">
-        <div class="modal-header">
-            <div class="modal-title">🤖 AI Chat</div>
-            <button class="close-btn" onclick="closeModal('ai-modal')">Yopish</button>
+    <div class="section-label">🛠 Foydali Vositalar</div>
+    <div class="grid">
+        <div class="card" onclick="openModal('calc-modal')">
+            <div class="icon">🧮</div>
+            <div class="card-info">
+                <div class="title">Kalkulyator</div>
+                <div class="desc">Tezkor hisob</div>
+            </div>
         </div>
-        <div class="modal-body">
-            <textarea id="aiInput" rows="3" placeholder="Savolingizni yozing..."></textarea>
-            <button class="action-btn" onclick="sendToBot('AI Chat')">Savol yuborish</button>
+
+        <div class="card" onclick="openModal('qr-modal')">
+            <div class="icon">📲</div>
+            <div class="card-info">
+                <div class="title">QR Generator</div>
+                <div class="desc">QR Yaratish</div>
+            </div>
+        </div>
+
+        <div class="card" onclick="openModal('notes-modal')">
+            <div class="icon">📝</div>
+            <div class="card-info">
+                <div class="title">Eslatmalar</div>
+                <div class="desc">Shaxsiy bloknot</div>
+            </div>
         </div>
     </div>
 
@@ -262,54 +244,66 @@
     </div>
 
     <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand();
-
-        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
-        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-
-        // Tayyor o'yinlarni Telegram brauzerida xatosiz ochish
-        function openGame(url) {
-            tg.openLink(url);
+        const tg = window.Telegram ? window.Telegram.WebApp : null;
+        if (tg) {
+            tg.expand();
         }
 
-        function sendToBot(action) {
-            tg.sendData(JSON.stringify({action: action}));
-            tg.close();
-        }
+        const openModal = (id) => { 
+            document.getElementById(id).style.display = 'flex'; 
+        };
 
-        function calcResult() {
+        const closeModal = (id) => { 
+            document.getElementById(id).style.display = 'none'; 
+        };
+
+        const openGame = (url) => {
+            if (tg && tg.openLink) {
+                tg.openLink(url);
+            } else {
+                window.open(url, '_blank');
+            }
+        };
+
+        const calcResult = () => {
             try {
-                let v = document.getElementById('calcVal').value;
-                document.getElementById('calcVal').value = eval(v);
-            } catch(e) { document.getElementById('calcVal').value = 'Xato'; }
-        }
+                const inputElem = document.getElementById('calcVal');
+                const expression = inputElem.value;
+                inputElem.value = Function('"use strict";return (' + expression + ')')();
+            } catch (e) { 
+                document.getElementById('calcVal').value = 'Xato'; 
+            }
+        };
 
-        function generateQR() {
-            let t = document.getElementById('qrText').value;
-            if(!t) return;
+        const generateQR = () => {
+            const text = document.getElementById('qrText').value;
+            if (!text) return;
             document.getElementById('qrResult').innerHTML = 
-                `<img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(t)}" style="border-radius:10px;">`;
-        }
+                `<img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(text)}" style="border-radius:10px;">`;
+        };
 
-        function saveNote() {
-            let val = document.getElementById('noteText').value;
-            if(!val) return;
-            let list = JSON.parse(localStorage.getItem('app_notes') || '[]');
+        const saveNote = () => {
+            const input = document.getElementById('noteText');
+            const val = input.value;
+            if (!val) return;
+            
+            const list = JSON.parse(localStorage.getItem('app_notes') || '[]');
             list.push(val);
             localStorage.setItem('app_notes', JSON.stringify(list));
-            document.getElementById('noteText').value = '';
+            
+            input.value = '';
             renderNotes();
-        }
+        };
 
-        function renderNotes() {
-            let list = JSON.parse(localStorage.getItem('app_notes') || '[]');
+        const renderNotes = () => {
+            const list = JSON.parse(localStorage.getItem('app_notes') || '[]');
             let html = '';
-            list.forEach(n => {
-                html += `<div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:8px; margin-bottom:6px; font-size:13px;">${n}</div>`;
+            list.forEach(note => {
+                html += `<div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:8px; margin-bottom:6px; font-size:13px;">${note}</div>`;
             });
             document.getElementById('notesList').innerHTML = html;
-        }
+        };
+
         renderNotes();
     </script>
 </body>
