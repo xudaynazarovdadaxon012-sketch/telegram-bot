@@ -3,3 +3,4 @@ aiohttp
 deep-translator
 qrcode
 Pillow
+flask
