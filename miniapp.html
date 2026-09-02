@@ -2,309 +2,87 @@
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Mega App Hub</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mini App Games Hub</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root {
-            --bg: #0b0f19;
-            --card-bg: rgba(255, 255, 255, 0.04);
-            --border: rgba(255, 255, 255, 0.08);
-            --accent: #38bdf8;
-            --text: #f8fafc;
-            --muted: #94a3b8;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            -webkit-tap-highlight-color: transparent;
-        }
-
         body {
-            background: linear-gradient(135deg, #0f172a 0%, #0b0f19 100%);
-            color: var(--text);
-            padding: 16px;
-            min-height: 100vh;
-        }
-
-        .header {
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            margin: 0;
+            padding: 20px;
             text-align: center;
-            margin-bottom: 20px;
         }
-
-        .header h1 {
+        .header {
             font-size: 22px;
-            font-weight: 800;
-            background: linear-gradient(90deg, #38bdf8, #818cf8, #c084fc);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #0088cc;
         }
-
-        .header p { font-size: 12px; color: var(--muted); margin-top: 4px; }
-
-        .section-label {
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: var(--accent);
-            margin: 20px 0 10px 4px;
-        }
-
-        .grid {
+        .card-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
         }
-
         .card {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            backdrop-filter: blur(12px);
-            border-radius: 16px;
-            padding: 14px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            cursor: pointer;
-            transition: transform 0.2s, background 0.2s;
-        }
-
-        .card:active {
-            transform: scale(0.96);
-            background: rgba(255, 255, 255, 0.08);
-        }
-
-        .icon {
-            width: 40px;
-            height: 40px;
+            background: #1e1e1e;
             border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--border);
-            flex-shrink: 0;
+            padding: 20px;
+            border: 1px solid #333;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
         }
-
-        .card-info .title { font-size: 13px; font-weight: 600; }
-        .card-info .desc { font-size: 10px; color: var(--muted); margin-top: 2px; }
-
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(11, 15, 25, 0.95);
-            backdrop-filter: blur(16px);
-            z-index: 1000;
-            flex-direction: column;
+        .card h3 {
+            margin: 10px 0 5px 0;
+            font-size: 16px;
         }
-
-        .modal-header {
-            height: 50px;
-            padding: 0 16px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .modal-title { font-size: 15px; font-weight: 700; }
-        .close-btn {
-            background: rgba(255, 255, 255, 0.1);
-            border: none; color: #fff;
-            padding: 6px 12px; border-radius: 8px; font-size: 12px;
+        .btn {
+            background: #0088cc;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-weight: bold;
             cursor: pointer;
-        }
-
-        .modal-body {
-            flex: 1; padding: 16px; display: flex;
-            flex-direction: column; gap: 10px; overflow-y: auto;
-        }
-
-        input, textarea, button.action-btn {
-            width: 100%; padding: 12px; border-radius: 10px;
-            border: 1px solid var(--border); background: rgba(255,255,255,0.05);
-            color: white; font-size: 14px; outline: none;
-        }
-
-        button.action-btn {
-            background: linear-gradient(90deg, #38bdf8, #818cf8);
-            color: #000; font-weight: 700; border: none; margin-top: 5px;
-            cursor: pointer;
+            margin-top: 10px;
+            width: 100%;
         }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <h1>🚀 Mega Assistant App</h1>
-        <p>Barcha vositalar va tayyor o'yinlar markazi</p>
-    </div>
+    <div class="header">🎮 Mini App O'yinlar Hubi</div>
 
-    <div class="section-label">🎮 Tayyor Online O'yinlar</div>
-    <div class="grid">
-        <div class="card" onclick="openGame('https://ellisonleao.github.io/clumsy-bird/')">
-            <div class="icon">🐦</div>
-            <div class="card-info">
-                <div class="title">Clumsy Bird</div>
-                <div class="desc">Flappy Bird analogi</div>
-            </div>
+    <div class="card-grid">
+        <div class="card">
+            <div>🚀</div>
+            <h3>Flappy Bird</h3>
+            <button class="btn" onclick="playGame('Flappy Bird')">O'ynash</button>
         </div>
-
-        <div class="card" onclick="openGame('https://pacman-canvas.js.org/')">
-            <div class="icon">👾</div>
-            <div class="card-info">
-                <div class="title">Pacman</div>
-                <div class="desc">Klassik Pacman</div>
-            </div>
+        <div class="card">
+            <div>🧩</div>
+            <h3>2048 Puzzle</h3>
+            <button class="btn" onclick="playGame('2048')">O'ynash</button>
         </div>
-
-        <div class="card" onclick="openGame('https://play2048.co/')">
-            <div class="icon">🧩</div>
-            <div class="card-info">
-                <div class="title">2048 Game</div>
-                <div class="desc">Mantiqiy puzzle</div>
-            </div>
+        <div class="card">
+            <div>🎯</div>
+            <h3>Tic Tac Toe</h3>
+            <button class="btn" onclick="playGame('Tic Tac Toe')">O'ynash</button>
         </div>
-
-        <div class="card" onclick="openGame('https://hextris.io/')">
-            <div class="icon">🔷</div>
-            <div class="card-info">
-                <div class="title">Hextris</div>
-                <div class="desc">Tetris puzzle</div>
-            </div>
-        </div>
-    </div>
-
-    <div class="section-label">🛠 Foydali Vositalar</div>
-    <div class="grid">
-        <div class="card" onclick="openModal('calc-modal')">
-            <div class="icon">🧮</div>
-            <div class="card-info">
-                <div class="title">Kalkulyator</div>
-                <div class="desc">Tezkor hisob</div>
-            </div>
-        </div>
-
-        <div class="card" onclick="openModal('qr-modal')">
-            <div class="icon">📲</div>
-            <div class="card-info">
-                <div class="title">QR Generator</div>
-                <div class="desc">QR Yaratish</div>
-            </div>
-        </div>
-
-        <div class="card" onclick="openModal('notes-modal')">
-            <div class="icon">📝</div>
-            <div class="card-info">
-                <div class="title">Eslatmalar</div>
-                <div class="desc">Shaxsiy bloknot</div>
-            </div>
-        </div>
-    </div>
-
-    <div id="calc-modal" class="modal">
-        <div class="modal-header">
-            <div class="modal-title">🧮 Kalkulyator</div>
-            <button class="close-btn" onclick="closeModal('calc-modal')">Yopish</button>
-        </div>
-        <div class="modal-body">
-            <input type="text" id="calcVal" placeholder="Misolni kiriting (masalan: 12*5)" style="text-align:right;">
-            <button class="action-btn" onclick="calcResult()">Hisoblash</button>
-        </div>
-    </div>
-
-    <div id="qr-modal" class="modal">
-        <div class="modal-header">
-            <div class="modal-title">📲 QR Yaratish</div>
-            <button class="close-btn" onclick="closeModal('qr-modal')">Yopish</button>
-        </div>
-        <div class="modal-body">
-            <input type="text" id="qrText" placeholder="Matn yoki link kiriting...">
-            <button class="action-btn" onclick="generateQR()">QR Kod Yasash</button>
-            <div id="qrResult" style="text-align:center; margin-top:10px;"></div>
-        </div>
-    </div>
-
-    <div id="notes-modal" class="modal">
-        <div class="modal-header">
-            <div class="modal-title">📝 Eslatmalar</div>
-            <button class="close-btn" onclick="closeModal('notes-modal')">Yopish</button>
-        </div>
-        <div class="modal-body">
-            <textarea id="noteText" rows="3" placeholder="Eslatma yozing..."></textarea>
-            <button class="action-btn" onclick="saveNote()">Saqlash</button>
-            <div id="notesList" style="margin-top:10px;"></div>
+        <div class="card">
+            <div>🏎️</div>
+            <h3>Speed Racer</h3>
+            <button class="btn" onclick="playGame('Speed Racer')">O'ynash</button>
         </div>
     </div>
 
     <script>
-        const tg = window.Telegram ? window.Telegram.WebApp : null;
-        if (tg) {
-            tg.expand();
+        const tg = window.Telegram.WebApp;
+        tg.expand(); // Telegram oynasini to'liq ekranga yoyish
+
+        function playGame(gameName) {
+            tg.showAlert(gameName + " o'yini yuklanmoqda...");
         }
-
-        const openModal = (id) => { 
-            document.getElementById(id).style.display = 'flex'; 
-        };
-
-        const closeModal = (id) => { 
-            document.getElementById(id).style.display = 'none'; 
-        };
-
-        const openGame = (url) => {
-            if (tg && tg.openLink) {
-                tg.openLink(url);
-            } else {
-                window.open(url, '_blank');
-            }
-        };
-
-        const calcResult = () => {
-            try {
-                const inputElem = document.getElementById('calcVal');
-                const expression = inputElem.value;
-                inputElem.value = Function('"use strict";return (' + expression + ')')();
-            } catch (e) { 
-                document.getElementById('calcVal').value = 'Xato'; 
-            }
-        };
-
-        const generateQR = () => {
-            const text = document.getElementById('qrText').value;
-            if (!text) return;
-            document.getElementById('qrResult').innerHTML = 
-                `<img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(text)}" style="border-radius:10px;">`;
-        };
-
-        const saveNote = () => {
-            const input = document.getElementById('noteText');
-            const val = input.value;
-            if (!val) return;
-            
-            const list = JSON.parse(localStorage.getItem('app_notes') || '[]');
-            list.push(val);
-            localStorage.setItem('app_notes', JSON.stringify(list));
-            
-            input.value = '';
-            renderNotes();
-        };
-
-        const renderNotes = () => {
-            const list = JSON.parse(localStorage.getItem('app_notes') || '[]');
-            let html = '';
-            list.forEach(note => {
-                html += `<div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:8px; margin-bottom:6px; font-size:13px;">${note}</div>`;
-            });
-            document.getElementById('notesList').innerHTML = html;
-        };
-
-        renderNotes();
     </script>
 </body>
 </html>
