@@ -1,3 +1,5 @@
+import os
+from aiohttp import web
 import logging
 import sqlite3
 import json
@@ -6,7 +8,7 @@ from aiogram.types import Message, PreCheckoutQuery, ContentType, LabeledPrice
 from aiogram.filters import CommandStart
 from aiogram.fsm.storage.memory import MemoryStorage
 
-BOT_TOKEN = "YOUR_BOT_TOKEN_HERE"
+BOT_TOKEN = os.environ.get("BOT_TOKEN")
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher(storage=MemoryStorage())
