@@ -1,232 +1,195 @@
-import os
 import asyncio
-from aiogram import Bot, Dispatcher
-from aiogram.types import KeyboardButton, ReplyKeyboardMarkup, WebAppInfo
+import io
+import logging
+import os
+import sqlite3
+import sys
 
-# Render yoki .env faylidan o'zgaruvchilarni olish
-BOT_TOKEN = os.getenv("BOT_TOKEN")
-MINI_APP_URL = os.getenv("MINI_APP_URL", "https://telegram-bot-7n6t.onrender.com")
-ADMIN_ID = int(os.getenv("ADMIN_ID", "8898979946"))
+import qrcode
+from aiogram import Bot, Dispatcher, F, Router
+from aiogram.filters import Command, CommandStart
+from aiogram.types import (
+    BufferedInputFile,
+    CallbackQuery,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    LabeledPrice,
+    Message,
+    PreCheckoutQuery,
+    WebAppInfo,
+)
 
-if not BOT_TOKEN:
-    raise ValueError("BOT_TOKEN topilmadi! Render Environment Variables qismini tekshiring.")
+logging.basicConfig(level=logging.INFO, stream=sys.stdout)
+router = Router()
 
-bot = Bot(token=BOT_TOKEN)
-dp = Dispatcher()
-
-
-# Dinamik menyu yaratuvchi funksiya
-def get_main_menu(user_id: int):
-    keyboard_layout = [
-        [
-            KeyboardButton(
-                text="🎮 Mini App (O'yinlar Hub)",
-                web_app=WebAppInfo(url=MINI_APP_URL),
-            ),
-        ],
-        [
-            KeyboardButton(text="🤖 Sun'iy Intellekt (AI)"),
-            KeyboardButton(text="🎨 AI Rasm Yaratish"),
-        ],
-        [
-            KeyboardButton(text="📹 Video Yuklagich"),
-            KeyboardButton(text="📈 Kripto & Oltin"),
-        ],
-        [
-            KeyboardButton(text="🔗 Link Qisqartirish"),
-            KeyboardButton(text="🔤 Matn Tarjimon"),
-        ],
-        [
-            KeyboardButton(text="📱 QR-Kod Yaratish"),
-            KeyboardButton(text="🧮 Aqlli Kalkulyator"),
-        ],
-        [
-            KeyboardButton(text="🌤 Aniq Ob-havo"),
-            KeyboardButton(text="💎 Valyuta kurslari"),
-        ],
-        [
-            KeyboardButton(text="📝 Shaxsiya Eslatmalar"),
-            KeyboardButton(text="⭐ VIP Obuna"),
-        ],
-    ]
-
-    # Faqat ADMIN_ID ga mos foydalanuvchiga Admin Panel tugmasi ko'rinadi
-    if user_id == ADMIN_ID:
-        keyboard_layout.append([KeyboardButton(text="⚙️ Admin Panel")])
-
-    return ReplyKeyboardMarkup(keyboard=keyboard_layout, resize_keyboard=True)
-
-
-# ==================== HANDLERLAR ====================
-
-
-# Start buyrug'i
-@dp.message_handler(commands=["start"])
-async def start_command(message: types.Message):
-    user_menu = get_main_menu(message.from_user.id)
-    await message.answer(
-        "👋 Xush kelibsiz! Kerakli bo'limni pastdagi menyudan tanlang:",
-        reply_markup=user_menu,
-    )
-
-
-# ⚙️ Admin Panel (Faqat ADMIN_ID uchun)
-@dp.message_handler(lambda msg: msg.text == "⚙️ Admin Panel")
-async def admin_handler(message: types.Message):
-    if message.from_user.id == ADMIN_ID:
-        channels_str = "\n".join(SPONSOR_CHANNELS)
-        await message.answer(
-            f"⚙️ **Admin Panel**\n\n"
-            f"👤 **Admin ID:** `{ADMIN_ID}`\n"
-            f"🌐 **Mini App:** {MINI_APP_URL}\n"
-            f"📢 **Sponsor kanallar:**\n{channels_str}",
-            parse_mode="Markdown",
+# ==========================================
+# 1. DATABASE (SQLITE)
+# ==========================================
+def init_db():
+    conn = sqlite3.connect("bot_database.db")
+    cursor = conn.cursor()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            user_id INTEGER PRIMARY KEY,
+            full_name TEXT,
+            username TEXT
         )
-    else:
-        await message.answer("❌ Sizda admin panelga kirish huquqi yo'q!")
+    """)
+    conn.commit()
+    conn.close()
 
-
-# ⭐ VIP Obuna (To'lov tizimi integratsiyasi)
-@dp.message_handler(lambda msg: msg.text == "⭐ VIP Obuna")
-async def vip_handler(message: types.Message):
-    PRICES = [
-        LabeledPrice(label="VIP Obuna (1 oy)", amount=1500000)
-    ]  # 15000.00 UZS
-    await bot.send_invoice(
-        message.chat.id,
-        title="⭐ VIP Obuna",
-        description="Botning barcha eksklyuziv imkoniyatlaridan cheklovsiz foydalanish.",
-        provider_token=PAYMENT_PROVIDER_TOKEN,
-        currency="UZS",
-        prices=PRICES,
-        start_parameter="vip-subscription",
-        payload="vip_access_payload",
+def add_user(user_id: int, full_name: str, username: str):
+    conn = sqlite3.connect("bot_database.db")
+    cursor = conn.cursor()
+    cursor.execute(
+        "INSERT OR IGNORE INTO users (user_id, full_name, username) VALUES (?, ?, ?)",
+        (user_id, full_name, username)
     )
+    conn.commit()
+    conn.close()
 
+def get_total_users():
+    conn = sqlite3.connect("bot_database.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM users")
+    count = cursor.fetchone()[0]
+    conn.close()
+    return count
 
-# Pre-checkout check (To'lovni tasdiqlash)
-@dp.pre_checkout_query_handler(lambda query: True)
-async def process_pre_checkout_query(
-    pre_checkout_query: types.PreCheckoutQuery,
-):
-    await bot.answer_pre_checkout_query(pre_checkout_query.id, ok=True)
+# ==========================================
+# 2. KEYBOARD & BUTTONS
+# ==========================================
+def main_keyboard():
+    WEB_APP_URL = os.getenv("WEB_APP_URL", "https://telegram.org")
+    
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="🚀 Mini App-ni ochish",
+                    web_app=WebAppInfo(url=WEB_APP_URL)
+                )
+            ],
+            [
+                InlineKeyboardButton(text="📲 QR-kod yaratish", callback_data="qr_info"),
+                InlineKeyboardButton(text="⭐ Telegram Stars To'lov", callback_data="pay_stars")
+            ]
+        ]
+    )
+    return keyboard
 
+# ==========================================
+# 3. HANDLERS
+# ==========================================
 
-# Muvaffaqiyatli to'lov qayta ishlash
-@dp.message_handler(content_types=types.ContentType.SUCCESSFUL_PAYMENT)
-async def process_successful_payment(message: types.Message):
+# /start
+@router.message(CommandStart())
+async def start_handler(message: Message):
+    add_user(
+        user_id=message.from_user.id,
+        full_name=message.from_user.full_name,
+        username=message.from_user.username or "yo'q"
+    )
+    
     await message.answer(
-        "🎉 Muvaffaqiyatli to'lov amalga oshirildi! VIP maqomi faollashtirildi."
+        f"Xush kelibsiz, <b>{message.from_user.full_name}</b>!\n\n"
+        f"Pastdagi tugmalar orqali Mini App-ni ochishingiz yoki funksiyalardan foydalanishingiz mumkin.",
+        reply_markup=main_keyboard(),
+        parse_mode="HTML"
     )
 
+# /admin
+@router.message(Command("admin"))
+async def admin_handler(message: Message):
+    ADMIN_ID = int(os.getenv("ADMIN_ID", "0"))
+    if message.from_user.id != ADMIN_ID:
+        await message.answer("⚠️ Bu buyruq faqat administrator uchun!")
+        return
 
-# 🤖 Sun'iy Intellekt (AI)
-@dp.message_handler(lambda msg: msg.text == "🤖 Sun'iy Intellekt (AI)")
-async def ai_handler(message: types.Message):
+    users_count = get_total_users()
     await message.answer(
-        "🤖 **AI Yordamchi:**\nSizni qiziqtirgan har qanday savolni yozib yuboring:"
+        f"📊 <b>Admin Panel:</b>\n\n"
+        f"👥 Foydalanuvchilar soni: <b>{users_count}</b> ta",
+        parse_mode="HTML"
     )
 
+# /qr
+@router.message(Command("qr"))
+async def qr_generator_handler(message: Message):
+    args = message.text.split(maxsplit=1)
+    if len(args) < 2:
+        await message.answer("⚠️ Matn kiritilmadi! Misol: <code>/qr https://t.me/botingiz</code>", parse_mode="HTML")
+        return
 
-# 🎨 AI Rasm Yaratish
-@dp.message_handler(lambda msg: msg.text == "🎨 AI Rasm Yaratish")
-async def ai_image_handler(message: types.Message):
-    await message.answer(
-        "🎨 **AI Rasm Generator:**\nYaratmoqchi bo'lgan rasmingiz haqida batafsil matn (prompt) yuboring:"
+    text_to_encode = args[1]
+    qr_img = qrcode.make(text_to_encode)
+    buffer = io.BytesIO()
+    qr_img.save(buffer, format="PNG")
+    buffer.seek(0)
+
+    photo = BufferedInputFile(buffer.getvalue(), filename="qrcode.png")
+    await message.answer_photo(
+        photo=photo,
+        caption=f"✅ <b>QR-kod tayyor!</b>\n<code>{text_to_encode}</code>",
+        parse_mode="HTML"
     )
 
+# Mini App (Web App) dan qaytgan ma'lumotlarni qabul qilish
+@router.message(F.web_app_data)
+async def web_app_data_handler(message: Message):
+    data = message.web_app_data.data
+    await message.answer(f"📩 Mini App-dan ma'lumot qabul qilindi: <code>{data}</code>", parse_mode="HTML")
 
-# 📹 Video Yuklagich
-@dp.message_handler(lambda msg: msg.text == "📹 Video Yuklagich")
-async def video_downloader_handler(message: types.Message):
-    await message.answer(
-        "📹 **Video Yuklagich:**\nInstagram, YouTube yoki TikTok video havolasini (link) yuboring:"
+# Callback handler (Tugmalar bosilganda)
+@router.callback_query(F.data == "qr_info")
+async def qr_info_callback(call: CallbackQuery):
+    await call.answer()
+    await call.message.answer("QR-kod yaratish uchun <code>/qr [matn]</code> formatida yuboring.", parse_mode="HTML")
+
+# TELEGRAM STARS TO'LOV FUNKSIYASI
+@router.callback_query(F.data == "pay_stars")
+async def pay_stars_callback(call: CallbackQuery):
+    await call.answer()
+    prices = [LabeledPrice(label="VIP Obuna", amount=1)]  # 1 Telegram Star
+    
+    await call.message.answer_invoice(
+        title="VIP Obuna Xaridi",
+        description="1 oy muddatga botdan to'liq foydalanish imkoniyati",
+        prices=prices,
+        provider_token="",  # Telegram Stars uchun bo'sh qoldiriladi
+        payload="vip_subscription_payload",
+        currency="XTR"  # Telegram Stars valyutasi
     )
 
+@router.pre_checkout_query()
+async def pre_checkout_handler(pre_checkout_query: PreCheckoutQuery):
+    await pre_checkout_query.answer(ok=True)
 
-# 📈 Kripto & Oltin
-@dp.message_handler(lambda msg: msg.text == "📈 Kripto & Oltin")
-async def crypto_handler(message: types.Message):
-    await message.answer(
-        "📈 **Kripto va Oltin Narxlari:**\n\n"
-        "🟡 **Oltin (1g):** 910,000 UZS\n"
-        "🪙 **Bitcoin (BTC):** $64,200\n"
-        "💎 **Ethereum (ETH):** $3,450\n"
-        "⚡ **TON:** $6.80",
-        parse_mode="Markdown",
-    )
+@router.message(F.successful_payment)
+async def successful_payment_handler(message: Message):
+    await message.answer("🎉 To'lov muvaffaqiyatli amalga oshirildi! VIP statusingiz faollashtirildi.")
 
+# ==========================================
+# 4. START BOT
+# ==========================================
 
-# 🔗 Link Qisqartirish
-@dp.message_handler(lambda msg: msg.text == "🔗 Link Qisqartirish")
-async def url_shortener_handler(message: types.Message):
-    await message.answer(
-        "🔗 **Link Qisqartirish:**\nQisqartirmoqchi bo'lgan uzun havolangizni yuboring:"
-    )
+async def main():
+    init_db()
+    BOT_TOKEN = os.getenv("BOT_TOKEN")
+    
+    if not BOT_TOKEN:
+        logging.critical("BOT_TOKEN topilmadi!")
+        return
 
+    bot = Bot(token=BOT_TOKEN)
+    dp = Dispatcher()
+    dp.include_router(router)
 
-# 🔤 Matn Tarjimon
-@dp.message_handler(lambda msg: msg.text == "🔤 Matn Tarjimon")
-async def translator_handler(message: types.Message):
-    await message.answer(
-        "🔤 **Matn Tarjimon:**\nTarjima qilmoqchi bo'lgan matningizni yuboring (O'zbek/Ingliz/Rus):"
-    )
-
-
-# 📱 QR-Kod Yaratish
-@dp.message_handler(lambda msg: msg.text == "📱 QR-Kod Yaratish")
-async def qr_code_handler(message: types.Message):
-    await message.answer(
-        "📱 **QR-Kod Yaratish:**\nQR-kodga aylantirmoqchi bo'lgan matn yoki havolani yuboring:"
-    )
-
-
-# 🧮 Aqlli Kalkulyator
-@dp.message_handler(lambda msg: msg.text == "🧮 Aqlli Kalkulyator")
-async def calculator_handler(message: types.Message):
-    await message.answer(
-        "🧮 **Aqlli Kalkulyator:**\nMatematik ifodani yozing (masalan: `25 * 4 + 100`):",
-        parse_mode="Markdown",
-    )
-
-
-# 🌤 Aniq Ob-havo
-@dp.message_handler(lambda msg: msg.text == "🌤 Aniq Ob-havo")
-async def weather_handler(message: types.Message):
-    await message.answer(
-        "🌤 **Aniq Ob-havo:**\nOb-havosini bilmoqchi bo'lgan shahar nomini kiriting (masalan: Toshkent, Samarqand):"
-    )
-
-
-# 💎 Valyuta kurslari
-@dp.message_handler(lambda msg: msg.text == "💎 Valyuta kurslari")
-async def currency_handler(message: types.Message):
-    await message.answer(
-        "💎 **Markaziy Bank Valyuta Kurslari:**\n\n"
-        "🇺🇸 **USD:** 12,680 UZS\n"
-        "🇪🇺 **EUR:** 13,850 UZS\n"
-        "🇷🇺 **RUB:** 142 UZS",
-        parse_mode="Markdown",
-    )
-
-
-# 📝 Shaxsiya Eslatmalar
-@dp.message_handler(lambda msg: msg.text == "📝 Shaxsiya Eslatmalar")
-async def notes_handler(message: types.Message):
-    await message.answer(
-        "📝 **Shaxsiy Eslatmalar:**\nSaqlab qo'ymoqchi bo'lgan eslatmangizni yuboring:"
-    )
-
-
-# Noma'lum buyruq va matnlar uchun fallback
-@dp.message_handler()
-async def unknown_command(message: types.Message):
-    user_menu = get_main_menu(message.from_user.id)
-    await message.answer(
-        "⚠️ Noma'lum buyruq. Iltimos, pastdagi menyudan foydalaning:",
-        reply_markup=user_menu,
-    )
-
+    await bot.delete_webhook(drop_pending_updates=True)
+    await dp.start_polling(bot)
 
 if __name__ == "__main__":
-    executor.start_polling(dp, skip_updates=True)
+    try:
+        asyncio.run(main())
+    except (KeyboardInterrupt, SystemExit):
+        logging.info("Bot to'xtatildi.")
