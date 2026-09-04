@@ -2,184 +2,92 @@
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Mega AI Assistant</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root {
-            --bg-color: #0f172a;
-            --text-color: #f8fafc;
-            --glass-bg: rgba(15, 23, 42, 0.7);
-            --border-color: rgba(255, 255, 255, 0.1);
-        }
-
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
             margin: 0;
-            padding: 0;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            overflow: hidden;
+            padding: 15px;
             user-select: none;
-            touch-action: manipulation;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            height: 100vh;
         }
 
         .header {
-            position: fixed;
-            top: 0;
-            width: 100%;
-            height: 80px;
-            background: var(--glass-bg);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border-bottom: 1px solid var(--border-color);
+            text-align: center;
+            padding: 10px;
+            background: #1e293b;
+            border-radius: 12px;
+            margin-bottom: 15px;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .grid-item {
+            background: #1e293b;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 15px 10px;
             display: flex;
-            flex-direction: column;
+            align-items: center;
             justify-content: center;
-            align-items: center;
-            z-index: 100;
-        }
-
-        .user-name {
-            font-weight: 700;
-            font-size: 1.1rem;
-            margin-bottom: 5px;
-        }
-
-        .coins-display {
-            display: flex;
-            align-items: center;
-            font-size: 1.8rem;
-            font-weight: 800;
-            color: #fbbf24;
-            text-shadow: 0 0 10px rgba(251, 191, 36, 0.6);
-        }
-
-        .coins-display img {
-            width: 32px;
-            height: 32px;
-            margin-left: 10px;
-        }
-
-        .tap-area {
-            flex-grow: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-top: 100px;
-            position: relative;
-        }
-
-        .tap-button {
-            width: 220px;
-            height: 220px;
-            border-radius: 50%;
-            background: linear-gradient(145deg, #131d36, #0e1628);
-            box-shadow: 20px 20px 60px #090f1d, -20px -20px 60px #152037;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            font-size: 0.85rem;
+            font-weight: 600;
             cursor: pointer;
-            border: 2px solid rgba(255, 255, 255, 0.05);
-            transition: transform 0.1s ease;
-            position: relative;
+            text-align: center;
+            transition: transform 0.1s, background-color 0.2s;
         }
 
-        .tap-button:active {
-            transform: scale(0.95);
+        .grid-item:active {
+            transform: scale(0.96);
+            background: #334155;
         }
 
-        .tap-button img {
-            width: 130px;
-            height: 130px;
-            pointer-events: none;
+        .full-width {
+            grid-column: span 2;
         }
 
-        .tap-particle {
-            position: absolute;
-            width: 18px;
-            height: 18px;
-            background-color: #fbbf24;
-            border-radius: 50%;
-            box-shadow: 0 0 10px #fbbf24;
-            opacity: 0;
-            pointer-events: none;
-            z-index: 50;
-        }
-
-        @keyframes particle-fade-up {
-            0% { transform: translate(0, 0) scale(1.2); opacity: 1; }
-            100% { transform: translate(var(--x), var(--y)) scale(0.5); opacity: 0; }
+        .icon {
+            margin-right: 6px;
         }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <div class="user-name" id="user-name">Foydalanuvchi</div>
-        <div class="coins-display">
-            <span id="coins-count">0</span>
-            <img src="https://cdn-icons-png.flaticon.com/512/1828/1828884.png" alt="coin">
-        </div>
+        <h3 style="margin:0;">🎮 Mini App (O'yinlar & Hub)</h3>
     </div>
 
-    <div class="tap-area">
-        <div class="tap-button" id="tap-button">
-            <img src="https://cdn-icons-png.flaticon.com/512/625/625599.png" alt="Tap Here">
-        </div>
+    <div class="grid-container">
+        <div class="grid-item" onclick="sendAction('🤖 Sun\'iy Intellekt (AI)')"><span class="icon">🤖</span> Sun'iy Intellekt</div>
+        <div class="grid-item" onclick="sendAction('🎨 AI Rasm Yaratish')"><span class="icon">🎨</span> AI Rasm Yaratish</div>
+        <div class="grid-item" onclick="sendAction('📥 Video Yuklagich')"><span class="icon">📥</span> Video Yuklagich</div>
+        <div class="grid-item" onclick="sendAction('📈 Kripto & Oltin')"><span class="icon">📈</span> Kripto & Oltin</div>
+        <div class="grid-item" onclick="sendAction('🔗 Link Qisqartirish')"><span class="icon">🔗</span> Link Qisqartirish</div>
+        <div class="grid-item" onclick="sendAction('🔤 Matn Tarjimon')"><span class="icon">🔤</span> Matn Tarjimon</div>
+        <div class="grid-item" onclick="sendAction('📲 QR-Kod Yaratish')"><span class="icon">📲</span> QR-Kod Yaratish</div>
+        <div class="grid-item" onclick="sendAction('🧮 Aqlli Kalkulyator')"><span class="icon">🧮</span> Aqlli Kalkulyator</div>
+        <div class="grid-item" onclick="sendAction('🌤 Aniq Ob-havo')"><span class="icon">🌤</span> Aniq Ob-havo</div>
+        <div class="grid-item" onclick="sendAction('💎 Valyuta kurslari')"><span class="icon">💎</span> Valyuta kurslari</div>
+        <div class="grid-item full-width" onclick="sendAction('📝 Shaxsiy Eslatmalar')"><span class="icon">📝</span> Shaxsiy Eslatmalar</div>
     </div>
 
     <script>
         let tg = window.Telegram.WebApp;
         tg.expand();
-        tg.ready();
 
-        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-            document.getElementById('user-name').innerText = tg.initDataUnsafe.user.first_name;
-        }
-
-        let coins = 0;
-        const coinsCountEl = document.getElementById('coins-count');
-        const tapButton = document.getElementById('tap-button');
-
-        tapButton.addEventListener('click', (e) => {
-            coins++;
-            coinsCountEl.innerText = coins;
-
-            createParticleAnimation(e);
-
+        function sendAction(text) {
             if (tg.HapticFeedback) {
                 tg.HapticFeedback.impactOccurred('medium');
             }
-        });
-
-        function createParticleAnimation(event) {
-            const tapArea = document.querySelector('.tap-area');
-            for (let i = 0; i < 8; i++) {
-                const particle = document.createElement('div');
-                particle.classList.add('tap-particle');
-                tapArea.appendChild(particle);
-
-                const x = event.clientX;
-                const y = event.clientY - tapArea.offsetTop;
-                particle.style.left = `${x}px`;
-                particle.style.top = `${y}px`;
-
-                const driftX = (Math.random() - 0.5) * 160;
-                const driftY = (Math.random() - 1.0) * 120;
-                
-                particle.style.setProperty('--x', `${driftX}px`);
-                particle.style.setProperty('--y', `${driftY}px`);
-
-                const duration = Math.random() * 0.4 + 0.4;
-                particle.style.animation = `particle-fade-up ${duration}s ease-out forwards`;
-
-                setTimeout(() => { particle.remove(); }, duration * 1000);
-            }
+            tg.sendData(text);
+            tg.close();
         }
     </script>
 </body>
