@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Prime Suite Hub</title>
+    <title>Prime Elite Mini App</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
@@ -13,232 +13,70 @@
             --text-primary: #ffffff;
             --text-muted: #a8a8a8;
             --insta-gradient: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+            --gold-gradient: linear-gradient(45deg, #ffd700, #ffa500);
             --accent-blue: #0095f6;
             --status-success: #22c55e;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            -webkit-tap-highlight-color: transparent;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg-main); color: var(--text-primary); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-main);
-            color: var(--text-primary);
-            overflow: hidden;
-            height: 100vh;
+        .app-header { height: 52px; padding: 0 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-line); background: rgba(0, 0, 0, 0.95); backdrop-filter: blur(12px); z-index: 100; }
+        .brand-logo { font-size: 1.25rem; font-weight: 700; background: var(--insta-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+        .viewport { flex: 1; overflow-y: auto; position: relative; }
+        .feed-grid { padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+
+        /* Premium Card */
+        .premium-card {
+            background: linear-gradient(135deg, #1f1a00 0%, #121212 100%);
+            border: 1px solid #ffd700;
+            border-radius: 16px;
+            padding: 20px;
             display: flex;
             flex-direction: column;
-            user-select: none;
-        }
-
-        /* Top Bar */
-        .app-header {
-            height: 52px;
-            padding: 0 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border-line);
-            background: rgba(0, 0, 0, 0.95);
-            backdrop-filter: blur(12px);
-            z-index: 100;
-        }
-
-        .brand-logo {
-            font-size: 1.25rem;
-            font-weight: 700;
-            letter-spacing: -0.5px;
-            background: var(--insta-gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        /* Scroll Area */
-        .viewport {
-            flex: 1;
-            overflow-y: auto;
-            position: relative;
-        }
-
-        /* Stories System */
-        .stories-container {
-            display: flex;
             gap: 14px;
-            padding: 12px 16px;
-            overflow-x: auto;
-            border-bottom: 1px solid var(--border-line);
-            scrollbar-width: none;
+            box-shadow: 0 4px 20px rgba(255, 215, 0, 0.15);
         }
 
-        .stories-container::-webkit-scrollbar { display: none; }
-
-        .story-node {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-            cursor: pointer;
-            flex-shrink: 0;
-        }
-
-        .story-ring {
-            width: 64px;
-            height: 64px;
-            border-radius: 50%;
-            padding: 2px;
-            background: var(--insta-gradient);
-        }
-
-        .story-avatar {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            background: #1e1e1e;
-            border: 2px solid var(--bg-main);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.4rem;
-        }
-
-        .story-label {
+        .badge-gold {
+            background: var(--gold-gradient);
+            color: #000;
+            font-weight: 800;
             font-size: 0.7rem;
-            color: var(--text-muted);
+            padding: 3px 8px;
+            border-radius: 12px;
+            width: fit-content;
+            text-transform: uppercase;
         }
 
-        /* Dashboard Cards */
-        .feed-grid {
-            padding: 16px;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
+        .price-tag { font-size: 1.5rem; font-weight: 800; color: #ffd700; }
 
-        .service-card {
-            background: var(--surface-card);
-            border: 1px solid var(--border-line);
-            border-radius: 14px;
-            padding: 18px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .card-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .card-icon {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background: #262626;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.1rem;
-        }
-
-        .card-title {
-            font-weight: 600;
-            font-size: 0.9rem;
-        }
-
-        .btn-action {
-            background: var(--accent-blue);
-            color: white;
+        .btn-pay {
+            background: var(--gold-gradient);
+            color: #000;
             border: none;
-            padding: 10px;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 0.85rem;
+            padding: 12px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 0.9rem;
             cursor: pointer;
             transition: opacity 0.2s;
         }
+        .btn-pay:active { opacity: 0.85; }
 
-        .btn-action:active { opacity: 0.8; }
+        .profile-wrapper { padding: 20px 16px; display: flex; flex-direction: column; gap: 16px; }
+        .profile-main { display: flex; align-items: center; justify-content: space-between; }
+        .avatar-container { width: 76px; height: 76px; border-radius: 50%; padding: 3px; background: var(--insta-gradient); }
+        .avatar-inner { width: 100%; height: 100%; border-radius: 50%; background: #262626; border: 2px solid var(--bg-main); display: flex; align-items: center; justify-content: center; font-size: 2rem; }
 
-        /* Profile Layout */
-        .profile-wrapper {
-            padding: 20px 16px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .profile-main {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .avatar-container {
-            width: 76px;
-            height: 76px;
-            border-radius: 50%;
-            padding: 3px;
-            background: var(--insta-gradient);
-        }
-
-        .avatar-inner {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            background: #262626;
-            border: 2px solid var(--bg-main);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2rem;
-        }
-
-        .metrics-group {
-            display: flex;
-            gap: 24px;
-            text-align: center;
-        }
-
+        .metrics-group { display: flex; gap: 24px; text-align: center; }
         .metric-val { font-weight: 700; font-size: 1.1rem; }
         .metric-lbl { font-size: 0.75rem; color: var(--text-muted); }
 
-        /* Admin Dashboard Card */
-        .admin-dashboard {
-            background: #181818;
-            border: 1px solid rgba(240, 148, 51, 0.4);
-            border-radius: 14px;
-            padding: 18px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        /* Bottom Nav Bar */
-        .bottom-nav {
-            height: 50px;
-            border-top: 1px solid var(--border-line);
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            background: rgba(0, 0, 0, 0.95);
-        }
-
-        .nav-item {
-            background: none;
-            border: none;
-            color: var(--text-primary);
-            font-size: 1.3rem;
-            cursor: pointer;
-            opacity: 0.5;
-            transition: opacity 0.2s;
-        }
-
-        .nav-item.active { opacity: 1; }
+        .bottom-nav { height: 50px; border-top: 1px solid var(--border-line); display: flex; justify-content: space-around; align-items: center; background: rgba(0, 0, 0, 0.95); }
+        .nav-item { background: none; border: none; color: var(--text-primary); font-size: 1.1rem; cursor: pointer; opacity: 0.5; font-weight: 600; }
+        .nav-item.active { opacity: 1; color: #0095f6; }
         .page-view { display: none; }
         .page-view.active { display: block; }
     </style>
@@ -246,102 +84,73 @@
 <body>
 
     <div class="app-header">
-        <div class="brand-logo">Prime Hub</div>
-        <div style="display: flex; gap: 14px;">
-            <span>🔒 OAuth 2.0</span>
-        </div>
+        <div class="brand-logo">Prime Elite</div>
+        <div style="font-size: 0.85rem; color: #ffd700;">👑 VIP Pass</div>
     </div>
 
     <div class="viewport">
 
-        <!-- TAB 1: HUB / FEED -->
+        <!-- TAB 1: STORE / MONETIZATION -->
         <div class="page-view active" id="tab-feed">
-            <div class="stories-container">
-                <div class="story-node" onclick="handleAction('AI Chat')">
-                    <div class="story-ring"><div class="story-avatar">🤖</div></div>
-                    <span class="story-label">AI Chat</span>
-                </div>
-                <div class="story-node" onclick="handleAction('AI Rasm')">
-                    <div class="story-ring"><div class="story-avatar">🎨</div></div>
-                    <span class="story-label">AI Rasm</span>
-                </div>
-                <div class="story-node" onclick="handleAction('Downloader')">
-                    <div class="story-ring"><div class="story-avatar">📥</div></div>
-                    <span class="story-label">Media</span>
-                </div>
-                <div class="story-node" onclick="handleAction('Kripto')">
-                    <div class="story-ring"><div class="story-avatar">📈</div></div>
-                    <span class="story-label">Kripto</span>
-                </div>
-            </div>
-
             <div class="feed-grid">
-                <div class="service-card">
-                    <div class="card-header">
-                        <div class="card-icon">🤖</div>
-                        <div class="card-title">Sun'iy Intellekt Boshqaruvi</div>
-                    </div>
-                    <p style="font-size: 0.8rem; color: var(--text-muted);">
-                        GPT-4 va boshqa modellar orqali so'rovlarni avtomatik qayta ishlash.
+                
+                <div class="premium-card">
+                    <div class="badge-gold">PRO MONETIZATION</div>
+                    <h2>Prime Elite Pass</h2>
+                    <p style="font-size: 0.85rem; color: var(--text-muted);">
+                        Barcha cheklovlarni olib tashlang, cheksiz AI so'rovlari va AES-256 xavfsiz holatga ega bo'ling.
                     </p>
-                    <button class="btn-action" onclick="handleAction('AI Engine')">Ishga Tushirish</button>
+                    <div class="price-tag">15,000 UZS <span style="font-size: 0.8rem; color: var(--text-muted);">/ oy</span></div>
+                    
+                    <button class="btn-pay" onclick="buySubscription()">👑 VIP Obunani Faollashtirish</button>
                 </div>
 
-                <div class="service-card">
-                    <div class="card-header">
-                        <div class="card-icon">🔐</div>
-                        <div class="card-title">Xavfsiz External Ulanishlar</div>
-                    </div>
-                    <p style="font-size: 0.8rem; color: var(--text-muted);">
-                        AES-256 va OAuth 2.0 protokoli orqali tashqi hisoblarni markazlashtirilgan boshqarish.
-                    </p>
-                    <button class="btn-action" style="background: #22c55e;" onclick="handleAction('Connect Account')">Akkaunt Ulash</button>
+                <div style="background: var(--surface-card); border: 1px solid var(--border-line); border-radius: 14px; padding: 16px;">
+                    <h3 style="font-size: 0.95rem; margin-bottom: 8px;">✨ VIP Imkoniyatlari:</h3>
+                    <ul style="font-size: 0.8rem; color: var(--text-muted); padding-left: 18px; display: flex; flex-direction: column; gap: 6px;">
+                        <li>Cheksiz AI va media yuklovchilar</li>
+                        <li>OAuth 2.0 va shifrlangan akkauntlar boshqaruvi</li>
+                        <li>24/7 Ustuvor tezkor server</li>
+                    </ul>
                 </div>
+
             </div>
         </div>
 
-        <!-- TAB 2: PROFILE & ADMIN PANEL -->
+        <!-- TAB 2: PROFILE & REFERRAL -->
         <div class="page-view" id="tab-profile">
             <div class="profile-wrapper">
                 <div class="profile-main">
                     <div class="avatar-container">
-                        <div class="avatar-inner" id="user-initial">👤</div>
+                        <div class="avatar-inner" id="user-avatar">👤</div>
                     </div>
                     <div class="metrics-group">
                         <div>
-                            <div class="metric-val" id="coins-count">0</div>
-                            <div class="metric-lbl">Coins</div>
+                            <div class="metric-val" id="user-balance">0 UZS</div>
+                            <div class="metric-lbl">Balans</div>
                         </div>
                         <div>
-                            <div class="metric-val">AES-256</div>
-                            <div class="metric-lbl">Security</div>
-                        </div>
-                        <div>
-                            <div class="metric-val" id="status-badge">Free</div>
-                            <div class="metric-lbl">Status</div>
+                            <div class="metric-val" id="vip-status">FREE</div>
+                            <div class="metric-lbl">Tarif</div>
                         </div>
                     </div>
                 </div>
 
                 <div>
-                    <h3 id="display-name" style="font-size: 1rem;">Foydalanuvchi</h3>
-                    <p id="display-username" style="font-size: 0.85rem; color: var(--text-muted);">@username</p>
+                    <h3 id="user-name">Foydalanuvchi</h3>
+                    <p id="user-handle" style="font-size: 0.85rem; color: var(--text-muted);">@username</p>
                 </div>
 
-                <!-- ADMIN CONTROL DASHBOARD (Faqat ADMIN_ID uchun) -->
-                <div id="admin-sec" style="display: none;">
-                    <div class="admin-dashboard">
-                        <h4 style="color: #f09433;">⚙️ System Admin Panel</h4>
-                        <p style="font-size: 0.8rem; color: var(--text-muted);">Platforma monitoringi va aktivlar statistikasi:</p>
-                        <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
-                            <span>Tizim Holati:</span>
-                            <strong style="color: var(--status-success);">Active (Valued at $2,500)</strong>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
-                            <span>Shifrlash Standart:</span>
-                            <strong>AES-256-CBC</strong>
-                        </div>
-                    </div>
+                <!-- REFERRAL BLOCK -->
+                <div style="background: var(--surface-card); border: 1px solid var(--border-line); border-radius: 14px; padding: 16px;">
+                    <h3 style="font-size: 0.95rem; color: #ffd700; margin-bottom: 6px;">👥 Referal Dasturi</h3>
+                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">
+                        Do'stlaringizni taklif qiling: har bir do'stingiz uchun **+2,000 UZS** va **+2 kun VIP** oling!
+                    </p>
+
+                    <button onclick="shareReferralLink()" style="width: 100%; background: var(--accent-blue); color: #fff; border: none; padding: 12px; border-radius: 10px; font-weight: 600; cursor: pointer;">
+                        📲 Do'stlarga Ulashish
+                    </button>
                 </div>
 
             </div>
@@ -349,44 +158,26 @@
 
     </div>
 
-    <!-- Navigation -->
+    <!-- BOTTOM NAVIGATION -->
     <div class="bottom-nav">
-        <button class="nav-item active" id="btn-feed" onclick="switchTab('feed')">🏠</button>
-        <button class="nav-item" onclick="switchTab('feed')">🔍</button>
-        <button class="nav-item" onclick="switchTab('feed')">➕</button>
-        <button class="nav-item" id="btn-profile" onclick="switchTab('profile')">👤</button>
+        <button class="nav-item active" id="btn-feed" onclick="switchTab('feed')">💎 Do'kon</button>
+        <button class="nav-item" id="btn-profile" onclick="switchTab('profile')">👤 Profil</button>
     </div>
 
     <script>
-        // ADMIN_ID konfiguratsiyasi
-        const ADMIN_ID = 8898979946;
-
         let tg = window.Telegram.WebApp;
         tg.expand();
         tg.ready();
 
         if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-            const user = tg.initDataUnsafe.user;
-            document.getElementById('display-name').innerText = user.first_name + (user.last_name ? " " + user.last_name : "");
-            document.getElementById('display-username').innerText = user.username ? "@" + user.username : "@user";
-            document.getElementById('user-initial').innerText = user.first_name.charAt(0);
-
-            // Access Control Logic
-            if (user.id === ADMIN_ID) {
-                document.getElementById('admin-sec').style.display = 'block';
-                document.getElementById('status-badge').innerText = "ADMIN";
-                document.getElementById('status-badge').style.color = "#f09433";
-            }
-        }
-
-        function triggerHaptic() {
-            if (tg.HapticFeedback) {
-                tg.HapticFeedback.impactOccurred('light');
-            }
+            const u = tg.initDataUnsafe.user;
+            document.getElementById('user-name').innerText = u.first_name + (u.last_name ? " " + u.last_name : "");
+            document.getElementById('user-handle').innerText = u.username ? "@" + u.username : "@user";
+            document.getElementById('user-avatar').innerText = u.first_name.charAt(0);
         }
 
         function switchTab(tab) {
-            triggerHaptic();
+            if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
             document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
 
@@ -399,9 +190,18 @@
             }
         }
 
-        function handleAction(name) {
-            triggerHaptic();
-            alert(name + " moduli ishga tushirildi.");
+        function buySubscription() {
+            if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+            tg.sendData(JSON.stringify({action: "buy_vip", amount: 15000}));
+        }
+
+        function shareReferralLink() {
+            if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+            if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+                let userId = tg.initDataUnsafe.user.id;
+                let shareUrl = `https://t.me/share/url?url=https://t.me/YOUR_BOT_USERNAME?start=${userId}&text=Prime%20Mini%20App’ga%20qo’shiling!`;
+                tg.openTelegramLink(shareUrl);
+            }
         }
     </script>
 </body>
