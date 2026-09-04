@@ -4,3 +4,4 @@ deep-translator
 qrcode
 Pillow
 flask
+cryptography
