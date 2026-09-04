@@ -2,112 +2,103 @@ import os
 import sqlite3
 import logging
 import asyncio
+from datetime import datetime, timedelta
 from aiohttp import web
-from cryptography.fernet import Fernet
 
 from aiogram import Bot, Dispatcher, F, Router
-from aiogram.types import Message
+from aiogram.types import Message, LabeledPrice, PreCheckoutQuery
 from aiogram.filters import CommandStart
 from aiogram.fsm.storage.memory import MemoryStorage
 
-# Environmental Configurations
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
-ADMIN_ID = int(os.environ.get("ADMIN_ID", 8898979946))  # O'zingizning ID raqamingiz
+ADMIN_ID = int(os.environ.get("ADMIN_ID", 8898979946))
 
-# AES-256 Shifrlash uchun kalit yaratish yoki yuklash
-KEY_FILE = "secret.key"
-if os.path.exists(KEY_FILE):
-    with open(KEY_FILE, "rb") as f:
-        FERNET_KEY = f.read()
-else:
-    FERNET_KEY = Fernet.generate_key()
-    with open(KEY_FILE, "wb") as f:
-        f.write(FERNET_KEY)
-
-cipher_suite = Fernet(FERNET_KEY)
+# Homiy kanal (Majburiy a'zolik uchun)
+SPONSOR_CHANNEL = "@your_channel_username" 
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher(storage=MemoryStorage())
 router = Router()
 
-# ==================== DATABASE ARCHITECTURE ====================
 def init_db():
     conn = sqlite3.connect("platform_database.db")
     cursor = conn.cursor()
-    
-    # Foydalanuvchilar jadvali
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS users (
             user_id INTEGER PRIMARY KEY,
             full_name TEXT,
             username TEXT,
-            balance REAL DEFAULT 0.0,
-            coins INTEGER DEFAULT 0,
+            stars_balance INTEGER DEFAULT 0,
+            free_daily_limits INTEGER DEFAULT 5,
             is_vip INTEGER DEFAULT 0,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    """)
-    
-    # Ulangan external accounts (OAuth Tokenlar) jadvali
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS external_accounts (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER,
-            service_name TEXT,
-            encrypted_token BLOB,
-            status TEXT DEFAULT 'active',
-            FOREIGN KEY(user_id) REFERENCES users(user_id)
+            vip_expire TIMESTAMP
         )
     """)
     conn.commit()
     conn.close()
 
-def register_user(user_id: int, full_name: str, username: str):
-    conn = sqlite3.connect("platform_database.db")
-    cursor = conn.cursor()
-    cursor.execute("SELECT user_id FROM users WHERE user_id = ?", (user_id,))
-    if cursor.fetchone() is None:
-        cursor.execute("INSERT INTO users (user_id, full_name, username) VALUES (?, ?, ?)", 
-                       (user_id, full_name, username))
-    else:
-        cursor.execute("UPDATE users SET full_name = ?, username = ? WHERE user_id = ?", 
-                       (full_name, username, user_id))
-    conn.commit()
-    conn.close()
+# Homiy kanalga a'zolikni tekshirish (1-daromad manbai)
+async def check_subscription(user_id: int) -> bool:
+    try:
+        member = await bot.get_chat_member(chat_id=SPONSOR_CHANNEL, user_id=user_id)
+        return member.status in ["creator", "administrator", "member"]
+    except Exception:
+        return True  # Kanal sozlanmagan bo'lsa o'tkazib yuboradi
 
-def encrypt_data(data: str) -> bytes:
-    return cipher_suite.encrypt(data.encode('utf-8'))
-
-def decrypt_data(encrypted_data: bytes) -> str:
-    return cipher_suite.decrypt(encrypted_data).decode('utf-8')
-
-# ==================== BOT HANDLERS ====================
 @router.message(CommandStart())
 async def cmd_start(message: Message):
-    register_user(message.from_user.id, message.from_user.full_name, message.from_user.username or "")
+    is_subscribed = await check_subscription(message.from_user.id)
+    if not is_subscribed:
+        await message.answer(
+            f"⚠️ **Xizmatdan foydalanish uchun homiy kanalimizga a'zo bo'ling:**\n\n"
+            f"👉 {SPONSOR_CHANNEL}\n\n"
+            f"A'zo bo'lib, qayta /start bosing."
+        )
+        return
+
     await message.answer(
-        "✨ **Prime Mini App Platformasiga Xush Kelibsiz!**\n\n"
-        "Quyidagi havola orqali markazlashtirilgan boshqaruv panelini oching."
+        "✨ **Prime Elite Mini App'ga xush kelibsiz!**\n\n"
+        "🎁 Kunlik 5 ta bepul AI so'rovingiz mavjud.\n"
+        "👑 Cheksiz foydalanish uchun **VIP Pass** yoki **Telegram Stars** xarid qilishingiz mumkin."
     )
 
-# ==================== API & SERVER ====================
-async def handle_miniapp(request):
-    try:
-        with open("miniapp.html", "r", encoding="utf-8") as f:
-            return web.Response(text=f.read(), content_type='text/html')
-    except Exception as e:
-        return web.Response(text=f"App Load Error: {e}", status=500)
+# Telegram Stars To'lovi (2-daromad manbai)
+@router.message(F.text == "/buy_stars")
+async def send_stars_invoice(message: Message):
+    prices = [LabeledPrice(label="50 AI Stars Pack", amount=50)]  # 50 Telegram Stars
+    await bot.send_invoice(
+        chat_id=message.chat.id,
+        title="50 AI Stars To'plami",
+        description="Mini App ichida eksklyuziv AI va media xizmatlaridan foydalanish uchun.",
+        payload="stars_pack_50",
+        provider_token="",  # Telegram Stars uchun bo'sh qoladi
+        currency="XTR",
+        prices=prices
+    )
+
+@router.pre_checkout_query()
+async def process_pre_checkout(pre_checkout_query: PreCheckoutQuery):
+    await bot.answer_pre_checkout_query(pre_checkout_query.id, ok=True)
+
+@router.message(F.successful_payment)
+async def successful_payment_handler(message: Message):
+    # To'lov muvaffaqiyatli amalga oshganda balansni to'ldirish
+    conn = sqlite3.connect("platform_database.db")
+    cursor = conn.cursor()
+    cursor.execute("UPDATE users SET stars_balance = stars_balance + 50 WHERE user_id = ?", (message.from_user.id,))
+    conn.commit()
+    conn.close()
+    
+    await message.answer("🎉 To'lov muvaffaqiyatli amalga oshirildi! 50 Stars balansingizga qo'shildi.")
 
 async def start_web_server():
     app = web.Application()
-    app.router.add_get('/', handle_miniapp)
     runner = web.AppRunner(app)
     await runner.setup()
     port = int(os.environ.get("PORT", 10000))
     site = web.TCPSite(runner, '0.0.0.0', port)
     await site.start()
 
-# ==================== ENGINE ENTRYPOINT ====================
 async def main():
     logging.basicConfig(level=logging.INFO)
     init_db()
