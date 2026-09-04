@@ -3,567 +3,160 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mega Mini App Hub</title>
+    <title>Elite Mini App</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-    
     <style>
         :root {
-            --bg-color: #0f172a;
-            --card-bg: rgba(30, 41, 59, 0.7);
-            --primary: #6366f1;
-            --primary-glow: rgba(99, 102, 241, 0.4);
-            --accent: #ec4899;
-            --text-color: #f8fafc;
-            --text-muted: #94a3b8;
-            --border: rgba(255, 255, 255, 0.1);
-            --insta-gradient: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
+            --bg-color: #0b0e14;
+            --card-bg: rgba(255, 255, 255, 0.04);
+            --border: rgba(255, 255, 255, 0.08);
+            --accent: #0088cc;
+            --gold: #ffd700;
         }
 
         body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background: var(--bg-color);
-            color: var(--text-color);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow-x: hidden;
-            background: radial-gradient(circle at top right, #1e1b4b, #0f172a);
-        }
-
-        /* Header */
-        .user-header {
-            padding: 16px 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: var(--card-bg);
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid var(--border);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .balance-badge {
-            background: rgba(99, 102, 241, 0.2);
-            border: 1px solid var(--primary);
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 700;
-            color: #818cf8;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        /* Container & Screens */
-        .container {
+            background-color: var(--bg-color);
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+            margin: 0;
             padding: 16px;
-            flex: 1;
-            padding-bottom: 90px;
+            user-select: none;
+            -webkit-user-select: none;
         }
 
-        .screen {
-            display: none;
-            animation: fadeIn 0.4s ease-out forwards;
-        }
-
-        .screen.active { display: block; }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Glass Cards */
-        .card {
+        /* Glassmorphism Card */
+        .glass-card {
             background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             border: 1px solid var(--border);
             border-radius: 20px;
-            padding: 20px;
+            padding: 18px;
             margin-bottom: 16px;
-            backdrop-filter: blur(10px);
             box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            transition: transform 0.2s ease, border-color 0.2s ease;
         }
 
-        /* Tap Game UI */
-        .clicker-area { text-align: center; padding: 30px 10px; }
-        .coin-btn {
-            width: 170px;
-            height: 170px;
-            border-radius: 50%;
-            background: radial-gradient(circle, #818cf8 0%, #4f46e5 100%);
-            border: 8px solid rgba(255, 255, 255, 0.2);
-            margin: 20px auto;
+        .glass-card:active {
+            transform: scale(0.97);
+            border-color: var(--accent);
+        }
+
+        .user-header {
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            justify-content: center;
-            font-size: 65px;
-            cursor: pointer;
-            box-shadow: 0 0 30px var(--primary-glow);
-            transition: transform 0.1s;
         }
-        .coin-btn:active { transform: scale(0.92); }
 
-        .plus-one {
-            position: absolute;
-            color: #fff;
+        .vip-badge {
+            display: none;
+            background: linear-gradient(45deg, #ffd700, #ffa500);
+            color: #000;
             font-weight: bold;
-            font-size: 24px;
-            animation: floatUp 0.8s ease-out forwards;
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 10px;
+        }
+
+        .vip-badge.active {
+            display: inline-block;
+        }
+
+        /* Tap Particle FX */
+        .particle-coin {
+            position: fixed;
             pointer-events: none;
+            font-weight: 800;
+            font-size: 24px;
+            color: #ff2a85;
+            animation: floatUp 0.8s ease-out forwards;
+            z-index: 999;
         }
 
         @keyframes floatUp {
-            0% { opacity: 1; transform: translateY(0); }
-            100% { opacity: 0; transform: translateY(-80px); }
+            0% { opacity: 1; transform: translateY(0) scale(0.8); }
+            100% { opacity: 0; transform: translateY(-80px) scale(1.2); }
         }
 
-        /* AI Chat UI */
-        .chat-box {
-            height: 280px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-        .message { max-width: 80%; padding: 10px 14px; border-radius: 16px; font-size: 14px; }
-        .msg-user { align-self: flex-end; background: linear-gradient(135deg, var(--primary), #4f46e5); color: #fff; }
-        .msg-ai { align-self: flex-start; background: rgba(255, 255, 255, 0.08); border: 1px solid var(--border); }
-        
-        .chat-input-area { display: flex; gap: 8px; }
-        .chat-input {
-            flex: 1;
-            background: rgba(15, 23, 42, 0.6);
-            border: 1px solid var(--border);
-            padding: 12px 16px;
-            border-radius: 12px;
-            color: #fff;
-            outline: none;
-        }
-        .btn {
-            background: linear-gradient(135deg, var(--primary), var(--accent));
-            border: none;
-            padding: 12px 20px;
-            border-radius: 12px;
-            color: white;
-            font-weight: 700;
-            cursor: pointer;
-        }
-
-        /* Grid Services */
-        .services-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-
-        .service-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 16px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            gap: 10px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .service-card:active {
-            transform: scale(0.95);
-            background: rgba(99, 102, 241, 0.2);
-        }
-
-        .service-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 22px;
-            background: rgba(255, 255, 255, 0.05);
-        }
-
-        .service-card h4 {
-            font-size: 13px;
-            font-weight: 700;
-        }
-
-        /* Instagram Style Profile */
-        .insta-profile-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .insta-avatar-ring {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            padding: 3px;
-            background: var(--insta-gradient);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-
-        .insta-avatar {
+        .btn-action {
             width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            background: #1e293b;
-            border: 2px solid #0f172a;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 30px;
-            font-weight: bold;
-            color: #fff;
-        }
-
-        .insta-stats {
-            display: flex;
-            justify-content: space-around;
-            flex: 1;
-            text-align: center;
-        }
-
-        .insta-stat-item h4 { font-size: 16px; font-weight: 800; }
-        .insta-stat-item p { font-size: 11px; color: var(--text-muted); }
-
-        .insta-bio { margin-bottom: 16px; }
-        .insta-bio h3 { font-size: 15px; font-weight: 700; }
-        .insta-bio p { font-size: 13px; color: #cbd5e1; margin-top: 4px; line-height: 1.4; }
-
-        .insta-actions { display: flex; gap: 8px; margin-bottom: 20px; }
-        .insta-btn {
-            flex: 1;
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid var(--border);
-            padding: 8px 12px;
-            border-radius: 10px;
-            color: #fff;
-            font-size: 13px;
+            background: var(--accent);
+            border: none;
+            color: white;
+            padding: 14px;
+            border-radius: 14px;
             font-weight: 600;
-            text-align: center;
+            font-size: 16px;
             cursor: pointer;
         }
-        .insta-btn-primary { background: var(--primary); border: none; }
-
-        /* Bottom Nav */
-        .bottom-nav {
-            position: fixed;
-            bottom: 0; left: 0; right: 0;
-            height: 70px;
-            background: rgba(15, 23, 42, 0.85);
-            backdrop-filter: blur(16px);
-            border-top: 1px solid var(--border);
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            z-index: 1000;
-        }
-
-        .nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-            color: var(--text-muted);
-            font-size: 11px;
-            font-weight: 600;
-            cursor: pointer;
-        }
-
-        .nav-item i { font-size: 18px; }
-        .nav-item.active { color: var(--primary); transform: translateY(-2px); }
     </style>
 </head>
 <body>
 
-    <!-- Header -->
-    <div class="user-header">
-        <h2 style="font-size: 18px; font-weight: 800;" id="header-username">@mega_bot</h2>
-        <div class="balance-badge">
-            <i class="fa-solid fa-coins"></i> <span id="coin-count">0</span>
+    <!-- Header Section -->
+    <div class="glass-card">
+        <div class="user-header">
+            <span id="user-tag">@username</span>
+            <span id="vip-tag" class="vip-badge">VIP 👑</span>
         </div>
+        <h1 id="main-balance" style="margin: 8px 0 0 0; font-size: 32px;">$0.00</h1>
+        <p style="margin: 4px 0 0 0; color: #8a8d93;">Tangalar: <span id="coin-count" style="color: #fff; font-weight: bold;">0</span> 🪙</p>
     </div>
 
-    <!-- Main Screens -->
-    <div class="container">
-
-        <!-- 1. GAMING TAB -->
-        <div id="screen-games" class="screen active">
-            <div class="card clicker-area">
-                <h2>🚀 Tap & Earn Game</h2>
-                <p style="color: var(--text-muted); font-size: 13px; margin-top: 5px;">Tangalarni to'plash uchun ekranga bosing!</p>
-                <div class="coin-btn" id="tap-btn">⚡</div>
-                <p style="font-size: 12px; color: var(--text-muted);">Energy: 1000 / 1000</p>
-            </div>
-        </div>
-
-        <!-- 2. AI STUDIO TAB -->
-        <div id="screen-ai" class="screen">
-            <div class="card">
-                <h3>🤖 AI Chat & Assistant</h3>
-                <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">Savolingizni yozib yuboring:</p>
-                <div class="chat-box" id="chat-box">
-                    <div class="message msg-ai">Salom! Men Sun'iy Intellektman. Sizga qanday yordam bera olaman?</div>
-                </div>
-                <div class="chat-input-area">
-                    <input type="text" id="chat-input" class="chat-input" placeholder="Xabar yozing...">
-                    <button class="btn" onclick="sendMessage()"><i class="fa-solid fa-paper-plane"></i></button>
-                </div>
-            </div>
-        </div>
-
-        <!-- 3. SERVICES HUB TAB (RASMDAGI BARCHA FUNKSIYALAR) -->
-        <div id="screen-tools" class="screen">
-            <h3 style="margin-bottom: 12px;">🛠 Barsha Xizmatlar</h3>
-            <div class="services-grid">
-                <div class="service-card" onclick="openTool('🎨 AI Rasm Yaratish')">
-                    <div class="service-icon" style="color: #ec4899;"><i class="fa-solid fa-palette"></i></div>
-                    <h4>AI Rasm Yaratish</h4>
-                </div>
-                <div class="service-card" onclick="openTool('📥 Video Yuklagich')">
-                    <div class="service-icon" style="color: #ef4444;"><i class="fa-solid fa-circle-down"></i></div>
-                    <h4>Video Yuklagich</h4>
-                </div>
-                <div class="service-card" onclick="openTool('📈 Kripto & Oltin')">
-                    <div class="service-icon" style="color: #10b981;"><i class="fa-solid fa-chart-line"></i></div>
-                    <h4>Kripto & Oltin</h4>
-                </div>
-                <div class="service-card" onclick="openTool('🔗 Link Qisqartirish')">
-                    <div class="service-icon" style="color: #3b82f6;"><i class="fa-solid fa-link"></i></div>
-                    <h4>Link Qisqartirish</h4>
-                </div>
-                <div class="service-card" onclick="openTool('🔤 Matn Tarjimon')">
-                    <div class="service-icon" style="color: #8b5cf6;"><i class="fa-solid fa-language"></i></div>
-                    <h4>Matn Tarjimon</h4>
-                </div>
-                <div class="service-card" onclick="openTool('📱 QR-Kod Yaratish')">
-                    <div class="service-icon" style="color: #f59e0b;"><i class="fa-solid fa-qrcode"></i></div>
-                    <h4>QR-Kod Yaratish</h4>
-                </div>
-                <div class="service-card" onclick="openTool('🧮 Aaqlli Kalkulyator')">
-                    <div class="service-icon" style="color: #06b6d4;"><i class="fa-solid fa-calculator"></i></div>
-                    <h4>Aqliy Kalkulyator</h4>
-                </div>
-                <div class="service-card" onclick="openTool('🌤 Aniq Ob-havo')">
-                    <div class="service-icon" style="color: #eab308;"><i class="fa-solid fa-cloud-sun"></i></div>
-                    <h4>Aniq Ob-havo</h4>
-                </div>
-                <div class="service-card" onclick="openTool('💎 Valyuta Kurslari')">
-                    <div class="service-icon" style="color: #6366f1;"><i class="fa-solid fa-dollar-sign"></i></div>
-                    <h4>Valyuta Kurslari</h4>
-                </div>
-                <div class="service-card" onclick="openTool('📝 Shaxsiy Eslatmalar')">
-                    <div class="service-icon" style="color: #14b8a6;"><i class="fa-solid fa-note-sticky"></i></div>
-                    <h4>Shaxsiy Eslatmalar</h4>
-                </div>
-                <div class="service-card" onclick="openTool('⭐ VIP Obuna')">
-                    <div class="service-icon" style="color: #f43f5e;"><i class="fa-solid fa-star"></i></div>
-                    <h4>VIP Obuna</h4>
-                </div>
-            </div>
-        </div>
-
-        <!-- 4. INSTAGRAM STYLE PROFILE / ADMIN PANEL TAB -->
-        <div id="screen-profile" class="screen">
-            <div class="insta-profile-header">
-                <div class="insta-avatar-ring">
-                    <div class="insta-avatar" id="insta-avatar-letter">A</div>
-                </div>
-                <div class="insta-stats">
-                    <div class="insta-stat-item"><h4 id="stat-1">1,420</h4><p id="stat-1-label">Userlar</p></div>
-                    <div class="insta-stat-item"><h4 id="stat-2">385</h4><p id="stat-2-label">Aktiv</p></div>
-                    <div class="insta-stat-item"><h4 id="stat-3">42</h4><p id="stat-3-label">VIP</p></div>
-                </div>
-            </div>
-
-            <div class="insta-bio">
-                <h3 id="insta-name">Admin User <i class="fa-solid fa-circle-check" style="color: #38bdf8;"></i></h3>
-                <p id="insta-bio-text">⚡ Mega Assistant rasmiy boshqaruv profili.</p>
-            </div>
-
-            <div class="insta-actions">
-                <div class="insta-btn insta-btn-primary" id="btn-primary-action">Sozlamalar</div>
-                <div class="insta-btn" id="btn-secondary-action">Ulashish</div>
-            </div>
-
-            <div id="profile-dynamic-content"></div>
-        </div>
-
-    </div>
-
-    <!-- Navigation Bar -->
-    <div class="bottom-nav">
-        <div class="nav-item active" onclick="switchTab('screen-games', this)">
-            <i class="fa-solid fa-gamepad"></i>
-            <span>O'yinlar</span>
-        </div>
-        <div class="nav-item" onclick="switchTab('screen-ai', this)">
-            <i class="fa-solid fa-robot"></i>
-            <span>AI Studio</span>
-        </div>
-        <div class="nav-item" onclick="switchTab('screen-tools', this)">
-            <i class="fa-solid fa-border-all"></i>
-            <span>Xizmatlar</span>
-        </div>
-        <div class="nav-item" onclick="switchTab('screen-profile', this)">
-            <i class="fa-solid fa-user"></i>
-            <span id="nav-profile-label">Profil</span>
-        </div>
+    <!-- Tap Game Section -->
+    <div class="glass-card" onclick="handleTap(event)" style="text-align: center; padding: 40px 20px;">
+        <h2>🎮 Tap & Earn</h2>
+        <p style="color: #8a8d93;">Bosing va har safar real tanga yuting</p>
     </div>
 
     <script>
-        const ADMIN_ID = 8898979946;
-        const tg = window.Telegram.WebApp;
-        tg.expand();
+        const tg = window.Telegram?.WebApp;
+        let isVip = false;
 
-        let coins = parseInt(localStorage.getItem('coins')) || 0;
-        document.getElementById('coin-count').innerText = coins;
+        if (tg) {
+            tg.ready();
+            tg.expand();
+            tg.setHeaderColor('#0b0e14');
 
-        let currentUserId = 0;
-        let userName = "Foydalanuvchi";
-
-        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-            const user = tg.initDataUnsafe.user;
-            currentUserId = user.id;
-            userName = user.first_name;
-            document.getElementById('header-username').innerText = `@${user.username || 'user'}`;
-            document.getElementById('insta-avatar-letter').innerText = userName.charAt(0);
-        }
-
-        // Profile & Admin Control
-        const dynamicContent = document.getElementById('profile-dynamic-content');
-
-        if (currentUserId === ADMIN_ID) {
-            document.getElementById('nav-profile-label').innerText = "Admin";
-            document.getElementById('insta-name').innerHTML = `${userName} (Bosh Admin) <i class="fa-solid fa-circle-check" style="color: #ec4899;"></i>`;
-            document.getElementById('insta-bio-text').innerText = "👑 Bot va Mini App boshqaruv paneli.";
-            
-            document.getElementById('stat-1').innerText = "1,420";
-            document.getElementById('stat-1-label').innerText = "Userlar";
-            document.getElementById('stat-2').innerText = "385";
-            document.getElementById('stat-2-label').innerText = "Aktiv";
-            document.getElementById('stat-3').innerText = "$7,000";
-            document.getElementById('stat-3-label').innerText = "Balans";
-
-            dynamicContent.innerHTML = `
-                <div class="card">
-                    <h4 style="color: #ec4899; margin-bottom: 10px;"><i class="fa-solid fa-bullhorn"></i> Ommaviy Xabar (Broadcast)</h4>
-                    <textarea class="chat-input" style="width: 100%; height: 75px; margin-bottom: 10px; resize: none;" placeholder="Barcha foydalanuvchilarga xabar yuborish..."></textarea>
-                    <button class="btn" style="width: 100%;">Xabarni Tarqatish</button>
-                </div>
-            `;
-        } else {
-            document.getElementById('insta-name').innerText = userName;
-            document.getElementById('insta-bio-text').innerText = "🎮 Premier Player";
-            
-            document.getElementById('stat-1').innerText = coins;
-            document.getElementById('stat-1-label').innerText = "Tangalar";
-            document.getElementById('stat-2').innerText = "#12";
-            document.getElementById('stat-2-label').innerText = "Reyting";
-            document.getElementById('stat-3').innerText = "0";
-            document.getElementById('stat-3-label').innerText = "VIP";
-
-            dynamicContent.innerHTML = `
-                <div class="card" style="text-align: center;">
-                    <i class="fa-solid fa-trophy" style="font-size: 35px; color: #f59e0b; margin-bottom: 8px;"></i>
-                    <h4>Sizning Yutuqlaringiz</h4>
-                    <p style="font-size: 12px; color: var(--text-muted);">O'yinlarda faol qatnashib yangi unvonlarni oching!</p>
-                </div>
-            `;
-        }
-
-        // Tap Clicker Game
-        const tapBtn = document.getElementById('tap-btn');
-        tapBtn.addEventListener('click', (e) => {
-            coins += 1;
-            document.getElementById('coin-count').innerText = coins;
-            localStorage.setItem('coins', coins);
-
-            if (currentUserId !== ADMIN_ID) {
-                document.getElementById('stat-1').innerText = coins;
-            }
-
-            if (tg.HapticFeedback) {
-                tg.HapticFeedback.impactOccurred('medium');
-            }
-
-            const plus = document.createElement('div');
-            plus.className = 'plus-one';
-            plus.innerText = '+1';
-            plus.style.left = `${e.clientX - 10}px`;
-            plus.style.top = `${e.clientY - 20}px`;
-            document.body.appendChild(plus);
-
-            setTimeout(() => plus.remove(), 800);
-        });
-
-        // Tab Navigation
-        function switchTab(screenId, element) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-
-            document.getElementById(screenId).classList.add('active');
-            element.classList.add('active');
-
-            if (tg.HapticFeedback) {
-                tg.HapticFeedback.selectionChanged();
+            const user = tg.initDataUnsafe?.user;
+            if (user) {
+                document.getElementById("user-tag").innerText = user.username ? `@${user.username}` : user.first_name;
+                
+                // Backend Rest API orqali ma'lumotlarni tortish
+                fetch(`/api/user/${user.id}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        document.getElementById("main-balance").innerText = `$${(data.balance || 0).toFixed(2)}`;
+                        document.getElementById("coin-count").innerText = data.coins || 0;
+                        if (data.is_vip) {
+                            isVip = true;
+                            document.getElementById("vip-tag").classList.add("active");
+                        }
+                    }).catch(() => {});
             }
         }
 
-        function openTool(name) {
-            if (tg.HapticFeedback) {
-                tg.HapticFeedback.notificationOccurred('success');
-            }
-            alert(`${name} bulimi ishga tushirildi!`);
+        function triggerHaptic(style = 'medium') {
+            tg?.HapticFeedback?.impactOccurred(style);
         }
 
-        // AI Chat Demo
-        function sendMessage() {
-            const input = document.getElementById('chat-input');
-            const box = document.getElementById('chat-box');
+        function handleTap(event) {
+            triggerHaptic('light');
 
-            if (!input.value.trim()) return;
+            const coinGain = isVip ? 20 : 10; // VIP bo'lsa 2x ko'proq coin
+            const particle = document.createElement('div');
+            particle.className = 'particle-coin';
+            particle.innerText = `+${coinGain} 🪙`;
 
-            const userMsg = document.createElement('div');
-            userMsg.className = 'message msg-user';
-            userMsg.innerText = input.value;
-            box.appendChild(userMsg);
+            const x = event.touches ? event.touches[0].clientX : event.clientX;
+            const y = event.touches ? event.touches[0].clientY : event.clientY;
 
-            const userText = input.value;
-            input.value = '';
-            box.scrollTop = box.scrollHeight;
+            particle.style.left = `${x - 20}px`;
+            particle.style.top = `${y - 20}px`;
 
-            setTimeout(() => {
-                const aiMsg = document.createElement('div');
-                aiMsg.className = 'message msg-ai';
-                aiMsg.innerText = `Siz yubordingiz: "${userText}". Bajarilmoqda...`;
-                box.appendChild(aiMsg);
-                box.scrollTop = box.scrollHeight;
-            }, 700);
+            document.body.appendChild(particle);
+
+            setTimeout(() => particle.remove(), 800);
         }
     </script>
 </body>
