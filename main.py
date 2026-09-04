@@ -1,6 +1,5 @@
 import os
 import sqlite3
-import json
 import logging
 import asyncio
 from aiohttp import web
@@ -10,14 +9,14 @@ from aiogram.types import Message, PreCheckoutQuery, ContentType, LabeledPrice
 from aiogram.filters import CommandStart
 from aiogram.fsm.storage.memory import MemoryStorage
 
-# Tokenni Render Environment Variable orqali xavfsiz olamiz
+# Token Environment Variable orqali xavfsiz olinadi
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher(storage=MemoryStorage())
 router = Router()
 
-# ==================== 1. SQLite Baza Initsializatsiyasi ====================
+# ==================== 1. DATABASE SETUP ====================
 def init_db():
     conn = sqlite3.connect("bot_database.db")
     cursor = conn.cursor()
@@ -35,7 +34,6 @@ def init_db():
     conn.commit()
     conn.close()
 
-# ==================== 2. Baza bilan ishlash funksiyalari ====================
 def get_user_data(user_id: int):
     conn = sqlite3.connect("bot_database.db")
     cursor = conn.cursor()
@@ -77,7 +75,7 @@ def set_user_vip(user_id: int):
     conn.commit()
     conn.close()
 
-# ==================== 3. Bot buyruqlari va Handlers ====================
+# ==================== 2. BOT HANDLERS ====================
 @router.message(CommandStart())
 async def cmd_start(message: Message):
     register_or_update_user(
@@ -87,25 +85,24 @@ async def cmd_start(message: Message):
     )
     user_data = get_user_data(message.from_user.id)
     
-    vip_status = "⭐ VIP A'zo" if user_data["is_vip"] else "Oddiy foydalanuvchi"
+    vip_status = "⭐ VIP A'zo (2x Bonus)" if user_data["is_vip"] else "Oddiy foydalanuvchi"
     
     await message.answer(
         f"Xush kelibsiz, {user_data['full_name']}!\n\n"
-        f"Status: {vip_status}\n"
-        f"Balans: {user_data['balance']} UZS\n"
-        f"Tangalar: {user_data['coins']} coin\n\n"
-        f"VIP darajasiga o'tish uchun /buy_vip buyrug'ini yuboring."
+        f"📌 Status: {vip_status}\n"
+        f"💰 Balans: {user_data['balance']} UZS\n"
+        f"🪙 Tangalar: {user_data['coins']} coin\n\n"
+        f"VIP darajasiga o'tish va 2x bonus olish uchun /buy_vip buyrug'ini yuboring."
     )
 
 @router.message(F.text == "/buy_vip")
 async def process_buy_vip(message: Message):
-    # Telegram Stars orqali to'lov yuborish
-    prices = [LabeledPrice(label="VIP Obuna (1 oy)", amount=100)] # 100 Stars
+    prices = [LabeledPrice(label="VIP Obuna (1 oy)", amount=100)]  # 100 Telegram Stars
     await message.answer_invoice(
         title="VIP Status Sotib Olish",
         description="VIP maqomiga ega bo'ling va 2x bonus hamda maxsus imkoniyatlarni qo'lga kiriting!",
         payload="vip_subscription_payload",
-        currency="XTR", # Telegram Stars valyutasi
+        currency="XTR",
         prices=prices
     )
 
@@ -119,9 +116,9 @@ async def process_successful_payment(message: Message):
         set_user_vip(message.from_user.id)
         await message.answer("🎉 Tabriklaymiz! Siz muvaffaqiyatli VIP statusiga ega bo'ldingiz!")
 
-# ==================== 4. Render Port Xatosini Oldini Oluvchi Server ====================
+# ==================== 3. RENDER PORT DUMMY SERVER ====================
 async def handle(request):
-    return web.Response(text="Bot active and running!")
+    return web.Response(text="Bot Web Service Active")
 
 async def start_dummy_server():
     app = web.Application()
@@ -132,12 +129,10 @@ async def start_dummy_server():
     site = web.TCPSite(runner, '0.0.0.0', port)
     await site.start()
 
-# ==================== 5. Asosiy Ishga Tushirish ====================
+# ==================== 4. MAIN ENTRYPOINT ====================
 async def main():
     init_db()
-    # Portni fonda ishga tushirish (Render xatoni darhol yo'qotadi)
     asyncio.create_task(start_dummy_server())
-    
     dp.include_router(router)
     await dp.start_polling(bot)
 
