@@ -8,6 +8,7 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
 
 # Render'dagi Environment Variable'dan tokenni olish
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
+bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
 # 1. Ma'lumotlar bazasini yaratish va sozlash
