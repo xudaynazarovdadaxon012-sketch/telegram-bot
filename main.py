@@ -14,7 +14,7 @@ from aiogram.types import (
 
 # Render Environment Variables'dan avtomatik o'qiydi (Xavfsiz)
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-WEBAPP_URL = os.getenv("WEBAPP_URL")
+WEBAPP_URL = "https://telegram-bot-7n6t.onrender.com"
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
