@@ -261,6 +261,7 @@
 
     // AI CHAT
    // AI CHAT
+// GEMINI REAL AI CHAT
 async function sendAiChat() {
   const input = document.getElementById('chat-in');
   const box = document.getElementById('chat-box');
@@ -278,31 +279,31 @@ async function sendAiChat() {
   box.appendChild(aiMsg);
   box.scrollTop = box.scrollHeight;
 
-  try {
-    const encodedPrompt = encodeURIComponent("Siz Telegram Mini App'dagi aqlli AI yordamchisiz. O'zbek tilida qisqa va aniq javob bering. Savol: " + userText);
-    const response = await fetch(`https://text.pollinations.ai/${encodedPrompt}?model=openai&seed=${Math.floor(Math.random() * 1000)}`);
+  // "Copy key" tugmasidan olgan kodingizni tirnoqlar ichiga joylang:
+  const API_KEY = "AQ.Ab8RN6LFSAexXmYhGphNNNE02yLCG3KaNZSLil13dxCYftd4bQ";
 
-    if (response.ok) {
-      const reply = await response.text();
-      aiMsg.innerText = reply;
+  try {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{ text: `Siz Telegram Mini App ichida ishlaydigan va foydalanuvchilar bilan samimiy muloqot qiluvchi aqlli AI yordamchisiz. O'zbek tilida savollarga aniq, ravon va batafsil javob bering.\n\nSavol: ${userText}` }]
+        }]
+      })
+    });
+
+    const data = await response.json();
+
+    if (data.candidates && data.candidates[0].content.parts[0].text) {
+      aiMsg.innerText = data.candidates[0].content.parts[0].text;
     } else {
-      const backupRes = await fetch(`https://text.pollinations.ai/${encodeURIComponent(userText)}`);
-      if (backupRes.ok) {
-        const backupReply = await backupRes.text();
-        aiMsg.innerText = backupReply;
-      } else {
-        aiMsg.innerText = "AI serveri band, birozdan so'ng qayta urinib ko'ring.";
-      }
+      aiMsg.innerText = "Javob olishda xatolik bo'ldi. Qayta urinib ko'ring.";
     }
   } catch (err) {
-    try {
-      const fallbackRes = await fetch(`https://text.pollinations.ai/${encodeURIComponent(userText)}`);
-      const fallbackText = await fallbackRes.text();
-      aiMsg.innerText = fallbackText;
-    } catch(e) {
-      aiMsg.innerText = "Ulanish xatosi. Iltimos, internetingizni va so'rovni tekshiring.";
-    }
+    aiMsg.innerText = "Ulanishda xatolik yuz berdi. Internetingizni tekshiring.";
   }
+
   box.scrollTop = box.scrollHeight;
 }
 
