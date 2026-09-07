@@ -133,11 +133,45 @@
       }
     }
 
-    function runSim(btn) {
-      const out = btn.nextElementSibling;
-      out.innerText = "Bajarilmoqda...";
-      setTimeout(() => { out.innerText = "Muvaffaqiyatli bajarildi!"; }, 600);
+    async function runSim(btn) {
+  const container = btn.parentElement;
+  const input = container.querySelector('input, textarea');
+  const out = container.querySelector('.output-box');
+
+  if (!input || !input.value.trim()) {
+    out.innerText = "Iltimos, savolingizni yozing!";
+    return;
+  }
+
+  const userQuery = input.value;
+  out.innerHTML = "<i>AI o'ylanmoqda... ⏳</i>";
+  btn.disabled = true;
+
+  try {
+    const response = await fetch("https://text.pollinations.ai/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        messages: [
+          { role: "system", content: "Siz Telegram Mini App'dagi aqlli va xushmuomala AI yordamchisiz. O'zbek tilida javob bering." },
+          { role: "user", content: userQuery }
+        ],
+        model: "openai"
+      })
+    });
+
+    if (response.ok) {
+      const replyText = await response.text();
+      out.innerText = replyText;
+    } else {
+      out.innerText = "AIdan javob olishda xatolik bo'ldi. Qayta urinib ko'ring.";
     }
+  } catch (err) {
+    out.innerText = "Ulanishda xatolik yuz berdi.";
+  } finally {
+    btn.disabled = false;
+  }
+}
 
     function calcEval() {
       try {
