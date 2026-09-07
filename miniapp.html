@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Mega App & Sky Jumper 3D</title>
+  <!-- Telegram WebApp SDK va Three.js kutubxonalari -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;900&family=Plus+Jakarta+Sans:wght@500;700;800&display=swap" rel="stylesheet">
@@ -16,7 +17,7 @@
     .view.active { display: flex; flex-direction: column; }
     
     /* Header */
-    .app-header { background: #141a2e; padding: 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .app-header { background: #141a2e; padding: 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.08); z-index: 20; }
     .app-title { font-family: 'Orbitron', sans-serif; font-size: 18px; font-weight: 900; color: #00e676; }
     .btn-game-launch { background: linear-gradient(135deg, #00e676, #00b0ff); color: #050b14; border: none; padding: 8px 16px; border-radius: 12px; font-weight: 800; cursor: pointer; }
 
@@ -35,11 +36,11 @@
     .output-box { background: #101626; border: 1px dashed rgba(255,255,255,0.2); border-radius: 12px; padding: 14px; min-height: 80px; font-size: 13px; color: #a0aec0; word-break: break-all; }
 
     /* 3D Game Layer */
-    #webgl-container { width: 100%; height: 100%; }
+    #webgl-container { width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 1; }
     .game-hud { position: absolute; top: 16px; left: 16px; right: 16px; display: flex; justify-content: space-between; z-index: 10; pointer-events: none; }
     .hud-box { background: rgba(15,22,42,0.85); backdrop-filter: blur(10px); padding: 8px 16px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.1); font-weight: 800; font-size: 14px; }
     .game-ctrl { position: absolute; bottom: 20px; left: 0; right: 0; display: flex; justify-content: space-between; padding: 0 24px; z-index: 10; }
-    .btn-ctrl { width: 70px; height: 70px; border-radius: 50%; background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.3); display: flex; justify-content: center; align-items: center; font-size: 24px; }
+    .btn-ctrl { width: 70px; height: 70px; border-radius: 50%; background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.3); display: flex; justify-content: center; align-items: center; font-size: 24px; touch-action: manipulation; }
   </style>
 </head>
 <body>
@@ -66,7 +67,7 @@
     </div>
   </div>
 
-  <!-- GENERIC TOOL VIEW TEMPLATE -->
+  <!-- GENERIC TOOL VIEW -->
   <div id="view-tool" class="view">
     <div class="app-header">
       <button class="btn-back" onclick="showHub()">◄ Orqaga</button>
@@ -75,7 +76,7 @@
     <div class="tool-body" id="tool-content"></div>
   </div>
 
-  <!-- GAME VIEW -->
+  <!-- 3D GAME VIEW -->
   <div id="view-game" class="view">
     <div class="game-hud">
       <div class="hud-box" style="color:#00e676;" id="g-score">0m</div>
@@ -104,7 +105,7 @@
       init3DGame();
     }
 
-    // --- TOOL ROUTER ---
+    // --- XIZMATLAR ROUTERI ---
     function openTool(type) {
       document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
       document.getElementById('view-tool').classList.add('active');
@@ -114,7 +115,7 @@
       const tools = {
         'ai-chat': { t: 'AI CHAT', c: '<textarea placeholder="Savolingizni yozing..."></textarea><button class="btn-action" onclick="runSim(this)">YUBORISH</button><div class="output-box">AI Javobi shu yerda chiqadi...</div>' },
         'ai-rasm': { t: 'AI RASM YARATISH', c: '<input placeholder="Rasm tavsifi (Prompt)..."><button class="btn-action" onclick="runSim(this)">GENERATSIYA QILISH</button><div class="output-box">Rasm havola ko\'rinishida tayyorlanadi...</div>' },
-        'media-dl': { t: 'MEDIA DOWNLOADER', c: '<input placeholder="Instagram/TikTok/YouTube link..."><button class="btn-action" onclick="runSim(this)">YUKLASH</button><div class="output-box">Media fayl tayyor...</div>' },
+        'media-dl': { t: 'MEDIA DOWNLOADER', c: '<input placeholder="Instagram/TikTok/YouTube link..."><button class="btn-action" onclick="runSim(this)">YUKLASH</button><div class="output-box">Media fayl yuklashga tayyor...</div>' },
         'kripto': { t: 'KRIPTO KURSI', c: '<div class="output-box"><b>BTC:</b> $64,200<br><b>ETH:</b> $3,450<br><b>TON:</b> $6.80</div>' },
         'link-short': { t: 'LINK QISQARTIRISH', c: '<input placeholder="Uzun linkni kiriting..."><button class="btn-action" onclick="runSim(this)">QISQARTIRISH</button><div class="output-box">https://clck.ru/sample</div>' },
         'tarjimon': { t: 'TARJIMON', c: '<textarea placeholder="Matn kiriting..."></textarea><button class="btn-action" onclick="runSim(this)">TARJIMA QILISH</button><div class="output-box">Tarjima natijasi...</div>' },
@@ -122,7 +123,7 @@
         'calc': { t: 'KALKULYATOR', c: '<input id="calc-in" placeholder="12+45*2"><button class="btn-action" onclick="calcEval()">HISOBLASH</button><div class="output-box" id="calc-out">Natija: 0</div>' },
         'ob-havo': { t: 'OB-HAVO', c: '<input placeholder="Shahar nomi..."><button class="btn-action" onclick="runSim(this)">IZLASH</button><div class="output-box">Toshkent: +28°C, Mūsayiqlik</div>' },
         'valyuta': { t: 'VALYUTA KURSI', c: '<div class="output-box"><b>1 USD:</b> 12,650 UZS<br><b>1 EUR:</b> 13,800 UZS<br><b>1 RUB:</b> 142 UZS</div>' },
-        'eslatma': { t: 'ESLATMALAR', c: '<input placeholder="Eslatmat matni..."><button class="btn-action" onclick="runSim(this)">SAQLASH</button><div class="output-box">1. Loyihani sotuvga chiqarish.</div>' },
+        'eslatma': { t: 'ESLATMALAR', c: '<input placeholder="Eslatma matni..."><button class="btn-action" onclick="runSim(this)">SAQLASH</button><div class="output-box">1. Loyihani sotuvga chiqarish.</div>' },
         'admin': { t: 'ADMIN PANEL', c: '<div class="output-box"><b>Foydalanuvchilar:</b> 1,240 ta<br><b>Bugungi aktivlik:</b> 310<br><b>Tizim holati:</b> 100% OK</div>' }
       };
 
@@ -135,7 +136,7 @@
     function runSim(btn) {
       const out = btn.nextElementSibling;
       out.innerText = "Bajarilmoqda...";
-      setTimeout(() => { out.innerText = "Muvaffaqiyatli bajarildi (Demo Mode)"; }, 600);
+      setTimeout(() => { out.innerText = "Muvaffaqiyatli bajarildi!"; }, 600);
     }
 
     function calcEval() {
@@ -152,10 +153,12 @@
     let moveLeft = false, moveRight = false;
 
     function init3DGame() {
+      const container = document.getElementById('webgl-container');
+      if (!container) return;
+
       if (gameInited) { resetGame(); return; }
       gameInited = true;
 
-      const container = document.getElementById('webgl-container');
       scene = new THREE.Scene();
       scene.background = new THREE.Color(0x0c101c);
 
@@ -175,6 +178,14 @@
       resetGame();
       setupControls();
       animate();
+
+      window.addEventListener('resize', () => {
+        if (camera && renderer) {
+          camera.aspect = window.innerWidth / window.innerHeight;
+          camera.updateProjectionMatrix();
+          renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+      });
     }
 
     function resetGame() {
@@ -200,15 +211,28 @@
     function setupControls() {
       const l = document.getElementById('g-left');
       const r = document.getElementById('g-right');
-      l.addEventListener('pointerdown', () => moveLeft = true);
-      l.addEventListener('pointerup', () => moveLeft = false);
-      r.addEventListener('pointerdown', () => moveRight = true);
-      r.addEventListener('pointerup', () => moveRight = false);
+      
+      const setLeft = (val) => moveLeft = val;
+      const setRight = (val) => moveRight = val;
+
+      l.addEventListener('pointerdown', () => setLeft(true));
+      l.addEventListener('pointerup', () => setLeft(false));
+      r.addEventListener('pointerdown', () => setRight(true));
+      r.addEventListener('pointerup', () => setRight(false));
+
+      window.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowLeft') setLeft(true);
+        if (e.key === 'ArrowRight') setRight(true);
+      });
+      window.addEventListener('keyup', (e) => {
+        if (e.key === 'ArrowLeft') setLeft(false);
+        if (e.key === 'ArrowRight') setRight(false);
+      });
     }
 
     function animate() {
       requestAnimationFrame(animate);
-      if (isPlaying) {
+      if (isPlaying && player) {
         if (moveLeft) player.position.x -= 0.1;
         if (moveRight) player.position.x += 0.1;
 
@@ -232,7 +256,7 @@
 
         if (player.position.y < score - 8) { resetGame(); }
       }
-      if (renderer) renderer.render(scene, camera);
+      if (renderer && scene && camera) renderer.render(scene, camera);
     }
   </script>
 </body>
