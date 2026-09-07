@@ -1,6 +1,6 @@
-import os
 import asyncio
 import logging
+import os  # <-- Buni qo'shing
 from aiogram import Bot, Dispatcher, F, types
 from aiogram.filters import CommandStart
 from aiogram.types import (
@@ -12,11 +12,9 @@ from aiogram.types import (
 )
 
 
-# GitHub'da token ko'rinmaydi, xavfsiz!
+# Render Environment Variables'dan avtomatik o'qiydi (Xavfsiz)
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-
-# Vercel yoki Netlify'dan olgan HTTPS linkingiz
-WEBAPP_URL = "https://telegram-bot-7n6t.onrender.com"
+WEBAPP_URL = os.getenv("WEBAPP_URL")
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
@@ -58,10 +56,25 @@ async def process_successful_payment(message: types.Message):
     )
 
 
+from aiohttp import web
+
+async def handle(request):
+    return web.Response(text="Bot ishlayapti!")
+
 async def main():
     logging.basicConfig(level=logging.INFO)
-    await dp.start_polling(bot)
+    
+    # Render port talab qilgani uchun soxta server
+    app = web.Application()
+    app.router.add_get("/", handle)
+    runner = web.AppRunner(app)
+    await runner.setup()
+    port = int(os.getenv("PORT", 8080))
+    site = web.TCPSite(runner, "0.0.0.0", port)
+    await site.start()
 
+    # Bot Polling
+    await dp.start_polling(bot)
 
 if __name__ == "__main__":
     asyncio.run(main())
