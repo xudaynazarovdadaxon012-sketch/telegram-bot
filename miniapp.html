@@ -344,47 +344,19 @@ async function sendAiChat() {
       out.innerText = text;
     }
 
-    // 3D GAME ENGINE
-    let gameInited = false;
-    let scene, camera, renderer, player, platforms = [];
-    let score = 0, coins = 0, jumpVel = 0, isPlaying = false;
-    let moveLeft = false, moveRight = false;
+   let distance = 0; // Bosib o'tilgan metr
+let coins = 0;    // Yig'ilgan tangalar
+let isGameOver = false;
 
-    function init3DGame() {
-      const container = document.getElementById('webgl-container');
-      if (!container) return;
+// O'yin siklida masofani oshirib borish
+function updateGame() {
+  if (isGameOver) return;
 
-      if (gameInited) { resetGame(); return; }
-      gameInited = true;
-
-      scene = new THREE.Scene();
-      scene.background = new THREE.Color(0x070913);
-
-      camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
-      renderer = new THREE.WebGLRenderer({ antialias: true });
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      container.appendChild(renderer.domElement);
-
-      const light = new THREE.AmbientLight(0xffffff, 0.9);
-      scene.add(light);
-
-      const pGeo = new THREE.SphereGeometry(0.6, 24, 24);
-      const pMat = new THREE.MeshBasicMaterial({ color: 0x00f2fe });
-      player = new THREE.Mesh(pGeo, pMat);
-      scene.add(player);
-
-      resetGame();
-      setupControls();
-      animate();
-
-      window.addEventListener('resize', () => {
-        if (camera && renderer) {
-          camera.aspect = window.innerWidth / window.innerHeight;
-          camera.updateProjectionMatrix();
-          renderer.setSize(window.innerWidth, window.innerHeight);
-        }
-      });
-    }
+  distance += 0.1; // Tezlikka qarab metr oshadi
+  
+  // Tanga yig'ilganda:
+  // coins += 1;
+}
 
     function resetGame() {
       score = 0; coins = 0; jumpVel = 0.35; isPlaying = true;
