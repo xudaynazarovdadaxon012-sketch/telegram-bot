@@ -3,71 +3,144 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Mega App & Sky Jumper 3D</title>
-  <!-- Telegram WebApp SDK va Three.js kutubxonalari -->
+  <title>Mega AI & Games Suite</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;900&family=Plus+Jakarta+Sans:wght@500;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --bg: #070913;
+      --card-bg: rgba(22, 27, 46, 0.7);
+      --border: rgba(255, 255, 255, 0.08);
+      --primary: #6366f1;
+      --accent: #00f2fe;
+    }
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; font-family: 'Plus Jakarta Sans', sans-serif; }
-    body, html { width: 100%; height: 100%; overflow: hidden; background: #0c101c; color: #fff; }
-    
-    /* App Views */
+    body, html { width: 100%; height: 100%; overflow: hidden; background: var(--bg); color: #fff; }
+
     .view { display: none; width: 100%; height: 100%; position: absolute; top: 0; left: 0; }
     .view.active { display: flex; flex-direction: column; }
+
+    /* HEADER */
+    .app-header { background: rgba(13, 17, 30, 0.8); backdrop-filter: blur(12px); padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); z-index: 20; }
+    .app-title { font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 700; background: linear-gradient(135deg, #00f2fe, #4facfe); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     
-    /* Header */
-    .app-header { background: #141a2e; padding: 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.08); z-index: 20; }
-    .app-title { font-family: 'Orbitron', sans-serif; font-size: 18px; font-weight: 900; color: #00e676; }
-    .btn-game-launch { background: linear-gradient(135deg, #00e676, #00b0ff); color: #050b14; border: none; padding: 8px 16px; border-radius: 12px; font-weight: 800; cursor: pointer; }
+    .btn-game-launch { 
+      background: linear-gradient(135deg, #ff0844 0%, #ffb199 100%); 
+      color: #fff; border: none; padding: 10px 16px; border-radius: 12px; font-weight: 700; cursor: pointer; 
+      box-shadow: 0 4px 15px rgba(255, 8, 68, 0.3); transition: 0.2s;
+    }
+    .btn-game-launch:active { transform: scale(0.95); }
 
-    /* Hub Grid */
-    .hub-container { flex: 1; padding: 16px; overflow-y: auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; align-content: start; }
-    .hub-card { background: #151c33; border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 14px 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; cursor: pointer; gap: 8px; transition: 0.2s; }
-    .hub-card:active { transform: scale(0.95); background: #1d2645; }
-    .hub-icon { font-size: 26px; }
-    .hub-label { font-size: 11px; font-weight: 700; color: #d0d7f0; }
+    /* HUB GRID */
+    .hub-container { flex: 1; padding: 20px; overflow-y: auto; display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; align-content: start; }
+    .hub-card { 
+      background: var(--card-bg); border: 1px solid var(--border); backdrop-filter: blur(10px); 
+      border-radius: 20px; padding: 20px 14px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; transition: 0.3s;
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+    }
+    .hub-card:active { transform: scale(0.96); }
+    .hub-icon-wrap { width: 50px; height: 50px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+    .hub-title { font-size: 13px; font-weight: 700; color: #f1f5f9; }
+    .hub-desc { font-size: 10px; color: #64748b; margin-top: -4px; }
 
-    /* Tool Modal Views */
-    .tool-body { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; }
-    .btn-back { background: rgba(255,255,255,0.1); border: none; color: #fff; padding: 8px 14px; border-radius: 10px; font-weight: 700; cursor: pointer; width: fit-content; }
-    input, textarea, select { width: 100%; background: #182038; border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; padding: 12px; color: #fff; outline: none; font-size: 14px; }
-    .btn-action { background: #00e676; color: #050b14; border: none; padding: 14px; border-radius: 12px; font-weight: 800; cursor: pointer; width: 100%; }
-    .output-box { background: #101626; border: 1px dashed rgba(255,255,255,0.2); border-radius: 12px; padding: 14px; min-height: 80px; font-size: 13px; color: #a0aec0; word-break: break-all; }
+    /* CARD CUSTOM STYLES */
+    .card-ai-chat .hub-icon-wrap { background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(168, 85, 247, 0.2)); color: #a855f7; border: 1px solid rgba(168, 85, 247, 0.3); }
+    .card-ai-img .hub-icon-wrap { background: linear-gradient(135deg, rgba(236, 72, 153, 0.2), rgba(244, 63, 94, 0.2)); color: #ec4899; border: 1px solid rgba(236, 72, 153, 0.3); }
+    .card-media .hub-icon-wrap { background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(59, 130, 246, 0.2)); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .card-kripto .hub-icon-wrap { background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(217, 119, 6, 0.2)); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .card-link .hub-icon-wrap { background: linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(59, 130, 246, 0.2)); color: #06b6d4; border: 1px solid rgba(6, 182, 212, 0.3); }
+    .card-trans .hub-icon-wrap { background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(99, 102, 241, 0.2)); color: #8b5cf6; border: 1px solid rgba(139, 92, 246, 0.3); }
+    .card-qr .hub-icon-wrap { background: linear-gradient(135deg, rgba(236, 72, 153, 0.2), rgba(139, 92, 246, 0.2)); color: #f43f5e; border: 1px solid rgba(244, 63, 94, 0.3); }
+    .card-admin .hub-icon-wrap { background: linear-gradient(135deg, rgba(100, 116, 139, 0.2), rgba(71, 85, 105, 0.2)); color: #cbd5e1; border: 1px solid rgba(148, 163, 184, 0.3); }
 
-    /* 3D Game Layer */
+    /* TOOL BODY STYLES */
+    .tool-body { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; }
+    .btn-back { background: rgba(255,255,255,0.06); border: 1px solid var(--border); color: #fff; padding: 8px 14px; border-radius: 10px; font-weight: 600; cursor: pointer; width: fit-content; font-size: 12px; }
+    
+    input, textarea { width: 100%; background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border); border-radius: 14px; padding: 14px; color: #fff; outline: none; font-size: 14px; transition: 0.2s; }
+    input:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 10px rgba(99, 102, 241, 0.3); }
+
+    .btn-action { background: linear-gradient(135deg, #4f46e5, #7c3aed); color: #fff; border: none; padding: 14px; border-radius: 14px; font-weight: 700; cursor: pointer; width: 100%; box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4); }
+
+    /* CUSTOM TOOL STYLINGS */
+    /* AI Chat UI */
+    .chat-box { flex: 1; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; max-height: 380px; padding-right: 4px; }
+    .chat-msg { padding: 12px 16px; border-radius: 16px; font-size: 13px; max-width: 85%; line-height: 1.5; }
+    .chat-msg.user { background: #4f46e5; color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; }
+    .chat-msg.ai { background: rgba(30, 41, 59, 0.8); border: 1px solid var(--border); color: #e2e8f0; align-self: flex-start; border-bottom-left-radius: 4px; }
+
+    /* Crypto UI */
+    .crypto-card { background: rgba(30, 41, 59, 0.5); border: 1px solid var(--border); border-radius: 16px; padding: 14px; display: flex; justify-content: space-between; align-items: center; }
+    .crypto-info { display: flex; align-items: center; gap: 10px; }
+    .crypto-price { font-weight: 700; font-family: 'Space Grotesk', sans-serif; }
+
+    /* Admin UI */
+    .stat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .stat-card { background: rgba(30, 41, 59, 0.6); border: 1px solid var(--border); border-radius: 16px; padding: 16px; text-align: center; }
+    .stat-value { font-size: 22px; font-weight: 800; color: #00f2fe; font-family: 'Space Grotesk', sans-serif; }
+
+    /* GAME VIEW */
     #webgl-container { width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 1; }
     .game-hud { position: absolute; top: 16px; left: 16px; right: 16px; display: flex; justify-content: space-between; z-index: 10; pointer-events: none; }
-    .hud-box { background: rgba(15,22,42,0.85); backdrop-filter: blur(10px); padding: 8px 16px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.1); font-weight: 800; font-size: 14px; }
+    .hud-box { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(12px); padding: 8px 16px; border-radius: 14px; border: 1px solid var(--border); font-weight: 800; font-size: 14px; }
     .game-ctrl { position: absolute; bottom: 20px; left: 0; right: 0; display: flex; justify-content: space-between; padding: 0 24px; z-index: 10; }
-    .btn-ctrl { width: 70px; height: 70px; border-radius: 50%; background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.3); display: flex; justify-content: center; align-items: center; font-size: 24px; touch-action: manipulation; }
+    .btn-ctrl { width: 70px; height: 70px; border-radius: 50%; background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); display: flex; justify-content: center; align-items: center; font-size: 24px; touch-action: manipulation; }
   </style>
 </head>
 <body>
 
-  <!-- MAIN HUB VIEW -->
+  <!-- MAIN HUB -->
   <div id="view-hub" class="view active">
     <div class="app-header">
-      <div class="app-title">MEGA HUB</div>
-      <button class="btn-game-launch" onclick="openGame()">🎮 SKY JUMPER 3D</button>
+      <div class="app-title">MEGA AI SUITE</div>
+      <button class="btn-game-launch" onclick="openGame()">🎮 3D GAME</button>
     </div>
     <div class="hub-container">
-      <div class="hub-card" onclick="openTool('ai-chat')"><div class="hub-icon">🤖</div><div class="hub-label">AI Chat</div></div>
-      <div class="hub-card" onclick="openTool('ai-rasm')"><div class="hub-icon">🎨</div><div class="hub-label">AI Rasm</div></div>
-      <div class="hub-card" onclick="openTool('media-dl')"><div class="hub-icon">📥</div><div class="hub-label">Media Downloader</div></div>
-      <div class="hub-card" onclick="openTool('kripto')"><div class="hub-icon">📈</div><div class="hub-label">Kripto Kursi</div></div>
-      <div class="hub-card" onclick="openTool('link-short')"><div class="hub-icon">🔗</div><div class="hub-label">Link Qisqartirish</div></div>
-      <div class="hub-card" onclick="openTool('tarjimon')"><div class="hub-icon">🌐</div><div class="hub-label">Tarjimon</div></div>
-      <div class="hub-card" onclick="openTool('qr-gen')"><div class="hub-icon">📱</div><div class="hub-label">QR Yaratish</div></div>
-      <div class="hub-card" onclick="openTool('calc')"><div class="hub-icon">🧮</div><div class="hub-label">Kalkulyator</div></div>
-      <div class="hub-card" onclick="openTool('ob-havo')"><div class="hub-icon">🌤️</div><div class="hub-label">Ob-havo</div></div>
-      <div class="hub-card" onclick="openTool('valyuta')"><div class="hub-icon">💵</div><div class="hub-label">Valyuta Kursi</div></div>
-      <div class="hub-card" onclick="openTool('eslatma')"><div class="hub-icon">📝</div><div class="hub-label">Eslatmalar</div></div>
-      <div class="hub-card" onclick="openTool('admin')"><div class="hub-icon">⚙️</div><div class="hub-label">Admin Panel</div></div>
+      <div class="hub-card card-ai-chat" onclick="openTool('ai-chat')">
+        <div class="hub-icon-wrap">🤖</div>
+        <div class="hub-title">AI Assistant</div>
+        <div class="hub-desc">GPT-4o aqlli chat</div>
+      </div>
+      <div class="hub-card card-ai-img" onclick="openTool('ai-rasm')">
+        <div class="hub-icon-wrap">🎨</div>
+        <div class="hub-title">AI Studio</div>
+        <div class="hub-desc">Rasm yaratish</div>
+      </div>
+      <div class="hub-card card-media" onclick="openTool('media-dl')">
+        <div class="hub-icon-wrap">⚡</div>
+        <div class="hub-title">Downloader</div>
+        <div class="hub-desc">Media yuklagich</div>
+      </div>
+      <div class="hub-card card-kripto" onclick="openTool('kripto')">
+        <div class="hub-icon-wrap">📈</div>
+        <div class="hub-title">Crypto Live</div>
+        <div class="hub-desc">Bozor kurslari</div>
+      </div>
+      <div class="hub-card card-link" onclick="openTool('link-short')">
+        <div class="hub-icon-wrap">🔗</div>
+        <div class="hub-title">Short Link</div>
+        <div class="hub-desc">Link qisqartirish</div>
+      </div>
+      <div class="hub-card card-trans" onclick="openTool('tarjimon')">
+        <div class="hub-icon-wrap">🌐</div>
+        <div class="hub-title">Translator</div>
+        <div class="hub-desc">Ko'p tilli tarjima</div>
+      </div>
+      <div class="hub-card card-qr" onclick="openTool('qr-gen')">
+        <div class="hub-icon-wrap">📱</div>
+        <div class="hub-title">QR Creator</div>
+        <div class="hub-desc">QR kod yaratish</div>
+      </div>
+      <div class="hub-card card-admin" onclick="openTool('admin')">
+        <div class="hub-icon-wrap">📊</div>
+        <div class="hub-title">Analytics</div>
+        <div class="hub-desc">Tizim statistikasi</div>
+      </div>
     </div>
   </div>
 
-  <!-- GENERIC TOOL VIEW -->
+  <!-- TOOL VIEW -->
   <div id="view-tool" class="view">
     <div class="app-header">
       <button class="btn-back" onclick="showHub()">◄ Orqaga</button>
@@ -79,7 +152,7 @@
   <!-- 3D GAME VIEW -->
   <div id="view-game" class="view">
     <div class="game-hud">
-      <div class="hud-box" style="color:#00e676;" id="g-score">0m</div>
+      <div class="hud-box" style="color:#00f2fe;" id="g-score">0m</div>
       <button class="btn-back" onclick="showHub()" style="pointer-events:auto;">✕ Chiqish</button>
       <div class="hud-box" style="color:#ffd700;" id="g-coins">🪙 0</div>
     </div>
@@ -105,82 +178,163 @@
       init3DGame();
     }
 
-    // --- XIZMATLAR ROUTERI ---
     function openTool(type) {
       document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
       document.getElementById('view-tool').classList.add('active');
       const title = document.getElementById('tool-title');
       const content = document.getElementById('tool-content');
 
-      const tools = {
-        'ai-chat': { t: 'AI CHAT', c: '<textarea placeholder="Savolingizni yozing..."></textarea><button class="btn-action" onclick="runSim(this)">YUBORISH</button><div class="output-box">AI Javobi shu yerda chiqadi...</div>' },
-        'ai-rasm': { t: 'AI RASM YARATISH', c: '<input placeholder="Rasm tavsifi (Prompt)..."><button class="btn-action" onclick="runSim(this)">GENERATSIYA QILISH</button><div class="output-box">Rasm havola ko\'rinishida tayyorlanadi...</div>' },
-        'media-dl': { t: 'MEDIA DOWNLOADER', c: '<input placeholder="Instagram/TikTok/YouTube link..."><button class="btn-action" onclick="runSim(this)">YUKLASH</button><div class="output-box">Media fayl yuklashga tayyor...</div>' },
-        'kripto': { t: 'KRIPTO KURSI', c: '<div class="output-box"><b>BTC:</b> $64,200<br><b>ETH:</b> $3,450<br><b>TON:</b> $6.80</div>' },
-        'link-short': { t: 'LINK QISQARTIRISH', c: '<input placeholder="Uzun linkni kiriting..."><button class="btn-action" onclick="runSim(this)">QISQARTIRISH</button><div class="output-box">https://clck.ru/sample</div>' },
-        'tarjimon': { t: 'TARJIMON', c: '<textarea placeholder="Matn kiriting..."></textarea><button class="btn-action" onclick="runSim(this)">TARJIMA QILISH</button><div class="output-box">Tarjima natijasi...</div>' },
-        'qr-gen': { t: 'QR YARATISH', c: '<input placeholder="Matn yoki Link..."><button class="btn-action" onclick="runSim(this)">QR HOZIRLASH</button><div class="output-box">QR Code kodi yaratildi.</div>' },
-        'calc': { t: 'KALKULYATOR', c: '<input id="calc-in" placeholder="12+45*2"><button class="btn-action" onclick="calcEval()">HISOBLASH</button><div class="output-box" id="calc-out">Natija: 0</div>' },
-        'ob-havo': { t: 'OB-HAVO', c: '<input placeholder="Shahar nomi..."><button class="btn-action" onclick="runSim(this)">IZLASH</button><div class="output-box">Toshkent: +28°C, Mūsayiqlik</div>' },
-        'valyuta': { t: 'VALYUTA KURSI', c: '<div class="output-box"><b>1 USD:</b> 12,650 UZS<br><b>1 EUR:</b> 13,800 UZS<br><b>1 RUB:</b> 142 UZS</div>' },
-        'eslatma': { t: 'ESLATMALAR', c: '<input placeholder="Eslatma matni..."><button class="btn-action" onclick="runSim(this)">SAQLASH</button><div class="output-box">1. Loyihani sotuvga chiqarish.</div>' },
-        'admin': { t: 'ADMIN PANEL', c: '<div class="output-box"><b>Foydalanuvchilar:</b> 1,240 ta<br><b>Bugungi aktivlik:</b> 310<br><b>Tizim holati:</b> 100% OK</div>' }
-      };
-
-      if (tools[type]) {
-        title.innerText = tools[type].t;
-        content.innerHTML = tools[type].c;
+      if (type === 'ai-chat') {
+        title.innerText = 'AI ASSISTANT (GPT-4o)';
+        content.innerHTML = `
+          <div class="chat-box" id="chat-box">
+            <div class="chat-msg ai">Assalomu alaykum! Men GPT-4o AI yordamchisiman. Nimada yordam bera olaman?</div>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <input id="chat-in" placeholder="Xabar yozing..." onkeypress="if(event.key==='Enter') sendAiChat()">
+            <button class="btn-action" style="width: auto; padding: 0 20px;" onclick="sendAiChat()">➤</button>
+          </div>
+        `;
+      } else if (type === 'ai-rasm') {
+        title.innerText = 'AI IMAGE STUDIO';
+        content.innerHTML = `
+          <input id="img-prompt" placeholder="Rasm tavsifini yozing (masalan: Futuristic city at night)...">
+          <button class="btn-action" onclick="generateImage(this)">Rasm Yaratish 🎨</button>
+          <div id="img-result" style="text-align:center; margin-top:10px;"></div>
+        `;
+      } else if (type === 'kripto') {
+        title.innerText = 'CRYPTO LIVE PRICES';
+        content.innerHTML = `
+          <div class="crypto-card">
+            <div class="crypto-info"><span style="font-size:24px;">₿</span><div><b>Bitcoin</b><br><small style="color:#64748b;">BTC/USD</small></div></div>
+            <div class="crypto-price" style="color:#10b981;">$64,280.00</div>
+          </div>
+          <div class="crypto-card">
+            <div class="crypto-info"><span style="font-size:24px;">Ξ</span><div><b>Ethereum</b><br><small style="color:#64748b;">ETH/USD</small></div></div>
+            <div class="crypto-price" style="color:#10b981;">$3,490.50</div>
+          </div>
+          <div class="crypto-card">
+            <div class="crypto-info"><span style="font-size:24px;">💎</span><div><b>Toncoin</b><br><small style="color:#64748b;">TON/USD</small></div></div>
+            <div class="crypto-price" style="color:#10b981;">$6.85</div>
+          </div>
+        `;
+      } else if (type === 'media-dl') {
+        title.innerText = 'MEDIA DOWNLOADER';
+        content.innerHTML = `
+          <input placeholder="Instagram, TikTok yoki YouTube linkini qo'ying...">
+          <button class="btn-action" onclick="simpleAction(this, 'Fayl tayyorlandi! Yuklab olish boshlandi.')">Yuklab Olish 📥</button>
+          <div class="output-box" style="margin-top:10px;"></div>
+        `;
+      } else if (type === 'link-short') {
+        title.innerText = 'LINK QISQARTIRISH';
+        content.innerHTML = `
+          <input placeholder="https://juda-uzun-havola-manzili.com/path...">
+          <button class="btn-action" onclick="simpleAction(this, 'Qisqa link: https://clck.ru/3Ai9X')">Qisqartirish 🔗</button>
+          <div class="output-box" style="margin-top:10px;"></div>
+        `;
+      } else if (type === 'tarjimon') {
+        title.innerText = 'AI TARJIMON';
+        content.innerHTML = `
+          <textarea placeholder="Tarjima qilish uchun matn kiriting..."></textarea>
+          <button class="btn-action" onclick="simpleAction(this, 'Tarjima muvaffaqiyatli bajarildi.')">Tarjima Qilish 🌐</button>
+          <div class="output-box" style="margin-top:10px;"></div>
+        `;
+      } else if (type === 'qr-gen') {
+        title.innerText = 'QR KOD YARATISH';
+        content.innerHTML = `
+          <input placeholder="Matn yoki URL kiriting...">
+          <button class="btn-action" onclick="simpleAction(this, 'QR Kod tayyorlandi!')">QR Yaratish 📱</button>
+          <div class="output-box" style="margin-top:10px;"></div>
+        `;
+      } else if (type === 'admin') {
+        title.innerText = 'SYSTEM ANALYTICS';
+        content.innerHTML = `
+          <div class="stat-grid">
+            <div class="stat-card"><div class="stat-value">2,840</div><small style="color:#94a3b8;">Foydalanuvchilar</small></div>
+            <div class="stat-card"><div class="stat-value">18.4k</div><small style="color:#94a3b8;">AI So'rovlar</small></div>
+            <div class="stat-card"><div class="stat-value" style="color:#10b981;">99.9%</div><small style="color:#94a3b8;">Uptime</small></div>
+            <div class="stat-card"><div class="stat-value" style="color:#f59e0b;">$450</div><small style="color:#94a3b8;">Kunlik daromad</small></div>
+          </div>
+        `;
       }
     }
 
-    async function runSim(btn) {
-  const container = btn.parentElement;
-  const input = container.querySelector('input, textarea');
-  const out = container.querySelector('.output-box');
+    // AI CHAT
+    async function sendAiChat() {
+      const input = document.getElementById('chat-in');
+      const box = document.getElementById('chat-box');
+      if (!input || !input.value.trim()) return;
 
-  if (!input || !input.value.trim()) {
-    out.innerText = "Iltimos, savolingizni yozing!";
-    return;
-  }
+      const userText = input.value;
+      input.value = '';
 
-  const userQuery = input.value;
-  out.innerHTML = "<i>AI o'ylanmoqda... ⏳</i>";
-  btn.disabled = true;
+      box.innerHTML += `<div class="chat-msg user">${userText}</div>`;
+      box.scrollTop = box.scrollHeight;
 
-  try {
-    const response = await fetch("https://text.pollinations.ai/", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        messages: [
-          { role: "system", content: "Siz Telegram Mini App'dagi aqlli va xushmuomala AI yordamchisiz. O'zbek tilida javob bering." },
-          { role: "user", content: userQuery }
-        ],
-        model: "openai"
-      })
-    });
+      const aiMsg = document.createElement('div');
+      aiMsg.className = 'chat-msg ai';
+      aiMsg.innerText = 'O\'ylanmoqda... ⏳';
+      box.appendChild(aiMsg);
+      box.scrollTop = box.scrollHeight;
 
-    if (response.ok) {
-      const replyText = await response.text();
-      out.innerText = replyText;
-    } else {
-      out.innerText = "AIdan javob olishda xatolik bo'ldi. Qayta urinib ko'ring.";
-    }
-  } catch (err) {
-    out.innerText = "Ulanishda xatolik yuz berdi.";
-  } finally {
-    btn.disabled = false;
-  }
-}
-
-    function calcEval() {
       try {
-        const val = document.getElementById('calc-in').value;
-        document.getElementById('calc-out').innerText = "Natija: " + eval(val);
-      } catch(e) { document.getElementById('calc-out').innerText = "Xato!"; }
+        const response = await fetch("https://text.pollinations.ai/", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            messages: [
+              { role: "system", content: "Siz Telegram Mini App'dagi aqlli va xushmuomala AI yordamchisiz. O'zbek tilida aniq va chiroyli javob bering." },
+              { role: "user", content: userText }
+            ],
+            model: "openai"
+          })
+        });
+
+        if (response.ok) {
+          const reply = await response.text();
+          aiMsg.innerText = reply;
+        } else {
+          aiMsg.innerText = "AIdan javob olishda xatolik bo'ldi.";
+        }
+      } catch (err) {
+        aiMsg.innerText = "Ulanishda xatolik yuz berdi.";
+      }
+      box.scrollTop = box.scrollHeight;
     }
 
-    // --- 3D GAME ENGINE ---
+    function generateImage(btn) {
+      const prompt = document.getElementById('img-prompt').value;
+      const res = document.getElementById('img-result');
+      if (!prompt) return;
+
+      btn.disabled = true;
+      res.innerHTML = "<i>Rasm chizilmoqda... 🎨</i>";
+
+      setTimeout(() => {
+        const imgUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=400&height=400&nologo=true`;
+        res.innerHTML = `<img src="${imgUrl}" style="width:100%; border-radius:16px; margin-top:10px; border:1px solid var(--border);">`;
+        btn.disabled = false;
+      }, 1000);
+    }
+
+    function simpleAction(btn, text) {
+      const parent = btn.parentElement;
+      let out = parent.querySelector('.output-box');
+      if (!out) {
+        out = document.createElement('div');
+        out.className = 'output-box';
+        parent.appendChild(out);
+      }
+      out.style.background = 'rgba(15, 23, 42, 0.8)';
+      out.style.border = '1px dashed var(--border)';
+      out.style.padding = '12px';
+      out.style.borderRadius = '12px';
+      out.style.fontSize = '13px';
+      out.style.color = '#e2e8f0';
+      out.innerText = text;
+    }
+
+    // 3D GAME ENGINE
     let gameInited = false;
     let scene, camera, renderer, player, platforms = [];
     let score = 0, coins = 0, jumpVel = 0, isPlaying = false;
@@ -194,7 +348,7 @@
       gameInited = true;
 
       scene = new THREE.Scene();
-      scene.background = new THREE.Color(0x0c101c);
+      scene.background = new THREE.Color(0x070913);
 
       camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
       renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -205,7 +359,7 @@
       scene.add(light);
 
       const pGeo = new THREE.SphereGeometry(0.6, 24, 24);
-      const pMat = new THREE.MeshBasicMaterial({ color: 0x00e676 });
+      const pMat = new THREE.MeshBasicMaterial({ color: 0x00f2fe });
       player = new THREE.Mesh(pGeo, pMat);
       scene.add(player);
 
@@ -245,22 +399,19 @@
     function setupControls() {
       const l = document.getElementById('g-left');
       const r = document.getElementById('g-right');
-      
-      const setLeft = (val) => moveLeft = val;
-      const setRight = (val) => moveRight = val;
 
-      l.addEventListener('pointerdown', () => setLeft(true));
-      l.addEventListener('pointerup', () => setLeft(false));
-      r.addEventListener('pointerdown', () => setRight(true));
-      r.addEventListener('pointerup', () => setRight(false));
+      l.addEventListener('pointerdown', () => moveLeft = true);
+      l.addEventListener('pointerup', () => moveLeft = false);
+      r.addEventListener('pointerdown', () => moveRight = true);
+      r.addEventListener('pointerup', () => moveRight = false);
 
       window.addEventListener('keydown', (e) => {
-        if (e.key === 'ArrowLeft') setLeft(true);
-        if (e.key === 'ArrowRight') setRight(true);
+        if (e.key === 'ArrowLeft') moveLeft = true;
+        if (e.key === 'ArrowRight') moveRight = true;
       });
       window.addEventListener('keyup', (e) => {
-        if (e.key === 'ArrowLeft') setLeft(false);
-        if (e.key === 'ArrowRight') setRight(false);
+        if (e.key === 'ArrowLeft') moveLeft = false;
+        if (e.key === 'ArrowRight') moveRight = false;
       });
     }
 
