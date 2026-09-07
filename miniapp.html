@@ -260,47 +260,51 @@
     }
 
     // AI CHAT
-    async function sendAiChat() {
-      const input = document.getElementById('chat-in');
-      const box = document.getElementById('chat-box');
-      if (!input || !input.value.trim()) return;
+   // AI CHAT
+async function sendAiChat() {
+  const input = document.getElementById('chat-in');
+  const box = document.getElementById('chat-box');
+  if (!input || !input.value.trim()) return;
 
-      const userText = input.value;
-      input.value = '';
+  const userText = input.value.trim();
+  input.value = '';
 
-      box.innerHTML += `<div class="chat-msg user">${userText}</div>`;
-      box.scrollTop = box.scrollHeight;
+  box.innerHTML += `<div class="chat-msg user">${userText}</div>`;
+  box.scrollTop = box.scrollHeight;
 
-      const aiMsg = document.createElement('div');
-      aiMsg.className = 'chat-msg ai';
-      aiMsg.innerText = 'O\'ylanmoqda... ⏳';
-      box.appendChild(aiMsg);
-      box.scrollTop = box.scrollHeight;
+  const aiMsg = document.createElement('div');
+  aiMsg.className = 'chat-msg ai';
+  aiMsg.innerText = "Javob tayyorlanmoqda... ⏳";
+  box.appendChild(aiMsg);
+  box.scrollTop = box.scrollHeight;
 
-      try {
-        const response = await fetch("https://text.pollinations.ai/", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            messages: [
-              { role: "system", content: "Siz Telegram Mini App'dagi aqlli va xushmuomala AI yordamchisiz. O'zbek tilida aniq va chiroyli javob bering." },
-              { role: "user", content: userText }
-            ],
-            model: "openai"
-          })
-        });
+  try {
+    const encodedPrompt = encodeURIComponent("Siz Telegram Mini App'dagi aqlli AI yordamchisiz. O'zbek tilida qisqa va aniq javob bering. Savol: " + userText);
+    const response = await fetch(`https://text.pollinations.ai/${encodedPrompt}?model=openai&seed=${Math.floor(Math.random() * 1000)}`);
 
-        if (response.ok) {
-          const reply = await response.text();
-          aiMsg.innerText = reply;
-        } else {
-          aiMsg.innerText = "AIdan javob olishda xatolik bo'ldi.";
-        }
-      } catch (err) {
-        aiMsg.innerText = "Ulanishda xatolik yuz berdi.";
+    if (response.ok) {
+      const reply = await response.text();
+      aiMsg.innerText = reply;
+    } else {
+      const backupRes = await fetch(`https://text.pollinations.ai/${encodeURIComponent(userText)}`);
+      if (backupRes.ok) {
+        const backupReply = await backupRes.text();
+        aiMsg.innerText = backupReply;
+      } else {
+        aiMsg.innerText = "AI serveri band, birozdan so'ng qayta urinib ko'ring.";
       }
-      box.scrollTop = box.scrollHeight;
     }
+  } catch (err) {
+    try {
+      const fallbackRes = await fetch(`https://text.pollinations.ai/${encodeURIComponent(userText)}`);
+      const fallbackText = await fallbackRes.text();
+      aiMsg.innerText = fallbackText;
+    } catch(e) {
+      aiMsg.innerText = "Ulanish xatosi. Iltimos, internetingizni va so'rovni tekshiring.";
+    }
+  }
+  box.scrollTop = box.scrollHeight;
+}
 
     function generateImage(btn) {
       const prompt = document.getElementById('img-prompt').value;
