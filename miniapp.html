@@ -397,30 +397,33 @@
     // 2. REAL AI IMAGE GENERATOR
     // ------------------------------------
     function generateAIImage() {
-      const prompt = document.getElementById('imgPrompt').value.trim();
-      const resBox = document.getElementById('imgResult');
+  const promptInput = document.getElementById('imgPrompt');
+  const resBox = document.getElementById('imgResult');
+  const rawPrompt = promptInput.value.trim();
 
-      if (!prompt) return alert("Rasm tavsifini kiriting!");
+  if (!rawPrompt) {
+    alert("Iltimos, rasm tavsifini kiriting!");
+    return;
+  }
 
-      resBox.innerHTML = `<span style="color: var(--accent-cyan);">Rasm chizilmoqda... 🎨</span>`;
-      trackUsage();
+  resBox.innerHTML = `<span style="color: var(--accent-cyan);">Rasm chizilmoqda... 🎨</span>`;
+  trackUsage();
 
-      const seed = Math.floor(Math.random() * 999999);
-      const imgUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=512&height=512&nologo=true&seed=${seed}`;
+  // Promptni tozalash va inglizcha kalit so'zlar bilan boyitish
+  const enhancedPrompt = `${rawPrompt}, highly detailed, 8k resolution, realistic photo`;
+  const safePrompt = encodeURIComponent(enhancedPrompt);
+  const seed = Math.floor(Math.random() * 999999);
+  
+  // High quality va aniq model ishlatish (flux yoki flux-realism)
+  const imgUrl = `https://pollinations.ai/p/${safePrompt}?width=512&height=512&seed=${seed}&model=flux&nologo=true`;
 
-      const img = new Image();
-      img.src = imgUrl;
-      img.style.width = "100%";
-      img.style.borderRadius = "12px";
-
-      img.onload = () => {
-        resBox.innerHTML = '';
-        resBox.appendChild(img);
-      };
-      img.onerror = () => {
-        resBox.innerHTML = `<span style="color: var(--accent-pink);">Rasmni yuklab bo'lmadi. Qaytadan urinib ko'ring!</span>`;
-      };
-    }
+  resBox.innerHTML = `
+    <img src="${imgUrl}" 
+         alt="AI Image" 
+         style="width: 100%; border-radius: 12px; display: block; margin-top: 8px;" 
+         onerror="this.parentElement.innerHTML='<span style=\'color: var(--accent-pink);\'>Rasm yuklab bo\'lmadi. Qayta urinib ko\'ring!</span>';" />
+  `;
+}
 
     // ------------------------------------
     // 3. REAL TRANSLATOR LOGIC
