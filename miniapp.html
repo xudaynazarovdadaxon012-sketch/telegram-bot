@@ -374,7 +374,7 @@
   try {
     // Odatiy GET so'rov orqali blokirovkalarsiz ulash
     const promptText = `Siz AI yordamchisiz. O'zbekcha javob bering. Savol: ${text}`;
-const url = `https://text.pollinations.ai/${encodeURIComponent(promptText)}?model=openai`;
+    const url = `https://text.pollinations.ai/${encodeURIComponent(promptText)}?model=openai`;
 
     const response = await fetch(url);
     const replyText = await response.text();
