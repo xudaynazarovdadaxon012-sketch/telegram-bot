@@ -353,7 +353,7 @@
     // 1. GEMINI AI CHAT LOGIC
     // ------------------------------------
 
-    async function sendChatMessage() {
+ async function sendChatMessage() {
   const input = document.getElementById('chatInput');
   const box = document.getElementById('chatBox');
   const text = input.value.trim();
@@ -372,23 +372,24 @@
   box.scrollTop = box.scrollHeight;
 
   try {
-    const response = await fetch("https://text.pollinations.ai/", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        messages: [
-          { role: "system", content: "Siz Telegram Mini App ichidagi aqlli AI yordamchisiz. O'zbek tilida aniq va chiroyli javob bering." },
-          { role: "user", content: text }
-        ],
-        model: "openai"
-      })
-    });
-    
+    // Bepul va to'g'ridan-to'g'ri ishlaydigan manba
+    const promptText = `Siz Telegram Mini App AI yordamchisiz. O'zbekcha javob bering. Savol: ${text}`;
+    const url = `https://text.pollinations.ai/${encodeURIComponent(promptText)}?model=openai&cache=false`;
+
+    const response = await fetch(url);
     const replyText = await response.text();
-    aiMsg.innerText = replyText || "Javob olib bo'lmadi.";
+
+    if (response.ok && replyText && !replyText.includes("402 Payment")) {
+      aiMsg.innerText = replyText;
+    } else {
+      // Zaxira bepul manba (Agar asosiy servisda cheklov bo'lsa)
+      const backupRes = await fetch(`https://text.pollinations.ai/${encodeURIComponent(text)}?system=O'zbekcha+javob+ber`);
+      aiMsg.innerText = await backupRes.text();
+    }
   } catch (err) {
     aiMsg.innerText = "Tarmoqda xatolik yuz berdi.";
   }
+  
   box.scrollTop = box.scrollHeight;
 }
 
