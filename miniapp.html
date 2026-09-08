@@ -363,7 +363,7 @@
 
   box.innerHTML += `<div class="msg user">${text}</div>`;
   box.scrollTop = box.scrollHeight;
-  trackUsage();
+  if (typeof trackUsage === 'function') trackUsage();
 
   const aiMsg = document.createElement('div');
   aiMsg.className = 'msg ai';
@@ -372,22 +372,21 @@
   box.scrollTop = box.scrollHeight;
 
   try {
-    // Bepul va to'g'ridan-to'g'ri ishlaydigan manba
-    const promptText = `Siz Telegram Mini App AI yordamchisiz. O'zbekcha javob bering. Savol: ${text}`;
-    const url = `https://text.pollinations.ai/${encodeURIComponent(promptText)}?model=openai&cache=false`;
+    // Odatiy GET so'rov orqali blokirovkalarsiz ulash
+    const promptText = `Siz AI yordamchisiz. O'zbekcha javob bering. Savol: ${text}`;
+const url = `https://text.pollinations.ai/${encodeURIComponent(promptText)}?model=openai`;
 
     const response = await fetch(url);
     const replyText = await response.text();
 
-    if (response.ok && replyText && !replyText.includes("402 Payment")) {
+    if (response.ok && replyText) {
       aiMsg.innerText = replyText;
     } else {
-      // Zaxira bepul manba (Agar asosiy servisda cheklov bo'lsa)
-      const backupRes = await fetch(`https://text.pollinations.ai/${encodeURIComponent(text)}?system=O'zbekcha+javob+ber`);
-      aiMsg.innerText = await backupRes.text();
+      aiMsg.innerText = "Javob olishda muammo bo'ldi. Qayta urinib ko'ring.";
     }
   } catch (err) {
-    aiMsg.innerText = "Tarmoqda xatolik yuz berdi.";
+    console.error("Chat Error:", err);
+    aiMsg.innerText = "Tarmoqda xatolik yuz berdi. Internetni tekshiring.";
   }
   
   box.scrollTop = box.scrollHeight;
