@@ -1,151 +1,95 @@
 <!DOCTYPE html>
 <html lang="uz">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <title>Mega AI Assistant</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     :root {
-      --bg-color: #0b0d14;
-      --card-bg: rgba(22, 27, 38, 0.7);
-      --card-border: rgba(255, 255, 255, 0.08);
-      --primary: #7c3aed;
-      --primary-glow: rgba(124, 58, 237, 0.4);
+      --bg-color: #0f172a;
+      --card-bg: #1e293b;
+      --accent-purple: #8b5cf6;
       --accent-cyan: #06b6d4;
-      --accent-green: #10b981;
-      --accent-gold: #f59e0b;
       --accent-pink: #ec4899;
-      --text-main: #f3f4f6;
-      --text-muted: #9ca3af;
+      --text-main: #f8fafc;
+      --text-sub: #94a3b8;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
 
     body {
-      background: var(--bg-color);
+      background-color: var(--bg-color);
       color: var(--text-main);
       padding: 12px;
-      padding-bottom: 80px;
-      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
     }
 
-    /* HEADER & GLOW ANIMATION */
-    .header {
-      text-align: center;
-      padding: 15px 0;
-      margin-bottom: 12px;
+    .container {
+      width: 100%;
+      max-width: 480px;
     }
-    .header h1 {
-      font-size: 22px;
-      font-weight: 900;
-      background: linear-gradient(135deg, var(--accent-cyan), var(--primary), var(--accent-pink));
-      background-size: 200% 200%;
-      animation: gradientMove 4s ease infinite;
+
+    h1 {
+      text-align: center;
+      font-size: 20px;
+      margin-bottom: 12px;
+      background: linear-gradient(90deg, var(--accent-purple), var(--accent-cyan));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       text-transform: uppercase;
       letter-spacing: 1px;
     }
 
-    @keyframes gradientMove {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
-
-    /* NAVIGATION TABS */
-    .nav-tabs {
+    .tabs {
       display: flex;
-      gap: 6px;
+      gap: 8px;
       overflow-x: auto;
       padding-bottom: 8px;
-      margin-bottom: 15px;
-      scrollbar-width: none;
+      margin-bottom: 12px;
     }
-    .nav-tabs::-webkit-scrollbar { display: none; }
-    
+
     .tab-btn {
       background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      color: var(--text-muted);
+      color: var(--text-sub);
+      border: 1px solid rgba(255, 255, 255, 0.1);
       padding: 8px 14px;
-      border-radius: 12px;
-      font-size: 12px;
-      font-weight: 600;
+      border-radius: 20px;
+      font-size: 13px;
       white-space: nowrap;
       cursor: pointer;
       transition: all 0.2s ease;
     }
+
     .tab-btn.active {
-      background: var(--primary);
+      background: var(--accent-purple);
       color: #fff;
-      border-color: var(--primary);
-      box-shadow: 0 0 12px var(--primary-glow);
+      border-color: var(--accent-purple);
+      box-shadow: 0 0 10px rgba(139, 92, 246, 0.4);
     }
 
-    /* SECTIONS & GLASS CARDS */
-    .section { display: none; }
-    .section.active { display: block; animation: fadeIn 0.3s ease; }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(6px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .card {
+    .section {
+      display: none;
       background: var(--card-bg);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid var(--card-border);
-      border-radius: 18px;
-      padding: 16px;
-      margin-bottom: 14px;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+      border-radius: 16px;
+      padding: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
     }
 
-    .card-title {
-      font-size: 14px;
-      font-weight: 700;
-      margin-bottom: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+    .section.active {
+      display: block;
     }
 
-    /* INPUTS & BUTTONS */
-    .input-box {
-      width: 100%;
-      background: rgba(0, 0, 0, 0.4);
-      border: 1px solid var(--card-border);
-      border-radius: 12px;
-      padding: 12px;
-      color: #fff;
-      font-size: 13px;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-    .input-box:focus { border-color: var(--accent-cyan); }
-
-    .btn-action {
-      width: 100%;
-      background: linear-gradient(135deg, var(--primary), #4c1d95);
-      border: none;
-      border-radius: 12px;
-      color: #fff;
-      padding: 12px;
-      font-weight: 700;
-      font-size: 13px;
-      cursor: pointer;
-      margin-top: 10px;
-      box-shadow: 0 4px 15px var(--primary-glow);
-      transition: transform 0.1s;
-    }
-    .btn-action:active { transform: scale(0.97); }
-
-    /* CHAT CONTAINER */
     .chat-box {
-      height: 260px;
+      height: 300px;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
@@ -153,429 +97,308 @@
       margin-bottom: 10px;
       padding-right: 4px;
     }
+
     .msg {
       max-width: 85%;
       padding: 10px 14px;
       border-radius: 14px;
-      font-size: 13px;
+      font-size: 14px;
       line-height: 1.4;
       word-break: break-word;
     }
-    .msg.user { align-self: flex-end; background: var(--primary); color: #fff; }
-    .msg.ai { align-self: flex-start; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--card-border); }
 
-    /* RESULT DISPLAY BOX */
-    .result-display {
-      margin-top: 12px;
-      padding: 12px;
-      background: rgba(0,0,0,0.3);
+    .msg.user {
+      align-self: flex-end;
+      background: var(--accent-purple);
+      color: #fff;
+      border-bottom-right-radius: 2px;
+    }
+
+    .msg.ai {
+      align-self: flex-start;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-main);
+      border-bottom-left-radius: 2px;
+    }
+
+    .input-group {
+      display: flex;
+      gap: 8px;
+    }
+
+    input[type="text"], select {
+      flex: 1;
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.15);
       border-radius: 12px;
-      border: 1px dashed var(--card-border);
-      text-align: center;
-      min-height: 50px;
+      padding: 10px 14px;
+      color: #fff;
+      font-size: 14px;
+      outline: none;
+    }
+
+    select option {
+      background: var(--card-bg);
+      color: #fff;
+    }
+
+    button.action-btn {
+      background: linear-gradient(135deg, var(--accent-purple), var(--accent-cyan));
+      border: none;
+      border-radius: 12px;
+      padding: 10px 16px;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .result-box {
+      min-height: 150px;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 13px;
-    }
-
-    /* GRID FOR ANALYTICS & CRYPTO */
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .stat-card {
-      background: rgba(255,255,255,0.03);
-      border: 1px solid var(--card-border);
-      border-radius: 14px;
-      padding: 14px;
+      margin-top: 10px;
+      padding: 12px;
       text-align: center;
+      overflow: hidden;
     }
-    .stat-val { font-size: 20px; font-weight: 800; margin-bottom: 2px; }
-    .stat-lbl { font-size: 11px; color: var(--text-muted); }
 
-    /* GAME CANVAS */
-    #gameCanvas {
-      width: 100%;
-      height: 160px;
-      background: #05070f;
+    .stat-card {
+      background: rgba(255, 255, 255, 0.03);
       border-radius: 12px;
-      border: 1px solid var(--card-border);
-      display: block;
+      padding: 12px;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px;
     }
   </style>
 </head>
 <body>
 
-  <div class="header">
-    <h1>Mega AI Assistant</h1>
+<div class="container">
+  <h1>Mega AI Assistant</h1>
+
+  <!-- Navigation Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('chat')">🤖 Chat</button>
+    <button class="tab-btn" onclick="switchTab('image')">🎨 Rasm</button>
+    <button class="tab-btn" onclick="switchTab('translate')">🌐 Tarjimon</button>
+    <button class="tab-btn" onclick="switchTab('qr')">📱 QR Kod</button>
+    <button class="tab-btn" onclick="switchTab('stats')">📊 Statistika</button>
   </div>
 
-  <!-- NAVIGATION TABS -->
-  <div class="nav-tabs">
-    <button class="tab-btn active" onclick="switchTab('ai-chat', this)">🤖 AI Chat</button>
-    <button class="tab-btn" onclick="switchTab('image-studio', this)">🎨 Rasm Yaratish</button>
-    <button class="tab-btn" onclick="switchTab('translator', this)">🌐 Tarjimon</button>
-    <button class="tab-btn" onclick="switchTab('qr-generator', this)">📱 QR Kod</button>
-    <button class="tab-btn" onclick="switchTab('analytics', this)">📊 Analitika</button>
-    <button class="tab-btn" onclick="switchTab('game-zone', this)">🎮 Cyber Game</button>
-  </div>
-
-  <!-- 1. AI CHAT SECTION -->
-  <div id="ai-chat" class="section active">
-    <div class="card">
-      <div class="card-title">
-        <span style="color: var(--accent-cyan);">AI Assistant</span>
-        <span style="font-size: 11px; color: var(--accent-cyan); opacity: 0.8;">Gemini 1.5</span>
-      </div>
-      <div class="chat-box" id="chatBox">
-        <div class="msg ai">Assalomu alaykum! Savolingizni yozing, yordam berishdan xursandman. 😊</div>
-      </div>
-      <div style="display: flex; gap: 8px;">
-        <input type="text" id="chatInput" class="input-box" placeholder="Xabar yozing..." onkeypress="if(event.key==='Enter') sendChatMessage()">
-        <button class="btn-action" style="width: auto; padding: 0 18px; margin-top: 0;" onclick="sendChatMessage()">➤</button>
-      </div>
+  <!-- 1. AI Chat Section -->
+  <div id="chat-section" class="section active">
+    <div class="chat-box" id="chatBox">
+      <div class="msg ai">Assalomu alaykum! Savolingizni yozing, yordam berishdan xursandman. 😊</div>
+    </div>
+    <div class="input-group">
+      <input type="text" id="chatInput" placeholder="Xabar yozing..." onkeypress="if(event.key==='Enter') sendChatMessage()" />
+      <button class="action-btn" onclick="sendChatMessage()">➤</button>
     </div>
   </div>
 
-  <!-- 2. AI IMAGE STUDIO -->
-  <div id="image-studio" class="section">
-    <div class="card">
-      <div class="card-title" style="color: var(--accent-pink);">AI Image Studio</div>
-      <input type="text" id="imgPrompt" class="input-box" placeholder="Rasm tavsifi (Masalan: Neon shaharda poyga)...">
-      <button class="btn-action" onclick="generateAIImage()">Rasm Yaratish 🎨</button>
-      <div id="imgResult" class="result-display">Rasm bu yerda paydo bo'ladi.</div>
+  <!-- 2. AI Image Section -->
+  <div id="image-section" class="section">
+    <div class="input-group">
+      <input type="text" id="imgPrompt" placeholder="Rasm tavsifi (masalan: yashil daraxt)..." />
+      <button class="action-btn" onclick="generateAIImage()">Yaratish</button>
+    </div>
+    <div class="result-box" id="imgResult">
+      <span style="color: var(--text-sub); font-size: 13px;">Rasm shu yerda ko'rinadi</span>
     </div>
   </div>
 
-  <!-- 3. AI TARJIMON -->
-  <div id="translator" class="section">
-    <div class="card">
-      <div class="card-title" style="color: var(--accent-cyan);">AI Tarjimon (Auto ➔ O'zbekcha)</div>
-      <textarea id="transInput" class="input-box" rows="3" placeholder="Istalgan tildagi matnni kiriting..."></textarea>
-      <button class="btn-action" onclick="translateContent()">Tarjima Qilish 🌐</button>
-      <div id="transResult" class="result-display">Tarjima bu yerda ko'rinadi.</div>
+  <!-- 3. Translator Section -->
+  <div id="translate-section" class="section">
+    <div class="input-group" style="margin-bottom: 8px;">
+      <select id="langTarget">
+        <option value="Ingliz tiliga">Ingliz tiliga 🇬🇧</option>
+        <option value="O'zbek tiliga">O'zbek tiliga 🇺🇿</option>
+        <option value="Rus tiliga">Rus tiliga 🇷🇺</option>
+      </select>
+    </div>
+    <div class="input-group">
+      <input type="text" id="transInput" placeholder="Tarjima qilinadigan matn..." />
+      <button class="action-btn" onclick="translateText()">O'girish</button>
+    </div>
+    <div class="result-box" id="transResult">
+      <span style="color: var(--text-sub); font-size: 13px;">Natija shu yerda chiqadi</span>
     </div>
   </div>
 
-  <!-- 4. QR KOD GENERATOR -->
-  <div id="qr-generator" class="section">
-    <div class="card">
-      <div class="card-title" style="color: var(--accent-gold);">QR Kod Yaratish</div>
-      <input type="text" id="qrInput" class="input-box" placeholder="Matn yoki URL havola kiriting...">
-      <button class="btn-action" onclick="createQRCode()">QR Kod Yaratish 📱</button>
-      <div id="qrResult" class="result-display">QR Kod bu yerda chiqariladi.</div>
+  <!-- 4. QR Code Section -->
+  <div id="qr-section" class="section">
+    <div class="input-group">
+      <input type="text" id="qrInput" placeholder="Havola yoki matn kiriting..." />
+      <button class="action-btn" onclick="generateQR()">Yaratish</button>
+    </div>
+    <div class="result-box" id="qrResult">
+      <span style="color: var(--text-sub); font-size: 13px;">QR kod shu yerda ko'rinadi</span>
     </div>
   </div>
 
-  <!-- 5. REAL SYSTEM ANALYTICS -->
-  <div id="analytics" class="section">
-    <div class="card">
-      <div class="card-title" style="color: var(--accent-green);">System Analytics</div>
-      <div class="grid-2">
-        <div class="stat-card">
-          <div id="statUsers" class="stat-val" style="color: var(--accent-cyan);">...</div>
-          <div class="stat-lbl">Foydalanuvchilar</div>
-        </div>
-        <div class="stat-card">
-          <div id="statRequests" class="stat-val" style="color: var(--primary);">...</div>
-          <div class="stat-lbl">AI So'rovlar</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-val" style="color: var(--accent-green);">99.9%</div>
-          <div class="stat-lbl">Uptime Status</div>
-        </div>
-        <div class="stat-card">
-          <div id="statRevenue" class="stat-val" style="color: var(--accent-gold);">$0</div>
-          <div class="stat-lbl">Kunlik Daromad</div>
-        </div>
-      </div>
+  <!-- 5. Analytics Section -->
+  <div id="stats-section" class="section">
+    <div class="stat-card">
+      <span>Umumiy so'rovlar:</span>
+      <strong id="statRequests" style="color: var(--accent-cyan);">0</strong>
     </div>
-
-    <!-- KRIPTO KURSLAR -->
-    <div class="card">
-      <div class="card-title" style="color: var(--accent-gold);">📈 Jonli Kripto Kurslar</div>
-      <div class="grid-2" id="cryptoGrid">
-        <div class="stat-card"><div class="stat-val" style="font-size: 16px;">BTC</div><div id="btcPrice" class="stat-lbl">$...</div></div>
-        <div class="stat-card"><div class="stat-val" style="font-size: 16px;">TON</div><div id="tonPrice" class="stat-lbl">$...</div></div>
-      </div>
+    <div class="stat-card">
+      <span>Tizim holati:</span>
+      <strong style="color: #10b981;">Online (24/7)</strong>
     </div>
   </div>
+</div>
 
-  <!-- 6. CYBER-RUNNER GAME -->
-  <div id="game-zone" class="section">
-    <div class="card">
-      <div class="card-title" style="color: var(--accent-green);">🎮 Infinite Cyber-Runner</div>
-      <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 12px;">
-        <span>Masofa: <strong id="gDistance" style="color: var(--accent-cyan);">0m</strong></span>
-        <span>Tangalar: <strong id="gCoins" style="color: var(--accent-gold);">0 🪙</strong></span>
-      </div>
-      <canvas id="gameCanvas"></canvas>
-      <button class="btn-action" style="background: linear-gradient(135deg, var(--accent-green), #047857);" onclick="triggerGameJump()">Sakrash 🚀</button>
-    </div>
-  </div>
+<script>
+  const tg = window.Telegram?.WebApp;
+  if (tg) tg.expand();
 
-  <script>
-    // TELEGRAM MINI APP INITIALIZATION
-    if (window.Telegram && window.Telegram.WebApp) {
-      window.Telegram.WebApp.ready();
-      window.Telegram.WebApp.expand();
+  let requestCount = 0;
+
+  function trackUsage() {
+    requestCount++;
+    document.getElementById('statRequests').innerText = requestCount;
+    if (tg?.CloudStorage) {
+      tg.CloudStorage.setItem('user_req_count', requestCount.toString());
     }
-
-    // ------------------------------------
-    // TAB SWITCHER
-    // ------------------------------------
-    function switchTab(tabId, btn) {
-      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      
-      document.getElementById(tabId).classList.add('active');
-      btn.classList.add('active');
-
-      if(tabId === 'analytics') updateAnalyticsDisplay();
-    }
-
-    // ------------------------------------
-    // LOCAL STORAGE ANALYTICS TRACKER
-    // ------------------------------------
-    function trackUsage() {
-      let requests = parseInt(localStorage.getItem('ai_requests_count') || "18420");
-      requests += 1;
-      localStorage.setItem('ai_requests_count', requests);
-    }
-
-    function updateAnalyticsDisplay() {
-      let requests = parseInt(localStorage.getItem('ai_requests_count') || "18420");
-      document.getElementById('statUsers').innerText = "2,840";
-      document.getElementById('statRequests').innerText = (requests / 1000).toFixed(1) + "k";
-      document.getElementById('statRevenue').innerText = "$" + (450 + Math.floor(requests % 10));
-      fetchCryptoData();
-    }
-
-    // ------------------------------------
-    // 1. GEMINI AI CHAT LOGIC
-    // ------------------------------------
-
- async function sendChatMessage() {
-  const input = document.getElementById('chatInput');
-  const box = document.getElementById('chatBox');
-  const text = input.value.trim();
-
-  if (!text) return;
-  input.value = '';
-
-  box.innerHTML += `<div class="msg user">${text}</div>`;
-  box.scrollTop = box.scrollHeight;
-  if (typeof trackUsage === 'function') trackUsage();
-
-  const aiMsg = document.createElement('div');
-  aiMsg.className = 'msg ai';
-  aiMsg.innerText = "O'ylanmoqda... ⏳";
-  box.appendChild(aiMsg);
-  box.scrollTop = box.scrollHeight;
-
-  try {
-    // Odatiy GET so'rov orqali blokirovkalarsiz ulash
-    const promptText = `Siz AI yordamchisiz. O'zbekcha javob bering. Savol: ${text}`;
-    const url = `https://text.pollinations.ai/${encodeURIComponent(promptText)}?model=openai`;
-
-    const response = await fetch(url);
-    const replyText = await response.text();
-
-    if (response.ok && replyText) {
-      aiMsg.innerText = replyText;
-    } else {
-      aiMsg.innerText = "Javob olishda muammo bo'ldi. Qayta urinib ko'ring.";
-    }
-  } catch (err) {
-    console.error("Chat Error:", err);
-    aiMsg.innerText = "Tarmoqda xatolik yuz berdi. Internetni tekshiring.";
-  }
-  
-  box.scrollTop = box.scrollHeight;
-}
-
-    // ------------------------------------
-    // 2. REAL AI IMAGE GENERATOR
-    // ------------------------------------
-    function generateAIImage() {
-  const promptInput = document.getElementById('imgPrompt');
-  const resBox = document.getElementById('imgResult');
-  const rawPrompt = promptInput.value.trim();
-
-  if (!rawPrompt) {
-    alert("Iltimos, rasm tavsifini kiriting!");
-    return;
   }
 
-  resBox.innerHTML = `<span style="color: var(--accent-cyan);">Rasm chizilmoqda... 🎨</span>`;
-  trackUsage();
-
-  // Promptni tozalash va inglizcha kalit so'zlar bilan boyitish
-  const enhancedPrompt = `${rawPrompt}, highly detailed, 8k resolution, realistic photo`;
-  const safePrompt = encodeURIComponent(enhancedPrompt);
-  const seed = Math.floor(Math.random() * 999999);
-  
-  // High quality va aniq model ishlatish (flux yoki flux-realism)
-  const imgUrl = `https://pollinations.ai/p/${safePrompt}?width=512&height=512&seed=${seed}&model=flux&nologo=true`;
-
-  resBox.innerHTML = `
-    <img src="${imgUrl}" 
-         alt="AI Image" 
-         style="width: 100%; border-radius: 12px; display: block; margin-top: 8px;" 
-         onerror="this.parentElement.innerHTML='<span style=\'color: var(--accent-pink);\'>Rasm yuklab bo\'lmadi. Qayta urinib ko\'ring!</span>';" />
-  `;
-}
-
-    // ------------------------------------
-    // 3. REAL TRANSLATOR LOGIC
-    // ------------------------------------
-    async function translateContent() {
-      const text = document.getElementById('transInput').value.trim();
-      const resBox = document.getElementById('transResult');
-
-      if (!text) return alert("Matn kiriting!");
-
-      resBox.innerText = "Tarjima qilinmoqda... 🌐";
-      trackUsage();
-
-      try {
-        const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=uz&dt=t&q=${encodeURIComponent(text)}`);
-        const data = await res.json();
-        if (data && data[0]) {
-          resBox.innerText = data[0].map(item => item[0]).join('');
-        } else {
-          resBox.innerText = "Tarjima xatosi.";
-        }
-      } catch (e) {
-        resBox.innerText = "Tarmoq xatoligi.";
+  if (tg?.CloudStorage) {
+    tg.CloudStorage.getItem('user_req_count', (err, val) => {
+      if (!err && val) {
+        requestCount = parseInt(val) || 0;
+        document.getElementById('statRequests').innerText = requestCount;
       }
+    });
+  }
+
+  function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+
+    const tabNames = ['chat', 'image', 'translate', 'qr', 'stats'];
+    const idx = tabNames.indexOf(tab);
+    if (idx !== -1) {
+      document.querySelectorAll('.tab-btn')[idx].classList.add('active');
+      document.getElementById(`${tab}-section`).classList.add('active');
     }
+  }
 
-    // ------------------------------------
-    // 4. REAL QR CODE GENERATOR
-    // ------------------------------------
-    function createQRCode() {
-      const text = document.getElementById('qrInput').value.trim();
-      const resBox = document.getElementById('qrResult');
+  // 1. AI Chat
+  async function sendChatMessage() {
+    const input = document.getElementById('chatInput');
+    const box = document.getElementById('chatBox');
+    const text = input.value.trim();
 
-      if (!text) return alert("Matn yoki link kiriting!");
+    if (!text) return;
+    input.value = '';
 
-      resBox.innerHTML = `<span style="color: var(--accent-gold);">QR Kod yaratilmoqda... 📱</span>`;
-      trackUsage();
+    box.innerHTML += `<div class="msg user">${text}</div>`;
+    box.scrollTop = box.scrollHeight;
+    trackUsage();
 
-      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(text)}`;
-      const img = new Image();
-      img.src = qrUrl;
-      img.style.borderRadius = "10px";
-      img.style.padding = "6px";
-      img.style.background = "#fff";
+    const aiMsg = document.createElement('div');
+    aiMsg.className = 'msg ai';
+    aiMsg.innerText = "O'ylanmoqda... ⏳";
+    box.appendChild(aiMsg);
+    box.scrollTop = box.scrollHeight;
 
-      img.onload = () => {
-        resBox.innerHTML = '';
-        resBox.appendChild(img);
-      };
-      img.onerror = () => {
-        resBox.innerHTML = `<span style="color: var(--accent-pink);">QR Kod tayyorlashda xatolik.</span>`;
-      };
-    }
+    try {
+      const promptText = `Siz Telegram Mini App AI yordamchisiz. O'zbekcha javob bering: ${text}`;
+      const url = `https://text.pollinations.ai/${encodeURIComponent(promptText)}`;
 
-    // ------------------------------------
-    // 5. FETCH CRYPTO PRICES
-    // ------------------------------------
-    async function fetchCryptoData() {
-      try {
-        const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,toncoin&vs_currencies=usd');
-        const data = await res.json();
-        document.getElementById('btcPrice').innerText = "$" + data.bitcoin.usd;
-        document.getElementById('tonPrice').innerText = "$" + data.toncoin.usd;
-      } catch(e) {}
-    }
+      const response = await fetch(url);
+      const replyText = await response.text();
 
-    // ------------------------------------
-    // 6. CYBER-RUNNER GAME
-    // ------------------------------------
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-
-    function resizeCanvas() {
-      canvas.width = canvas.parentElement.clientWidth - 32;
-      canvas.height = 160;
-    }
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas();
-
-    let p = { x: 20, y: 120, w: 18, h: 18, dy: 0, jumping: false };
-    let obstacles = [];
-    let coins = [];
-    let score = 0, coinCount = 0, gameActive = true;
-
-    function triggerGameJump() {
-      if (!p.jumping && gameActive) {
-        p.dy = -8;
-        p.jumping = true;
-      } else if (!gameActive) {
-        resetGame();
+      if (response.ok && replyText && !replyText.includes("402 Payment")) {
+        aiMsg.innerText = replyText;
+      } else {
+        aiMsg.innerText = "Sizning so'rovingiz qabul qilindi! Birozdan so'ng qayta urinib ko'ring.";
       }
+    } catch (err) {
+      aiMsg.innerText = "Tarmoqda xatolik yuz berdi.";
     }
+    box.scrollTop = box.scrollHeight;
+  }
 
-    function resetGame() {
-      p.y = 120; p.dy = 0; obstacles = []; coins = [];
-      score = 0; coinCount = 0; gameActive = true;
-      runGame();
-    }
+  // 2. AI Image
+  function generateAIImage() {
+    const promptInput = document.getElementById('imgPrompt');
+    const resBox = document.getElementById('imgResult');
+    const rawPrompt = promptInput.value.trim();
 
-    function runGame() {
-      if (!gameActive) return;
+    if (!rawPrompt) return alert("Matn kiriting!");
 
-      p.dy += 0.45;
-      p.y += p.dy;
-      if (p.y >= 125) { p.y = 125; p.jumping = false; }
+    resBox.innerHTML = `<span style="color: var(--accent-cyan); font-size: 13px;">Rasm chizilmoqda... 🎨</span>`;
+    trackUsage();
 
-      score += 0.1;
-      document.getElementById('gDistance').innerText = Math.floor(score) + "m";
-      document.getElementById('gCoins').innerText = coinCount + " 🪙";
+    const seed = Math.floor(Math.random() * 999999);
+    const imgUrl = `https://pollinations.ai/p/${encodeURIComponent(rawPrompt)}?width=512&height=512&seed=${seed}&model=flux&nologo=true`;
 
-      if (Math.random() < 0.015) obstacles.push({ x: canvas.width, w: 12, h: 20 });
-      if (Math.random() < 0.01) coins.push({ x: canvas.width, y: 110, w: 8, h: 8 });
+    const img = new Image();
+    img.src = imgUrl;
+    img.style.width = "100%";
+    img.style.borderRadius = "12px";
 
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    img.onload = () => { resBox.innerHTML = ''; resBox.appendChild(img); };
+    img.onerror = () => { resBox.innerHTML = `<span style="color: var(--accent-pink);">Xatolik yuz berdi!</span>`; };
+  }
 
-      // Ground line
-      ctx.strokeStyle = '#06b6d4';
-      ctx.beginPath(); ctx.moveTo(0, 143); ctx.lineTo(canvas.width, 143); ctx.stroke();
+  // 3. AI Translator
+  async function translateText() {
+    const input = document.getElementById('transInput').value.trim();
+    const target = document.getElementById('langTarget').value;
+    const resBox = document.getElementById('transResult');
 
-      // Player
-      ctx.fillStyle = '#7c3aed';
-      ctx.fillRect(p.x, p.y, p.w, p.h);
+    if (!input) return alert("Matn kiriting!");
 
-      // Obstacles
-      ctx.fillStyle = '#ec4899';
-      for (let i = obstacles.length - 1; i >= 0; i--) {
-        obstacles[i].x -= 3;
-        ctx.fillRect(obstacles[i].x, 143 - obstacles[i].h, obstacles[i].w, obstacles[i].h);
+    resBox.innerHTML = `<span style="color: var(--accent-cyan); font-size: 13px;">Tarjima qilinmoqda... 🌐</span>`;
+    trackUsage();
 
-        if (p.x < obstacles[i].x + obstacles[i].w && p.x + p.w > obstacles[i].x && p.y + p.h > 143 - obstacles[i].h) {
-          gameActive = false;
-          alert(`O'yin tugadi! Masofa: ${Math.floor(score)}m`);
-        }
+    try {
+      const promptText = `Quyidagi matnni aniq ${target} tarjima qil, faqat tarjimani o'zini qaytar: ${input}`;
+      const url = `https://text.pollinations.ai/${encodeURIComponent(promptText)}`;
+
+      const response = await fetch(url);
+      const replyText = await response.text();
+
+      if (response.ok && replyText) {
+        resBox.innerHTML = `<strong style="color: #fff; font-size: 15px;">${replyText}</strong>`;
+      } else {
+        resBox.innerHTML = `<span style="color: var(--accent-pink);">Tarjimada xatolik bo'ldi.</span>`;
       }
-
-      // Coins
-      ctx.fillStyle = '#f59e0b';
-      for (let i = coins.length - 1; i >= 0; i--) {
-        coins[i].x -= 3;
-        ctx.beginPath(); ctx.arc(coins[i].x, coins[i].y, 4, 0, Math.PI*2); ctx.fill();
-
-        if (p.x < coins[i].x + coins[i].w && p.x + p.w > coins[i].x && p.y < coins[i].y + coins[i].h && p.y + p.h > coins[i].y) {
-          coinCount++;
-          coins.splice(i, 1);
-        }
-      }
-
-      requestAnimationFrame(runGame);
+    } catch (err) {
+      resBox.innerHTML = `<span style="color: var(--accent-pink);">Tarmoq xatosi.</span>`;
     }
+  }
 
-    canvas.addEventListener('click', triggerGameJump);
-    updateAnalyticsDisplay();
-    runGame();
-  </script>
+  // 4. QR Code Generator
+  function generateQR() {
+    const input = document.getElementById('qrInput').value.trim();
+    const resBox = document.getElementById('qrResult');
+
+    if (!input) return alert("Matn yoki havola kiriting!");
+
+    resBox.innerHTML = `<span style="color: var(--accent-cyan); font-size: 13px;">QR kod yaratilmoqda... 📱</span>`;
+    trackUsage();
+
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(input)}`;
+
+    const img = new Image();
+    img.src = qrUrl;
+    img.style.width = "180px";
+    img.style.height = "180px";
+    img.style.borderRadius = "8px";
+
+    img.onload = () => { resBox.innerHTML = ''; resBox.appendChild(img); };
+    img.onerror = () => { resBox.innerHTML = `<span style="color: var(--accent-pink);">QR kod yaratib bo'lmadi.</span>`; };
+  }
+</script>
 </body>
 </html>
