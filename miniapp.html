@@ -345,26 +345,34 @@
     }
 
     try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+      // Barqaror gemini-2.0-flash modelidan foydalanamiz
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
+      
       const res = await fetch(url, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json"
+        },
         body: JSON.stringify({
           contents: [{ parts: [{ text: promptText }] }]
         })
       });
 
       const data = await res.json();
+      
       if (data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
         return data.candidates[0].content.parts[0].text;
+      } else if (data.error) {
+        console.error("Gemini API Error:", data.error);
+        return `API Xatolik: ${data.error.message || 'Noma'lum xatolik'}`;
       } else {
-        return "Javob olishda xatolik yuz berdi.";
+        return "Javob strukturasida xatolik yuz berdi.";
       }
     } catch (e) {
-      return "Ulanishda xatolik yuz berdi.";
+      console.error("Fetch Error:", e);
+      return "Ulanishda xatolik yuz berdi (CORS yoki tarmoq xatosi).";
     }
   }
-
   // 1. AI Chat
   async function sendChatMessage() {
     const input = document.getElementById('chatInput');
