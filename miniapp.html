@@ -6,7 +6,6 @@
   <title>Mega Utility Studio</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <!-- Chart.js Kutubxonasi (Diagrammalar uchun) -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root {
@@ -171,7 +170,7 @@
       justify-content: space-between;
     }
 
-    /* VIZUAL ANALYTICS & EFFEKTLAR */
+    /* VIZUAL ANALYTICS STYLES */
     .chart-box {
       background: rgba(0, 0, 0, 0.2);
       border: 1px solid rgba(255, 255, 255, 0.05);
@@ -209,15 +208,16 @@
       box-shadow: 0 0 10px rgba(139, 92, 246, 0.3);
     }
 
-    /* PSEUDO 3D GAME CANVAS */
+    /* REAL 3D CANVAS STYLES */
     #gameCanvas {
       width: 100%;
-      height: 220px;
-      background: #000;
+      height: 230px;
+      background: #020208;
       border-radius: 12px;
       border: 1px solid var(--accent-purple);
       display: block;
       cursor: pointer;
+      box-shadow: 0 0 15px rgba(139, 92, 246, 0.2);
     }
   </style>
 </head>
@@ -251,10 +251,8 @@
     </div>
   </div>
 
-  <!-- 1. VIZUAL SYSTEM ANALYTICS (DIAGRAMMA VA EFFEKTLAR) -->
+  <!-- 1. SYSTEM ANALYTICS -->
   <div id="stats-section" class="section">
-    
-    <!-- Real-time Line Chart: FPS va Tezlik -->
     <div class="chart-box glow-effect">
       <div class="chart-title">
         <span>📈 Real-time FPS va Bot Javob Tarmog'i</span>
@@ -263,7 +261,6 @@
       <canvas id="fpsChart" height="130"></canvas>
     </div>
 
-    <!-- Progress Bar EFFEKTLARI -->
     <div class="chart-box">
       <div class="chart-title">
         <span>⚡ Protsessor (CPU) Yuklamasi</span>
@@ -284,7 +281,6 @@
       </div>
     </div>
 
-    <!-- Doughnut Chart: Tizim Resurslari Nisbati -->
     <div class="chart-box">
       <div class="chart-title">
         <span>🍩 Tizim Resurslari Bo'linishi</span>
@@ -293,7 +289,6 @@
         <canvas id="resourcesChart"></canvas>
       </div>
     </div>
-
   </div>
 
   <!-- 2. PDF Creator -->
@@ -346,7 +341,7 @@
     </div>
   </div>
 
-  <!-- 6. PSEUDO-3D GAME -->
+  <!-- 6. PSEUDO-3D CYBER GAME WITH REAL 3D OBJECTS -->
   <div id="game-section" class="section">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
       <span style="font-weight: bold; color: var(--accent-cyan);">3D Cyber Tunnel 🎮</span>
@@ -438,13 +433,12 @@
     `).join('');
   }
 
-  // 1. VIZUAL SYSTEM ANALYTICS & DIAGRAMMALAR
+  // 1. VIZUAL SYSTEM ANALYTICS
   let fpsChartObj = null;
   let resourcesChartObj = null;
   let analyticsInterval = null;
 
   function initVisualAnalytics() {
-    // Chart.js Line Graph (FPS dinamikasi)
     const ctxFps = document.getElementById('fpsChart').getContext('2d');
     if (!fpsChartObj) {
       fpsChartObj = new Chart(ctxFps, {
@@ -452,7 +446,7 @@
         data: {
           labels: ['1s', '2s', '3s', '4s', '5s', '6s', '7s', '8s', '9s', '10s'],
           datasets: [{
-            label: 'FPS (Silliqlik)',
+            label: 'FPS',
             data: [58, 60, 59, 60, 55, 60, 58, 60, 59, 60],
             borderColor: '#06b6d4',
             backgroundColor: 'rgba(6, 182, 212, 0.1)',
@@ -471,7 +465,6 @@
       });
     }
 
-    // Chart.js Doughnut Graph (Bo'linish diagrammasi)
     const ctxRes = document.getElementById('resourcesChart').getContext('2d');
     if (!resourcesChartObj) {
       resourcesChartObj = new Chart(ctxRes, {
@@ -491,16 +484,13 @@
       });
     }
 
-    // Jonli simulyatsiya va effektlarni yangilab turish
     if (analyticsInterval) clearInterval(analyticsInterval);
     analyticsInterval = setInterval(() => {
       if (!document.getElementById('stats-section').classList.contains('active')) return;
 
-      // Real simulyatsiya effektlari
       const randomFps = Math.floor(Math.random() * (60 - 54 + 1)) + 54;
       document.getElementById('liveFpsBadge').innerText = `${randomFps} FPS`;
 
-      // Progress bar lar animatsiyasi
       const cpuUsage = Math.floor(Math.random() * (45 - 20 + 1)) + 20;
       document.getElementById('cpuVal').innerText = `${cpuUsage}%`;
       document.getElementById('cpuBar').style.width = `${cpuUsage}%`;
@@ -509,7 +499,6 @@
       document.getElementById('ramVal').innerText = `${ramUsage}%`;
       document.getElementById('ramBar').style.width = `${ramUsage}%`;
 
-      // Diagramma nuqtalarini surish
       if (fpsChartObj) {
         fpsChartObj.data.datasets[0].data.shift();
         fpsChartObj.data.datasets[0].data.push(randomFps);
@@ -594,14 +583,14 @@
     resBox.innerHTML = `<img src="${qrUrl}" style="width:140px; height:140px; border-radius:8px;" />`;
   }
 
-  // 6. PSEUDO-3D CYBER GAME LOGIC
+  // 6. REAL 3D EFFECT CYBER GAME
   let canvas, ctx, playerX, obstacles3D, score3D, isGameRunning = false, gameFrame;
 
   function init3DGame() {
     canvas = document.getElementById('gameCanvas');
     ctx = canvas.getContext('2d');
     canvas.width = canvas.offsetWidth;
-    canvas.height = 220;
+    canvas.height = 230;
 
     playerX = canvas.width / 2;
     obstacles3D = [];
@@ -612,58 +601,145 @@
     render3DGame();
   }
 
-  function movePlayerLeft() { playerX = Math.max(40, playerX - 35); }
-  function movePlayerRight() { playerX = Math.min(canvas.width - 40, playerX + 35); }
+  function movePlayerLeft() { playerX = Math.max(50, playerX - 40); }
+  function movePlayerRight() { playerX = Math.min(canvas.width - 50, playerX + 40); }
   function movePlayer() { if (playerX > canvas.width / 2) movePlayerLeft(); else movePlayerRight(); }
+
+  // 3D KUB (BLOCK) CHIZISH FUNKSIYASI
+  function draw3DCube(x, y, size, depth, colorHex) {
+    const half = size / 2;
+    
+    // Front Face (Old yuzasi)
+    ctx.fillStyle = colorHex;
+    ctx.fillRect(x - half, y - size, size, size);
+
+    // Top Face (Tepa yuzasi)
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+    ctx.beginPath();
+    ctx.moveTo(x - half, y - size);
+    ctx.lineTo(x - half + depth, y - size - depth);
+    ctx.lineTo(x + half + depth, y - size - depth);
+    ctx.lineTo(x + half, y - size);
+    ctx.closePath();
+    ctx.fill();
+
+    // Side Face (Yon yuzasi)
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+    ctx.beginPath();
+    ctx.moveTo(x + half, y - size);
+    ctx.lineTo(x + half + depth, y - size - depth);
+    ctx.lineTo(x + half + depth, y - depth);
+    ctx.lineTo(x + half, y);
+    ctx.closePath();
+    ctx.fill();
+
+    // Border Lines (Chegaralari)
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 0.5;
+    ctx.strokeRect(x - half, y - size, size, size);
+  }
+
+  // 3D SHIP (O'YINCHI KEMASI) CHIZISH FUNKSIYASI
+  function draw3DShip(x, y) {
+    ctx.shadowBlur = 15;
+    ctx.shadowColor = '#06b6d4';
+
+    // Ship Base
+    ctx.fillStyle = '#06b6d4';
+    ctx.beginPath();
+    ctx.moveTo(x, y - 35);
+    ctx.lineTo(x - 22, y);
+    ctx.lineTo(x + 22, y);
+    ctx.closePath();
+    ctx.fill();
+
+    // Ship Top Cockpit (3D Piramida effekti)
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.moveTo(x, y - 35);
+    ctx.lineTo(x - 8, y - 10);
+    ctx.lineTo(x + 8, y - 10);
+    ctx.closePath();
+    ctx.fill();
+
+    // Left Wing 3D Side
+    ctx.fillStyle = '#0284c7';
+    ctx.beginPath();
+    ctx.moveTo(x - 22, y);
+    ctx.lineTo(x - 8, y - 10);
+    ctx.lineTo(x, y);
+    ctx.closePath();
+    ctx.fill();
+
+    // Right Wing 3D Side
+    ctx.fillStyle = '#0369a1';
+    ctx.beginPath();
+    ctx.moveTo(x + 22, y);
+    ctx.lineTo(x + 8, y - 10);
+    ctx.lineTo(x, y);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.shadowBlur = 0;
+  }
 
   function render3DGame() {
     if (!isGameRunning) return;
 
-    ctx.fillStyle = '#050210';
+    // Foni
+    ctx.fillStyle = '#03020c';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     const vpX = canvas.width / 2;
-    const vpY = 60;
+    const vpY = 50;
 
-    ctx.strokeStyle = '#8b5cf6';
+    // Grid (Tunnel chiziqlari)
+    ctx.strokeStyle = 'rgba(139, 92, 246, 0.25)';
     ctx.lineWidth = 1;
 
-    for (let x = -canvas.width; x <= canvas.width * 2; x += 40) {
+    for (let x = -canvas.width; x <= canvas.width * 2; x += 35) {
       ctx.beginPath();
       ctx.moveTo(vpX, vpY);
       ctx.lineTo(x, canvas.height);
       ctx.stroke();
     }
 
+    // Tunnel Chegaralari
     ctx.strokeStyle = '#06b6d4';
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(vpX, vpY);
-    ctx.lineTo(20, canvas.height);
+    ctx.lineTo(15, canvas.height);
     ctx.moveTo(vpX, vpY);
-    ctx.lineTo(canvas.width - 20, canvas.height);
+    ctx.lineTo(canvas.width - 15, canvas.height);
     ctx.stroke();
 
+    // Yangi 3D to'siqlarni hosil qilish
     if (Math.random() < 0.04) {
-      obstacles3D.push({ z: 0.1, lane: Math.random() > 0.5 ? 1 : -1 });
+      obstacles3D.push({ z: 0.05, lane: Math.random() > 0.5 ? 1 : -1 });
     }
 
+    // To'siqlarni harakatlantirish va 3D chizish
     for (let i = 0; i < obstacles3D.length; i++) {
       let obs = obstacles3D[i];
-      obs.z += 0.02;
+      obs.z += 0.018;
 
       let scale = obs.z;
-      let obsX = vpX + (obs.lane * 90 * scale);
+      let obsX = vpX + (obs.lane * 100 * scale);
       let obsY = vpY + ((canvas.height - vpY) * scale);
-      let size = 30 * scale;
+      let size = 36 * scale;
+      let depth = 12 * scale;
 
-      ctx.fillStyle = '#ec4899';
-      ctx.shadowBlur = 10 * scale;
+      // Glow effekti
+      ctx.shadowBlur = 12 * scale;
       ctx.shadowColor = '#ec4899';
-      ctx.fillRect(obsX - size / 2, obsY - size, size, size);
+
+      // 3D Kubni chizish
+      draw3DCube(obsX, obsY, size, depth, '#ec4899');
       ctx.shadowBlur = 0;
 
-      if (obs.z > 0.85 && obs.z < 1.0) {
+      // To'qnashuvni aniqlash
+      if (obs.z > 0.82 && obs.z < 0.98) {
         let playerLane = playerX < vpX ? -1 : 1;
         if (playerLane === obs.lane) {
           isGameRunning = false;
@@ -673,18 +749,11 @@
       }
     }
 
+    // O'tib ketgan to'siqlarni o'chirish
     obstacles3D = obstacles3D.filter(o => o.z <= 1.0);
 
-    ctx.fillStyle = '#06b6d4';
-    ctx.shadowBlur = 15;
-    ctx.shadowColor = '#06b6d4';
-    ctx.beginPath();
-    ctx.moveTo(playerX, canvas.height - 40);
-    ctx.lineTo(playerX - 20, canvas.height - 10);
-    ctx.lineTo(playerX + 20, canvas.height - 10);
-    ctx.closePath();
-    ctx.fill();
-    ctx.shadowBlur = 0;
+    // 3D O'yinchi kemasini chizish
+    draw3DShip(playerX, canvas.height - 15);
 
     score3D++;
     document.getElementById('gameScore').innerText = Math.floor(score3D / 5);
