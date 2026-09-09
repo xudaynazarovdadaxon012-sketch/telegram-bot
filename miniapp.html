@@ -3,9 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Mega Utility Hub</title>
+  <title>Mega Utility Studio</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <!-- PDF yaratish kutubxonasi -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     :root {
@@ -111,10 +110,7 @@
       outline: none;
     }
 
-    textarea {
-      resize: none;
-      height: 100px;
-    }
+    textarea { resize: none; height: 100px; }
 
     button.action-btn {
       background: linear-gradient(135deg, var(--accent-purple), var(--accent-cyan));
@@ -142,13 +138,41 @@
       word-break: break-all;
     }
 
+    /* REAL ANALYTICS GRID */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .stat-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 12px;
+      text-align: center;
+    }
+
+    .stat-card .val {
+      font-size: 16px;
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+
+    .stat-card .lbl {
+      font-size: 11px;
+      color: var(--text-sub);
+    }
+
+    /* PSEUDO 3D GAME CANVAS */
     #gameCanvas {
       width: 100%;
-      height: 180px;
-      background: #05050a;
+      height: 220px;
+      background: #000;
       border-radius: 12px;
-      border: 1px solid var(--accent-cyan);
+      border: 1px solid var(--accent-purple);
       display: block;
+      cursor: pointer;
     }
   </style>
 </head>
@@ -160,15 +184,16 @@
   <div class="tabs">
     <button class="tab-btn active" onclick="switchTab('pdf')">📄 PDF Creator</button>
     <button class="tab-btn" onclick="switchTab('calc')">💵 Valyuta</button>
-    <button class="tab-btn" onclick="switchTab('pass')">🔐 Parol Generator</button>
+    <button class="tab-btn" onclick="switchTab('pass')">🔐 Parol</button>
     <button class="tab-btn" onclick="switchTab('qr')">📱 QR Kod</button>
-    <button class="tab-btn" onclick="switchTab('game')">🎮 Cyber Game</button>
+    <button class="tab-btn" onclick="switchTab('stats')">📊 Real Analitika</button>
+    <button class="tab-btn" onclick="switchTab('game')">🎮 Cyber 3D Game</button>
   </div>
 
   <!-- 1. PDF Creator -->
   <div id="pdf-section" class="section active">
     <div class="input-group">
-      <input type="text" id="pdfTitle" placeholder="Hujjat sarlavhasi (Masalan: Rezyume)..." />
+      <input type="text" id="pdfTitle" placeholder="Hujjat sarlavhasi..." />
       <textarea id="pdfBody" placeholder="Hujjat matnini kiriting..."></textarea>
       <button class="action-btn" onclick="generatePDF()">PDF Fayl Yaratish 📄</button>
     </div>
@@ -215,14 +240,47 @@
     </div>
   </div>
 
-  <!-- 5. Cyber Game -->
+  <!-- 5. REAL ANALYTICS -->
+  <div id="stats-section" class="section">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="val" id="realPlatform" style="color: var(--accent-cyan);">---</div>
+        <div class="lbl">Platforma / Operatsion Tizim</div>
+      </div>
+      <div class="stat-card">
+        <div class="val" id="realCores" style="color: var(--accent-purple);">---</div>
+        <div class="lbl">Protsessor Yadro Soni</div>
+      </div>
+      <div class="stat-card">
+        <div class="val" id="realRam" style="color: var(--accent-green);">---</div>
+        <div class="lbl">Qurilma RAM Xotirasi</div>
+      </div>
+      <div class="stat-card">
+        <div class="val" id="realScreen" style="color: var(--accent-pink);">---</div>
+        <div class="lbl">Ekran Ruxsati</div>
+      </div>
+      <div class="stat-card">
+        <div class="val" id="realNet" style="color: var(--accent-cyan);">---</div>
+        <div class="lbl">Tarmoq Holati</div>
+      </div>
+      <div class="stat-card">
+        <div class="val" id="realFPS" style="color: var(--accent-green);">---</div>
+        <div class="lbl">Real FPS (Kadralar Soni)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. PSEUDO-3D GAME -->
   <div id="game-section" class="section">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-      <span style="font-weight: bold; color: var(--accent-cyan);">Neon Runner 🎮</span>
+      <span style="font-weight: bold; color: var(--accent-cyan);">3D Cyber Tunnel 🎮</span>
       <span style="font-size: 13px;">Ball: <strong id="gameScore" style="color: var(--accent-pink);">0</strong></span>
     </div>
-    <canvas id="gameCanvas" onclick="jumpGame()"></canvas>
-    <button class="action-btn" style="width: 100%; margin-top: 10px;" onclick="jumpGame()">Sakrash 🚀</button>
+    <canvas id="gameCanvas" onclick="movePlayer()"></canvas>
+    <div style="display: flex; gap: 8px; margin-top: 10px;">
+      <button class="action-btn" style="flex: 1;" onclick="movePlayerLeft()">◄ Chapga</button>
+      <button class="action-btn" style="flex: 1;" onclick="movePlayerRight()">O'ngga ►</button>
+    </div>
   </div>
 </div>
 
@@ -236,13 +294,14 @@
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
     document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
 
-    const tabs = ['pdf', 'calc', 'pass', 'qr', 'game'];
+    const tabs = ['pdf', 'calc', 'pass', 'qr', 'stats', 'game'];
     const idx = tabs.indexOf(tab);
     if (idx !== -1) {
       document.querySelectorAll('.tab-btn')[idx].classList.add('active');
       document.getElementById(`${tab}-section`).classList.add('active');
       if (tab === 'calc') convertCurrency();
-      if (tab === 'game' && !isGameRunning) initGame();
+      if (tab === 'stats') loadRealAnalytics();
+      if (tab === 'game' && !isGameRunning) init3DGame();
     }
   }
 
@@ -260,38 +319,28 @@
     try {
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF();
-
       doc.setFontSize(18);
       doc.text(title, 10, 20);
-
       doc.setFontSize(12);
       const splitText = doc.splitTextToSize(body, 180);
       doc.text(splitText, 10, 35);
-
       doc.save(`${title}.pdf`);
-      resBox.innerHTML = `<span style="color: var(--accent-green);">✓ PDF muvaffaqiyatli yuklab olindi!</span>`;
+      resBox.innerHTML = `<span style="color: var(--accent-green);">✓ PDF yuklab olindi!</span>`;
     } catch (e) {
-      resBox.innerHTML = `<span style="color: red;">PDF yaratishda xatolik yuz berdi.</span>`;
+      resBox.innerHTML = `<span style="color: red;">PDF yaratishda xatolik.</span>`;
     }
   }
 
-  // 2. Valyuta kalkulyatori (O'rtacha taxminiy kurslar bo'yicha)
+  // 2. Valyuta
   function convertCurrency() {
     const amount = parseFloat(document.getElementById('calcAmount').value) || 0;
     const target = document.getElementById('calcTarget').value;
-    const resVal = document.getElementById('calcVal');
-
-    const rates = {
-      UZS: 12850,
-      EUR: 0.92,
-      RUB: 91.5
-    };
-
+    const rates = { UZS: 12850, EUR: 0.92, RUB: 91.5 };
     const total = (amount * rates[target]).toLocaleString();
-    resVal.innerText = `${amount} USD = ${total} ${target}`;
+    document.getElementById('calcVal').innerText = `${amount} USD = ${total} ${target}`;
   }
 
-  // 3. Parol Generator
+  // 3. Parol
   function generatePassword() {
     const len = parseInt(document.getElementById('passLen').value) || 12;
     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=";
@@ -299,97 +348,160 @@
     for (let i = 0; i < len; i++) {
       password += chars.charAt(Math.floor(Math.random() * chars.length));
     }
-    document.getElementById('passVal').innerText = password;
+    const resBox = document.getElementById('passResult');
+    resBox.innerHTML = `
+      <span style="font-size: 16px; font-weight: bold; color: var(--accent-cyan); cursor: pointer;" onclick="navigator.clipboard.writeText('${password}'); alert('Nusxalandi!');">${password}</span>
+      <div style="font-size: 11px; color: var(--text-sub); margin-top: 6px;">(Ustiga bossangiz nusxalanadi)</div>
+    `;
   }
 
-  // 4. QR Code Generator
+  // 4. QR Kod
   function generateQR() {
     const input = document.getElementById('qrInput').value.trim();
     const resBox = document.getElementById('qrResult');
     if (!input) return;
-
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(input)}`;
     resBox.innerHTML = `<img src="${qrUrl}" style="width:140px; height:140px; border-radius:8px;" />`;
   }
 
-  // 5. Game Engine
-  let canvas, ctx, player, obstacles, score, isGameRunning = false, animationFrameId;
+  // 5. REAL ANALYTICS LOGIC
+  let fpsCounter = 0, lastFpsTime = performance.now();
+  function loadRealAnalytics() {
+    const platform = window.Telegram?.WebApp?.platform || navigator.platform || "Noma'lum";
+    document.getElementById('realPlatform').innerText = platform.toUpperCase();
 
-  function initGame() {
+    const cores = navigator.hardwareConcurrency || "Cheklangan";
+    document.getElementById('realCores').innerText = `${cores} Yadro`;
+
+    const ram = navigator.deviceMemory ? `~${navigator.deviceMemory} GB` : "Xavfsiz manba";
+    document.getElementById('realRam').innerText = ram;
+
+    document.getElementById('realScreen').innerText = `${window.screen.width}x${window.screen.height}`;
+
+    const online = navigator.onLine ? "Online 🟢" : "Offline 🔴";
+    document.getElementById('realNet').innerText = online;
+
+    function calcFPS() {
+      fpsCounter++;
+      const now = performance.now();
+      if (now - lastFpsTime >= 1000) {
+        document.getElementById('realFPS').innerText = `${fpsCounter} FPS`;
+        fpsCounter = 0;
+        lastFpsTime = now;
+      }
+      if (document.getElementById('stats-section').classList.contains('active')) {
+        requestAnimationFrame(calcFPS);
+      }
+    }
+    calcFPS();
+  }
+
+  // 6. PSEUDO-3D CYBER GAME LOGIC
+  let canvas, ctx, playerX, obstacles3D, score3D, isGameRunning = false, gameFrame;
+
+  function init3DGame() {
     canvas = document.getElementById('gameCanvas');
     ctx = canvas.getContext('2d');
     canvas.width = canvas.offsetWidth;
-    canvas.height = 180;
+    canvas.height = 220;
 
-    player = { x: 30, y: 130, size: 20, dy: 0, gravity: 0.6, jumpPower: -10, grounded: false };
-    obstacles = [];
-    score = 0;
+    playerX = canvas.width / 2;
+    obstacles3D = [];
+    score3D = 0;
     isGameRunning = true;
 
-    if (animationFrameId) cancelAnimationFrame(animationFrameId);
-    gameLoop();
+    if (gameFrame) cancelAnimationFrame(gameFrame);
+    render3DGame();
   }
 
-  function jumpGame() {
-    if (player && player.grounded) {
-      player.dy = player.jumpPower;
-      player.grounded = false;
-    }
-  }
+  function movePlayerLeft() { playerX = Math.max(40, playerX - 35); }
+  function movePlayerRight() { playerX = Math.min(canvas.width - 40, playerX + 35); }
+  function movePlayer() { if (playerX > canvas.width / 2) movePlayerLeft(); else movePlayerRight(); }
 
-  function gameLoop() {
+  function render3DGame() {
     if (!isGameRunning) return;
 
-    ctx.fillStyle = '#05050a';
+    // Background Gradient (Sky/Space)
+    ctx.fillStyle = '#050210';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+    const vpX = canvas.width / 2; // Vanishing Point X
+    const vpY = 60;               // Vanishing Point Y (3D Horizon)
+
+    // Draw Perspective Grid Lines (3D Road Effect)
+    ctx.strokeStyle = '#8b5cf6';
+    ctx.lineWidth = 1;
+
+    for (let x = -canvas.width; x <= canvas.width * 2; x += 40) {
+      ctx.beginPath();
+      ctx.moveTo(vpX, vpY);
+      ctx.lineTo(x, canvas.height);
+      ctx.stroke();
+    }
+
+    // Road Borders
     ctx.strokeStyle = '#06b6d4';
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.moveTo(0, 150);
-    ctx.lineTo(canvas.width, 150);
+    ctx.moveTo(vpX, vpY);
+    ctx.lineTo(20, canvas.height);
+    ctx.moveTo(vpX, vpY);
+    ctx.lineTo(canvas.width - 20, canvas.height);
     ctx.stroke();
 
-    player.dy += player.gravity;
-    player.y += player.dy;
-
-    if (player.y + player.size >= 150) {
-      player.y = 150 - player.size;
-      player.dy = 0;
-      player.grounded = true;
+    // Spawn 3D Obstacles
+    if (Math.random() < 0.04) {
+      obstacles3D.push({
+        z: 0.1, // Distance from horizon (0.1 -> 1.0)
+        lane: Math.random() > 0.5 ? 1 : -1
+      });
     }
 
-    ctx.fillStyle = '#8b5cf6';
-    ctx.fillRect(player.x, player.y, player.size, player.size);
+    // Render & Update Obstacles (Pseudo 3D Scaling)
+    for (let i = 0; i < obstacles3D.length; i++) {
+      let obs = obstacles3D[i];
+      obs.z += 0.02; // Moving closer
 
-    if (Math.random() < 0.015 && (obstacles.length === 0 || obstacles[obstacles.length - 1].x < canvas.width - 100)) {
-      obstacles.push({ x: canvas.width, size: 16 + Math.random() * 8 });
-    }
-
-    for (let i = 0; i < obstacles.length; i++) {
-      let obs = obstacles[i];
-      obs.x -= 3.5;
+      let scale = obs.z;
+      let obsX = vpX + (obs.lane * 90 * scale);
+      let obsY = vpY + ((canvas.height - vpY) * scale);
+      let size = 30 * scale;
 
       ctx.fillStyle = '#ec4899';
-      ctx.fillRect(obs.x, 150 - obs.size, obs.size, obs.size);
+      ctx.shadowBlur = 10 * scale;
+      ctx.shadowColor = '#ec4899';
+      ctx.fillRect(obsX - size / 2, obsY - size, size, size);
+      ctx.shadowBlur = 0;
 
-      if (
-        player.x < obs.x + obs.size &&
-        player.x + player.size > obs.x &&
-        player.y < 150 &&
-        player.y + player.size > 150 - obs.size
-      ) {
-        isGameRunning = false;
-        alert(`O'yin tugadi! Toplangan ball: ${Math.floor(score / 6)}`);
-        return;
+      // Collision Detection at the foreground (z > 0.85)
+      if (obs.z > 0.85 && obs.z < 1.0) {
+        let playerLane = playerX < vpX ? -1 : 1;
+        if (playerLane === obs.lane) {
+          isGameRunning = false;
+          alert(`O'yin tugadi! Natijangiz: ${Math.floor(score3D / 5)}`);
+          return;
+        }
       }
     }
 
-    obstacles = obstacles.filter(o => o.x > -20);
-    score++;
-    document.getElementById('gameScore').innerText = Math.floor(score / 6);
+    obstacles3D = obstacles3D.filter(o => o.z <= 1.0);
 
-    animationFrameId = requestAnimationFrame(gameLoop);
+    // Draw Player 3D Ship/Car
+    ctx.fillStyle = '#06b6d4';
+    ctx.shadowBlur = 15;
+    ctx.shadowColor = '#06b6d4';
+    ctx.beginPath();
+    ctx.moveTo(playerX, canvas.height - 40);
+    ctx.lineTo(playerX - 20, canvas.height - 10);
+    ctx.lineTo(playerX + 20, canvas.height - 10);
+    ctx.closePath();
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    score3D++;
+    document.getElementById('gameScore').innerText = Math.floor(score3D / 5);
+
+    gameFrame = requestAnimationFrame(render3DGame);
   }
 </script>
 </body>
