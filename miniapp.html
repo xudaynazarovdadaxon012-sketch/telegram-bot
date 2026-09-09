@@ -2,7 +2,7 @@
 <html lang="uz">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Mega AI Assistant</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
@@ -11,8 +11,6 @@
       --card-bg: #161b22;
       --accent-purple: #8b5cf6;
       --accent-cyan: #06b6d4;
-      --accent-pink: #ec4899;
-      --accent-green: #10b981;
       --text-main: #f0f6fc;
       --text-sub: #8b949e;
     }
@@ -22,6 +20,7 @@
       margin: 0;
       padding: 0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      -webkit-tap-highlight-color: transparent;
     }
 
     body {
@@ -32,6 +31,7 @@
       flex-direction: column;
       align-items: center;
       min-height: 100vh;
+      overflow-x: hidden;
     }
 
     .container {
@@ -41,7 +41,7 @@
 
     h1 {
       text-align: center;
-      font-size: 22px;
+      font-size: 20px;
       margin-bottom: 12px;
       background: linear-gradient(90deg, var(--accent-purple), var(--accent-cyan));
       -webkit-background-clip: text;
@@ -53,7 +53,7 @@
 
     .tabs {
       display: flex;
-      gap: 8px;
+      gap: 6px;
       overflow-x: auto;
       padding-bottom: 8px;
       margin-bottom: 12px;
@@ -66,19 +66,18 @@
       background: var(--card-bg);
       color: var(--text-sub);
       border: 1px solid rgba(255, 255, 255, 0.1);
-      padding: 8px 14px;
+      padding: 8px 12px;
       border-radius: 20px;
       font-size: 13px;
       white-space: nowrap;
       cursor: pointer;
-      transition: all 0.2s ease;
+      user-select: none;
     }
 
     .tab-btn.active {
       background: var(--accent-purple);
       color: #fff;
       border-color: var(--accent-purple);
-      box-shadow: 0 0 12px rgba(139, 92, 246, 0.5);
     }
 
     .section {
@@ -107,8 +106,6 @@
       outline: none;
     }
 
-    input[type="text"]:focus { border-color: var(--accent-cyan); }
-
     button.action-btn {
       background: linear-gradient(135deg, var(--accent-purple), var(--accent-cyan));
       border: none;
@@ -121,13 +118,12 @@
     }
 
     .chat-box {
-      height: 300px;
+      height: 280px;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
       gap: 10px;
       margin-bottom: 10px;
-      padding-right: 4px;
     }
 
     .msg {
@@ -143,18 +139,16 @@
       align-self: flex-end;
       background: var(--accent-purple);
       color: #fff;
-      border-bottom-right-radius: 2px;
     }
 
     .msg.ai {
       align-self: flex-start;
       background: rgba(255, 255, 255, 0.08);
       color: var(--text-main);
-      border-bottom-left-radius: 2px;
     }
 
     .result-box {
-      min-height: 180px;
+      min-height: 160px;
       background: rgba(0, 0, 0, 0.3);
       border-radius: 12px;
       display: flex;
@@ -163,42 +157,6 @@
       margin-top: 10px;
       padding: 10px;
       text-align: center;
-      overflow: hidden;
-    }
-
-    .stats-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-bottom: 12px;
-    }
-
-    .stat-card {
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid rgba(255, 255, 255, 0.05);
-      border-radius: 12px;
-      padding: 12px;
-      text-align: center;
-    }
-
-    .stat-card .val {
-      font-size: 18px;
-      font-weight: bold;
-      margin-bottom: 4px;
-    }
-
-    .stat-card .lbl {
-      font-size: 12px;
-      color: var(--text-sub);
-    }
-
-    #gameCanvas {
-      width: 100%;
-      height: 220px;
-      background: #05050a;
-      border-radius: 12px;
-      border: 1px solid var(--accent-cyan);
-      display: block;
     }
   </style>
 </head>
@@ -212,14 +170,12 @@
     <button class="tab-btn" onclick="switchTab('image')">🎨 Rasm</button>
     <button class="tab-btn" onclick="switchTab('translate')">🌐 Tarjimon</button>
     <button class="tab-btn" onclick="switchTab('qr')">📱 QR Kod</button>
-    <button class="tab-btn" onclick="switchTab('stats')">📊 Analitika</button>
-    <button class="tab-btn" onclick="switchTab('game')">🎮 Cyber Game</button>
   </div>
 
   <!-- 1. Chat Section -->
   <div id="chat-section" class="section active">
     <div class="chat-box" id="chatBox">
-      <div class="msg ai">Assalomu alaykum! Men rasmiy Google Gemini AI yordamchisiman. Istalgan murakkab savolingizni berishingiz mumkin! 🚀</div>
+      <div class="msg ai">Assalomu alaykum! Men Google Gemini AI yordamchisiman. Yozishingiz mumkin! 🚀</div>
     </div>
     <div class="input-group">
       <input type="text" id="chatInput" placeholder="Xabar yozing..." onkeypress="if(event.key==='Enter') sendChatMessage()" />
@@ -230,7 +186,7 @@
   <!-- 2. Image Section -->
   <div id="image-section" class="section">
     <div class="input-group">
-      <input type="text" id="imgPrompt" placeholder="Rasm tavsifi (masalan: daraxt, mashina)..." />
+      <input type="text" id="imgPrompt" placeholder="Rasm tavsifi..." />
       <button class="action-btn" onclick="generateAIImage()">Yaratish 🎨</button>
     </div>
     <div class="result-box" id="imgResult">
@@ -248,7 +204,7 @@
       </select>
     </div>
     <div class="input-group">
-      <input type="text" id="transInput" placeholder="Tarjima matnini kiriting..." />
+      <input type="text" id="transInput" placeholder="Matn kiriting..." />
       <button class="action-btn" onclick="translateText()">O'girish</button>
     </div>
     <div class="result-box" id="transResult">
@@ -259,122 +215,61 @@
   <!-- 4. QR Code -->
   <div id="qr-section" class="section">
     <div class="input-group">
-      <input type="text" id="qrInput" placeholder="Havola yoki matn kiriting..." />
+      <input type="text" id="qrInput" placeholder="Matn yoki havola..." />
       <button class="action-btn" onclick="generateQR()">Yaratish</button>
     </div>
     <div class="result-box" id="qrResult">
       <span style="color: var(--text-sub); font-size: 13px;">QR kod shu yerda ko'rinadi</span>
     </div>
   </div>
-
-  <!-- 5. Analytics -->
-  <div id="stats-section" class="section">
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="val" id="statReq" style="color: var(--accent-cyan);">0</div>
-        <div class="lbl">AI So'rovlar</div>
-      </div>
-      <div class="stat-card">
-        <div class="val" style="color: var(--accent-green);">99.9%</div>
-        <div class="lbl">Uptime Status</div>
-      </div>
-    </div>
-    <div style="background: rgba(255,255,255,0.03); border-radius: 12px; padding: 12px;">
-      <span style="font-size: 13px; color: var(--accent-pink); font-weight: bold;">📈 Jonli Kripto Kurslar</span>
-      <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 14px;">
-        <span>BTC: <strong style="color: #fff;">$88,450</strong></span>
-        <span>TON: <strong style="color: #fff;">$5.40</strong></span>
-      </div>
-    </div>
-  </div>
-
-  <!-- 6. Cyber Game -->
-  <div id="game-section" class="section">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-      <span style="font-weight: bold; color: var(--accent-cyan);">Neon Runner 🎮</span>
-      <span style="font-size: 13px;">Score: <strong id="gameScore" style="color: var(--accent-pink);">0</strong></span>
-    </div>
-    <canvas id="gameCanvas"></canvas>
-    <button class="action-btn" style="width: 100%; margin-top: 10px;" onclick="jumpGame()">Sakrash 🚀</button>
-  </div>
 </div>
 
 <script>
-  const tg = window.Telegram?.WebApp;
-  if (tg) tg.expand();
-
-  // SHU YERGA GOOGLE GEMINI API KALITINGIZNI QO'YING:
-  const GEMINI_API_KEY = "AQ.Ab8RN6JejU2xCbIU7NkmwBz43XqRBSOUPkgJSjHV8TMbNXGxlQ"; 
-
-  let reqCount = 0;
-
-  function trackUsage() {
-    reqCount++;
-    document.getElementById('statReq').innerText = reqCount;
-    if (tg?.CloudStorage) {
-      tg.CloudStorage.setItem('app_req_count', reqCount.toString());
-    }
+  if (window.Telegram?.WebApp) {
+    window.Telegram.WebApp.ready();
+    window.Telegram.WebApp.expand();
   }
 
-  if (tg?.CloudStorage) {
-    tg.CloudStorage.getItem('app_req_count', (err, val) => {
-      if (!err && val) {
-        reqCount = parseInt(val) || 0;
-        document.getElementById('statReq').innerText = reqCount;
-      }
-    });
-  }
+  // Gemini API Key:
+  const GEMINI_API_KEY = "AQ.Ab8RN6L2igzuU1PwAjNL5m05qqQryDYsyCfhUF-piN482VDiow";
 
   function switchTab(tab) {
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
     document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
 
-    const tabs = ['chat', 'image', 'translate', 'qr', 'stats', 'game'];
+    const tabs = ['chat', 'image', 'translate', 'qr'];
     const idx = tabs.indexOf(tab);
     if (idx !== -1) {
       document.querySelectorAll('.tab-btn')[idx].classList.add('active');
       document.getElementById(`${tab}-section`).classList.add('active');
-      if (tab === 'game') initGame();
     }
   }
 
-  // Rasmiy Gemini AI integratsiyasi
+  // To'g'ridan-to'g'ri Gemini API so'rovi (sahifa bloklanmaydi)
   async function callGeminiAI(promptText) {
-    if (!GEMINI_API_KEY || GEMINI_API_KEY === "AQ.Ab8RN6JejU2xCbIU7NkmwBz43XqRBSOUPkgJSjHV8TMbNXGxlQ") {
-      return "Iltimos, koddagi GEMINI_API_KEY o'rniga haqiqiy kalitni qo'ying!";
-    }
-
     try {
-      // Barqaror gemini-2.0-flash modelidan foydalanamiz
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
       
       const res = await fetch(url, {
         method: "POST",
-        headers: { 
-          "Content-Type": "application/json"
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           contents: [{ parts: [{ text: promptText }] }]
         })
       });
 
       const data = await res.json();
-      
       if (data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
         return data.candidates[0].content.parts[0].text;
-      } else if (data.error) {
-        console.error("Gemini API Error:", data.error);
-        return `API Xatolik: ${data.error.message || 'Noma'lum xatolik'}`;
       } else {
-        return "Javob strukturasida xatolik yuz berdi.";
+        return "Javob olishda xatolik yuz berdi.";
       }
     } catch (e) {
-      console.error("Fetch Error:", e);
-      return "Ulanishda xatolik yuz berdi (CORS yoki tarmoq xatosi).";
+      return "Ulanishda xatolik yuz berdi.";
     }
   }
-  // 1. AI Chat
-  async function sendChatMessage() {
+
+  function sendChatMessage() {
     const input = document.getElementById('chatInput');
     const box = document.getElementById('chatBox');
     const text = input.value.trim();
@@ -384,161 +279,57 @@
 
     box.innerHTML += `<div class="msg user">${text}</div>`;
     box.scrollTop = box.scrollHeight;
-    trackUsage();
 
     const aiMsg = document.createElement('div');
     aiMsg.className = 'msg ai';
-    aiMsg.innerText = "Gemini o'ylanmoqda... ⏳";
+    aiMsg.innerText = "Yozilmoqda... ⏳";
     box.appendChild(aiMsg);
     box.scrollTop = box.scrollHeight;
 
-    const reply = await callGeminiAI(`Siz o'zbek tilida javob beruvchi aqlli va xushfeli AI asistentsiz. Foydalanuvchi so'rovi: ${text}`);
-    aiMsg.innerText = reply;
-    box.scrollTop = box.scrollHeight;
+    // Orqa fonda mustaqil ishlaydi (GUI bloklanmaydi)
+    callGeminiAI(`O'zbek tilida xushfeli javob ber: ${text}`).then(reply => {
+      aiMsg.innerText = reply;
+      box.scrollTop = box.scrollHeight;
+    });
   }
 
-  // 2. AI Image Generator
   function generateAIImage() {
     const promptInput = document.getElementById('imgPrompt');
     const resBox = document.getElementById('imgResult');
-    const rawPrompt = promptInput.value.trim();
+    const text = promptInput.value.trim();
+    if (!text) return;
 
-    if (!rawPrompt) return alert("Rasm tavsifini kiriting!");
-
-    resBox.innerHTML = `<span style="color: var(--accent-cyan); font-size: 13px;">Rasm chizilmoqda... 🎨</span>`;
-    trackUsage();
-
-    const seed = Math.floor(Math.random() * 999999);
-    const imgUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(rawPrompt)}?width=512&height=512&seed=${seed}&nologo=true`;
+    resBox.innerHTML = `<span style="color: var(--accent-cyan);">Rasm tayyorlanmoqda... 🎨</span>`;
+    const seed = Math.floor(Math.random() * 99999);
+    const imgUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(text)}?width=400&height=400&seed=${seed}&nologo=true`;
 
     const img = new Image();
     img.src = imgUrl;
     img.style.width = "100%";
-    img.style.borderRadius = "12px";
-
-    img.onload = () => {
-      resBox.innerHTML = '';
-      resBox.appendChild(img);
-    };
-
-    img.onerror = () => {
-      resBox.innerHTML = `<span style="color: var(--accent-pink); font-size: 13px;">Rasm yuklashda xatolik bo'ldi. Qayta "Yaratish" tugmasini bosing!</span>`;
-    };
+    img.style.borderRadius = "10px";
+    img.onload = () => { resBox.innerHTML = ''; resBox.appendChild(img); };
+    img.onerror = () => { resBox.innerHTML = `<span style="color: red;">Rasm yuklanmadi.</span>`; };
   }
 
-  // 3. AI Translator
-  async function translateText() {
+  function translateText() {
     const input = document.getElementById('transInput').value.trim();
     const target = document.getElementById('langTarget').value;
     const resBox = document.getElementById('transResult');
+    if (!input) return;
 
-    if (!input) return alert("Matn kiriting!");
-
-    resBox.innerHTML = `<span style="color: var(--accent-cyan); font-size: 13px;">Tarjima qilinmoqda... 🌐</span>`;
-    trackUsage();
-
-    const result = await callGeminiAI(`Quyidagi matnni ${target} tarjima qil va faqat tarjimanining o'zini qaytar: ${input}`);
-    resBox.innerHTML = `<strong style="color: #fff; font-size: 15px;">${result}</strong>`;
+    resBox.innerHTML = `<span style="color: var(--accent-cyan);">Tarjima qilinmoqda... 🌐</span>`;
+    callGeminiAI(`Matnni ${target} tarjima qil va faqat tarjimaning o'zini ber: ${input}`).then(result => {
+      resBox.innerHTML = `<strong style="color:#fff;">${result}</strong>`;
+    });
   }
 
-  // 4. QR Code
   function generateQR() {
     const input = document.getElementById('qrInput').value.trim();
     const resBox = document.getElementById('qrResult');
+    if (!input) return;
 
-    if (!input) return alert("Matn kiriting!");
-
-    resBox.innerHTML = `<span style="color: var(--accent-cyan); font-size: 13px;">QR kod yaratilmoqda... 📱</span>`;
-    trackUsage();
-
-    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(input)}`;
-    resBox.innerHTML = `<img src="${qrUrl}" style="width:160px; height:160px; border-radius:8px;" />`;
-  }
-
-  // 5. Cyber Game
-  let canvas, ctx, player, obstacles, score, gameInterval, isGameRunning = false;
-
-  function initGame() {
-    canvas = document.getElementById('gameCanvas');
-    ctx = canvas.getContext('2d');
-    canvas.width = canvas.offsetWidth;
-    canvas.height = 220;
-
-    player = { x: 30, y: 160, size: 20, dy: 0, gravity: 0.8, jumpPower: -12, grounded: false };
-    obstacles = [];
-    score = 0;
-    isGameRunning = true;
-
-    if (gameInterval) clearInterval(gameInterval);
-    gameInterval = setInterval(updateGame, 1000 / 60);
-
-    canvas.onclick = jumpGame;
-  }
-
-  function jumpGame() {
-    if (player.grounded) {
-      player.dy = player.jumpPower;
-      player.grounded = false;
-    }
-  }
-
-  function updateGame() {
-    if (!isGameRunning) return;
-
-    ctx.fillStyle = '#05050a';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    ctx.strokeStyle = '#06b6d4';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(0, 180);
-    ctx.lineTo(canvas.width, 180);
-    ctx.stroke();
-
-    player.dy += player.gravity;
-    player.y += player.dy;
-
-    if (player.y + player.size >= 180) {
-      player.y = 180 - player.size;
-      player.dy = 0;
-      player.grounded = true;
-    }
-
-    ctx.fillStyle = '#8b5cf6';
-    ctx.shadowBlur = 10;
-    ctx.shadowColor = '#8b5cf6';
-    ctx.fillRect(player.x, player.y, player.size, player.size);
-    ctx.shadowBlur = 0;
-
-    if (Math.random() < 0.02 && (obstacles.length === 0 || obstacles[obstacles.length - 1].x < canvas.width - 120)) {
-      obstacles.push({ x: canvas.width, size: 18 + Math.random() * 10 });
-    }
-
-    for (let i = 0; i < obstacles.length; i++) {
-      let obs = obstacles[i];
-      obs.x -= 4;
-
-      ctx.fillStyle = '#ec4899';
-      ctx.shadowBlur = 10;
-      ctx.shadowColor = '#ec4899';
-      ctx.fillRect(obs.x, 180 - obs.size, obs.size, obs.size);
-      ctx.shadowBlur = 0;
-
-      if (
-        player.x < obs.x + obs.size &&
-        player.x + player.size > obs.x &&
-        player.y < 180 &&
-        player.y + player.size > 180 - obs.size
-      ) {
-        isGameRunning = false;
-        alert(`O'yin tugadi! Ball: ${Math.floor(score / 5)}`);
-        initGame();
-      }
-    }
-
-    obstacles = obstacles.filter(o => o.x > -20);
-    score++;
-    document.getElementById('gameScore').innerText = Math.floor(score / 5);
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(input)}`;
+    resBox.innerHTML = `<img src="${qrUrl}" style="width:140px; height:140px;" />`;
   }
 </script>
 </body>
