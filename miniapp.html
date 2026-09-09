@@ -3,14 +3,18 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Mega AI Assistant</title>
+  <title>Mega Utility Hub</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <!-- PDF yaratish kutubxonasi -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     :root {
       --bg-color: #0d1117;
       --card-bg: #161b22;
       --accent-purple: #8b5cf6;
       --accent-cyan: #06b6d4;
+      --accent-green: #10b981;
+      --accent-pink: #ec4899;
       --text-main: #f0f6fc;
       --text-sub: #8b949e;
     }
@@ -92,11 +96,12 @@
 
     .input-group {
       display: flex;
-      gap: 8px;
+      flex-direction: column;
+      gap: 10px;
     }
 
-    input[type="text"], select {
-      flex: 1;
+    input[type="text"], input[type="number"], textarea, select {
+      width: 100%;
       background: rgba(0, 0, 0, 0.3);
       border: 1px solid rgba(255, 255, 255, 0.15);
       border-radius: 12px;
@@ -106,121 +111,118 @@
       outline: none;
     }
 
+    textarea {
+      resize: none;
+      height: 100px;
+    }
+
     button.action-btn {
       background: linear-gradient(135deg, var(--accent-purple), var(--accent-cyan));
       border: none;
       border-radius: 12px;
-      padding: 10px 16px;
+      padding: 12px;
       color: #fff;
       font-size: 14px;
       font-weight: 600;
       cursor: pointer;
-    }
-
-    .chat-box {
-      height: 280px;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      margin-bottom: 10px;
-    }
-
-    .msg {
-      max-width: 85%;
-      padding: 10px 14px;
-      border-radius: 14px;
-      font-size: 14px;
-      line-height: 1.4;
-      word-break: break-word;
-    }
-
-    .msg.user {
-      align-self: flex-end;
-      background: var(--accent-purple);
-      color: #fff;
-    }
-
-    .msg.ai {
-      align-self: flex-start;
-      background: rgba(255, 255, 255, 0.08);
-      color: var(--text-main);
+      text-align: center;
     }
 
     .result-box {
-      min-height: 160px;
+      min-height: 100px;
       background: rgba(0, 0, 0, 0.3);
       border-radius: 12px;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
       margin-top: 10px;
-      padding: 10px;
+      padding: 12px;
       text-align: center;
+      word-break: break-all;
+    }
+
+    #gameCanvas {
+      width: 100%;
+      height: 180px;
+      background: #05050a;
+      border-radius: 12px;
+      border: 1px solid var(--accent-cyan);
+      display: block;
     }
   </style>
 </head>
 <body>
 
 <div class="container">
-  <h1>Mega AI Assistant</h1>
+  <h1>Mega Utility Studio</h1>
 
   <div class="tabs">
-    <button class="tab-btn active" onclick="switchTab('chat')">🤖 Gemini AI</button>
-    <button class="tab-btn" onclick="switchTab('image')">🎨 Rasm</button>
-    <button class="tab-btn" onclick="switchTab('translate')">🌐 Tarjimon</button>
+    <button class="tab-btn active" onclick="switchTab('pdf')">📄 PDF Creator</button>
+    <button class="tab-btn" onclick="switchTab('calc')">💵 Valyuta</button>
+    <button class="tab-btn" onclick="switchTab('pass')">🔐 Parol Generator</button>
     <button class="tab-btn" onclick="switchTab('qr')">📱 QR Kod</button>
+    <button class="tab-btn" onclick="switchTab('game')">🎮 Cyber Game</button>
   </div>
 
-  <!-- 1. Chat Section -->
-  <div id="chat-section" class="section active">
-    <div class="chat-box" id="chatBox">
-      <div class="msg ai">Assalomu alaykum! Men Google Gemini AI yordamchisiman. Yozishingiz mumkin! 🚀</div>
-    </div>
+  <!-- 1. PDF Creator -->
+  <div id="pdf-section" class="section active">
     <div class="input-group">
-      <input type="text" id="chatInput" placeholder="Xabar yozing..." onkeypress="if(event.key==='Enter') sendChatMessage()" />
-      <button class="action-btn" onclick="sendChatMessage()">➤</button>
+      <input type="text" id="pdfTitle" placeholder="Hujjat sarlavhasi (Masalan: Rezyume)..." />
+      <textarea id="pdfBody" placeholder="Hujjat matnini kiriting..."></textarea>
+      <button class="action-btn" onclick="generatePDF()">PDF Fayl Yaratish 📄</button>
+    </div>
+    <div class="result-box" id="pdfResult">
+      <span style="color: var(--text-sub); font-size: 13px;">Tayyor bo'lgach yuklab olish havolasi chiqadi</span>
     </div>
   </div>
 
-  <!-- 2. Image Section -->
-  <div id="image-section" class="section">
+  <!-- 2. Valyuta Kalkulyatori -->
+  <div id="calc-section" class="section">
     <div class="input-group">
-      <input type="text" id="imgPrompt" placeholder="Rasm tavsifi..." />
-      <button class="action-btn" onclick="generateAIImage()">Yaratish 🎨</button>
-    </div>
-    <div class="result-box" id="imgResult">
-      <span style="color: var(--text-sub); font-size: 13px;">Rasm shu yerda ko'rinadi</span>
-    </div>
-  </div>
-
-  <!-- 3. Translator -->
-  <div id="translate-section" class="section">
-    <div class="input-group" style="margin-bottom: 8px;">
-      <select id="langTarget">
-        <option value="Ingliz tiliga">Ingliz tiliga 🇬🇧</option>
-        <option value="O'zbek tiliga">O'zbek tiliga 🇺🇿</option>
-        <option value="Rus tiliga">Rus tiliga 🇷🇺</option>
+      <input type="number" id="calcAmount" placeholder="Summani kiriting (USD)..." value="100" oninput="convertCurrency()" />
+      <select id="calcTarget" onchange="convertCurrency()">
+        <option value="UZS">O'zbek so'miga (UZS)</option>
+        <option value="EUR">Yevroga (EUR)</option>
+        <option value="RUB">Rublega (RUB)</option>
       </select>
     </div>
-    <div class="input-group">
-      <input type="text" id="transInput" placeholder="Matn kiriting..." />
-      <button class="action-btn" onclick="translateText()">O'girish</button>
-    </div>
-    <div class="result-box" id="transResult">
-      <span style="color: var(--text-sub); font-size: 13px;">Natija shu yerda chiqadi</span>
+    <div class="result-box" id="calcResult">
+      <span style="font-size: 18px; font-weight: bold; color: var(--accent-green);" id="calcVal">---</span>
     </div>
   </div>
 
-  <!-- 4. QR Code -->
+  <!-- 3. Parol Generator -->
+  <div id="pass-section" class="section">
+    <div class="input-group">
+      <label style="font-size: 13px; color: var(--text-sub);">Parol uzunligi:</label>
+      <input type="number" id="passLen" value="12" min="6" max="32" />
+      <button class="action-btn" onclick="generatePassword()">Maksimal Xavfsiz Parol Yaratish 🔐</button>
+    </div>
+    <div class="result-box" id="passResult">
+      <span style="font-size: 16px; font-weight: bold; color: var(--accent-cyan);" id="passVal">Tugmani bosing</span>
+    </div>
+  </div>
+
+  <!-- 4. QR Code Studio -->
   <div id="qr-section" class="section">
     <div class="input-group">
-      <input type="text" id="qrInput" placeholder="Matn yoki havola..." />
-      <button class="action-btn" onclick="generateQR()">Yaratish</button>
+      <input type="text" id="qrInput" placeholder="Matn, havola yoki Telegram profil..." />
+      <button class="action-btn" onclick="generateQR()">QR Kod Yaratish 📱</button>
     </div>
     <div class="result-box" id="qrResult">
       <span style="color: var(--text-sub); font-size: 13px;">QR kod shu yerda ko'rinadi</span>
     </div>
+  </div>
+
+  <!-- 5. Cyber Game -->
+  <div id="game-section" class="section">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+      <span style="font-weight: bold; color: var(--accent-cyan);">Neon Runner 🎮</span>
+      <span style="font-size: 13px;">Ball: <strong id="gameScore" style="color: var(--accent-pink);">0</strong></span>
+    </div>
+    <canvas id="gameCanvas" onclick="jumpGame()"></canvas>
+    <button class="action-btn" style="width: 100%; margin-top: 10px;" onclick="jumpGame()">Sakrash 🚀</button>
   </div>
 </div>
 
@@ -230,106 +232,164 @@
     window.Telegram.WebApp.expand();
   }
 
-  // Gemini API Key:
-  const GEMINI_API_KEY = "AQ.Ab8RN6L2igzuU1PwAjNL5m05qqQryDYsyCfhUF-piN482VDiow";
-
   function switchTab(tab) {
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
     document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
 
-    const tabs = ['chat', 'image', 'translate', 'qr'];
+    const tabs = ['pdf', 'calc', 'pass', 'qr', 'game'];
     const idx = tabs.indexOf(tab);
     if (idx !== -1) {
       document.querySelectorAll('.tab-btn')[idx].classList.add('active');
       document.getElementById(`${tab}-section`).classList.add('active');
+      if (tab === 'calc') convertCurrency();
+      if (tab === 'game' && !isGameRunning) initGame();
     }
   }
 
-  // To'g'ridan-to'g'ri Gemini API so'rovi (sahifa bloklanmaydi)
-  async function callGeminiAI(promptText) {
+  // 1. PDF Creator
+  function generatePDF() {
+    const title = document.getElementById('pdfTitle').value.trim() || "Hujjat";
+    const body = document.getElementById('pdfBody').value.trim();
+    const resBox = document.getElementById('pdfResult');
+
+    if (!body) {
+      resBox.innerHTML = `<span style="color: red;">Iltimos, hujjat matnini kiriting!</span>`;
+      return;
+    }
+
     try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
-      
-      const res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: promptText }] }]
-        })
-      });
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
 
-      const data = await res.json();
-      if (data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
-        return data.candidates[0].content.parts[0].text;
-      } else {
-        return "Javob olishda xatolik yuz berdi.";
-      }
+      doc.setFontSize(18);
+      doc.text(title, 10, 20);
+
+      doc.setFontSize(12);
+      const splitText = doc.splitTextToSize(body, 180);
+      doc.text(splitText, 10, 35);
+
+      doc.save(`${title}.pdf`);
+      resBox.innerHTML = `<span style="color: var(--accent-green);">✓ PDF muvaffaqiyatli yuklab olindi!</span>`;
     } catch (e) {
-      return "Ulanishda xatolik yuz berdi.";
+      resBox.innerHTML = `<span style="color: red;">PDF yaratishda xatolik yuz berdi.</span>`;
     }
   }
 
-  function sendChatMessage() {
-    const input = document.getElementById('chatInput');
-    const box = document.getElementById('chatBox');
-    const text = input.value.trim();
+  // 2. Valyuta kalkulyatori (O'rtacha taxminiy kurslar bo'yicha)
+  function convertCurrency() {
+    const amount = parseFloat(document.getElementById('calcAmount').value) || 0;
+    const target = document.getElementById('calcTarget').value;
+    const resVal = document.getElementById('calcVal');
 
-    if (!text) return;
-    input.value = '';
+    const rates = {
+      UZS: 12850,
+      EUR: 0.92,
+      RUB: 91.5
+    };
 
-    box.innerHTML += `<div class="msg user">${text}</div>`;
-    box.scrollTop = box.scrollHeight;
-
-    const aiMsg = document.createElement('div');
-    aiMsg.className = 'msg ai';
-    aiMsg.innerText = "Yozilmoqda... ⏳";
-    box.appendChild(aiMsg);
-    box.scrollTop = box.scrollHeight;
-
-    // Orqa fonda mustaqil ishlaydi (GUI bloklanmaydi)
-    callGeminiAI(`O'zbek tilida xushfeli javob ber: ${text}`).then(reply => {
-      aiMsg.innerText = reply;
-      box.scrollTop = box.scrollHeight;
-    });
+    const total = (amount * rates[target]).toLocaleString();
+    resVal.innerText = `${amount} USD = ${total} ${target}`;
   }
 
-  function generateAIImage() {
-    const promptInput = document.getElementById('imgPrompt');
-    const resBox = document.getElementById('imgResult');
-    const text = promptInput.value.trim();
-    if (!text) return;
-
-    resBox.innerHTML = `<span style="color: var(--accent-cyan);">Rasm tayyorlanmoqda... 🎨</span>`;
-    const seed = Math.floor(Math.random() * 99999);
-    const imgUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(text)}?width=400&height=400&seed=${seed}&nologo=true`;
-
-    const img = new Image();
-    img.src = imgUrl;
-    img.style.width = "100%";
-    img.style.borderRadius = "10px";
-    img.onload = () => { resBox.innerHTML = ''; resBox.appendChild(img); };
-    img.onerror = () => { resBox.innerHTML = `<span style="color: red;">Rasm yuklanmadi.</span>`; };
+  // 3. Parol Generator
+  function generatePassword() {
+    const len = parseInt(document.getElementById('passLen').value) || 12;
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=";
+    let password = "";
+    for (let i = 0; i < len; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    document.getElementById('passVal').innerText = password;
   }
 
-  function translateText() {
-    const input = document.getElementById('transInput').value.trim();
-    const target = document.getElementById('langTarget').value;
-    const resBox = document.getElementById('transResult');
-    if (!input) return;
-
-    resBox.innerHTML = `<span style="color: var(--accent-cyan);">Tarjima qilinmoqda... 🌐</span>`;
-    callGeminiAI(`Matnni ${target} tarjima qil va faqat tarjimaning o'zini ber: ${input}`).then(result => {
-      resBox.innerHTML = `<strong style="color:#fff;">${result}</strong>`;
-    });
-  }
-
+  // 4. QR Code Generator
   function generateQR() {
     const input = document.getElementById('qrInput').value.trim();
     const resBox = document.getElementById('qrResult');
     if (!input) return;
 
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(input)}`;
-    resBox.innerHTML = `<img src="${qrUrl}" style="width:140px; height:140px;" />`;
+    resBox.innerHTML = `<img src="${qrUrl}" style="width:140px; height:140px; border-radius:8px;" />`;
+  }
+
+  // 5. Game Engine
+  let canvas, ctx, player, obstacles, score, isGameRunning = false, animationFrameId;
+
+  function initGame() {
+    canvas = document.getElementById('gameCanvas');
+    ctx = canvas.getContext('2d');
+    canvas.width = canvas.offsetWidth;
+    canvas.height = 180;
+
+    player = { x: 30, y: 130, size: 20, dy: 0, gravity: 0.6, jumpPower: -10, grounded: false };
+    obstacles = [];
+    score = 0;
+    isGameRunning = true;
+
+    if (animationFrameId) cancelAnimationFrame(animationFrameId);
+    gameLoop();
+  }
+
+  function jumpGame() {
+    if (player && player.grounded) {
+      player.dy = player.jumpPower;
+      player.grounded = false;
+    }
+  }
+
+  function gameLoop() {
+    if (!isGameRunning) return;
+
+    ctx.fillStyle = '#05050a';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.strokeStyle = '#06b6d4';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(0, 150);
+    ctx.lineTo(canvas.width, 150);
+    ctx.stroke();
+
+    player.dy += player.gravity;
+    player.y += player.dy;
+
+    if (player.y + player.size >= 150) {
+      player.y = 150 - player.size;
+      player.dy = 0;
+      player.grounded = true;
+    }
+
+    ctx.fillStyle = '#8b5cf6';
+    ctx.fillRect(player.x, player.y, player.size, player.size);
+
+    if (Math.random() < 0.015 && (obstacles.length === 0 || obstacles[obstacles.length - 1].x < canvas.width - 100)) {
+      obstacles.push({ x: canvas.width, size: 16 + Math.random() * 8 });
+    }
+
+    for (let i = 0; i < obstacles.length; i++) {
+      let obs = obstacles[i];
+      obs.x -= 3.5;
+
+      ctx.fillStyle = '#ec4899';
+      ctx.fillRect(obs.x, 150 - obs.size, obs.size, obs.size);
+
+      if (
+        player.x < obs.x + obs.size &&
+        player.x + player.size > obs.x &&
+        player.y < 150 &&
+        player.y + player.size > 150 - obs.size
+      ) {
+        isGameRunning = false;
+        alert(`O'yin tugadi! Toplangan ball: ${Math.floor(score / 6)}`);
+        return;
+      }
+    }
+
+    obstacles = obstacles.filter(o => o.x > -20);
+    score++;
+    document.getElementById('gameScore').innerText = Math.floor(score / 6);
+
+    animationFrameId = requestAnimationFrame(gameLoop);
   }
 </script>
 </body>
