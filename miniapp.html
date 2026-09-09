@@ -208,7 +208,7 @@
   <h1>Mega AI Assistant</h1>
 
   <div class="tabs">
-    <button class="tab-btn active" onclick="switchTab('chat')">🤖 AI Chat</button>
+    <button class="tab-btn active" onclick="switchTab('chat')">🤖 Gemini AI</button>
     <button class="tab-btn" onclick="switchTab('image')">🎨 Rasm</button>
     <button class="tab-btn" onclick="switchTab('translate')">🌐 Tarjimon</button>
     <button class="tab-btn" onclick="switchTab('qr')">📱 QR Kod</button>
@@ -219,7 +219,7 @@
   <!-- 1. Chat Section -->
   <div id="chat-section" class="section active">
     <div class="chat-box" id="chatBox">
-      <div class="msg ai">Assalomu alaykum! Men aqlli AI yordamchisiman. Istalgan savolingizni berishingiz mumkin! 😊</div>
+      <div class="msg ai">Assalomu alaykum! Men rasmiy Google Gemini AI yordamchisiman. Istalgan murakkab savolingizni berishingiz mumkin! 🚀</div>
     </div>
     <div class="input-group">
       <input type="text" id="chatInput" placeholder="Xabar yozing..." onkeypress="if(event.key==='Enter') sendChatMessage()" />
@@ -303,6 +303,9 @@
   const tg = window.Telegram?.WebApp;
   if (tg) tg.expand();
 
+  // SHU YERGA GOOGLE GEMINI API KALITINGIZNI QO'YING:
+  const GEMINI_API_KEY = "AQ.Ab8RN6L2igzuU1PwAjNL5m05qqQryDYsyCfhUF-piN482VDIow"; 
+
   let reqCount = 0;
 
   function trackUsage() {
@@ -335,25 +338,31 @@
     }
   }
 
-  // Tezkor va Ishonchli AI Javob Generator
-  async function askAI(promptText) {
-    try {
-      const url = `https://text.pollinations.ai/${encodeURIComponent(promptText)}?model=openai&seed=${Math.floor(Math.random()*10000)}`;
-      const res = await fetch(url);
-      const text = await res.text();
-      
-      if (res.ok && text && !text.includes("402 Payment") && !text.includes("error")) {
-        return text.trim();
-      }
-    } catch (e) {}
+  // Rasmiy Gemini AI integratsiyasi
+  async function callGeminiAI(promptText) {
+    if (!GEMINI_API_KEY || GEMINI_API_KEY === "YOUR_GEMINI_API_KEY") {
+      return "Iltimos, koddagi GEMINI_API_KEY o'rniga haqiqiy kalitni qo'ying!";
+    }
 
-    // Zaxira javob generatori (Xatolik bo'lsa ham foydalanuvchiga aniq javob berish uchun)
-    const respuestas = [
-      `Siz yozgan "${promptText}" bo'yicha ma'lumotlarni tahlil qildim. Ajoyib fikr!`,
-      `Albatta! "${promptText}" masalasi juda muhim. Yana batafsilroq ma'lumot berishimni xohlaysizmi?`,
-      `Tushundim. Bu bo'yicha qo'shimcha savollaringiz bo'lsa, mamnuniyat bilan javob beraman!`
-    ];
-    return respuestas[Math.floor(Math.random() * respuestas.length)];
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: promptText }] }]
+        })
+      });
+
+      const data = await res.json();
+      if (data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
+        return data.candidates[0].content.parts[0].text;
+      } else {
+        return "Javob olishda xatolik yuz berdi.";
+      }
+    } catch (e) {
+      return "Ulanishda xatolik yuz berdi.";
+    }
   }
 
   // 1. AI Chat
@@ -371,16 +380,16 @@
 
     const aiMsg = document.createElement('div');
     aiMsg.className = 'msg ai';
-    aiMsg.innerText = "Javob tayyorlanmoqda... ⏳";
+    aiMsg.innerText = "Gemini o'ylanmoqda... ⏳";
     box.appendChild(aiMsg);
     box.scrollTop = box.scrollHeight;
 
-    const reply = await askAI(`O'zbek tilida, samimiy javob ber: ${text}`);
+    const reply = await callGeminiAI(`Siz o'zbek tilida javob beruvchi aqlli va xushfeli AI asistentsiz. Foydalanuvchi so'rovi: ${text}`);
     aiMsg.innerText = reply;
     box.scrollTop = box.scrollHeight;
   }
 
-  // 2. AI Image Generator (Muammosiz va Kafolatlangan)
+  // 2. AI Image Generator
   function generateAIImage() {
     const promptInput = document.getElementById('imgPrompt');
     const resBox = document.getElementById('imgResult');
@@ -420,7 +429,7 @@
     resBox.innerHTML = `<span style="color: var(--accent-cyan); font-size: 13px;">Tarjima qilinmoqda... 🌐</span>`;
     trackUsage();
 
-    const result = await askAI(`Matnni ${target} tarjima qil va faqat tarjimasini ko'rsat: ${input}`);
+    const result = await callGeminiAI(`Quyidagi matnni ${target} tarjima qil va faqat tarjimanining o'zini qaytar: ${input}`);
     resBox.innerHTML = `<strong style="color: #fff; font-size: 15px;">${result}</strong>`;
   }
 
@@ -438,7 +447,7 @@
     resBox.innerHTML = `<img src="${qrUrl}" style="width:160px; height:160px; border-radius:8px;" />`;
   }
 
-  // 5. Cyber Game (Neon Canvas)
+  // 5. Cyber Game
   let canvas, ctx, player, obstacles, score, gameInterval, isGameRunning = false;
 
   function initGame() {
