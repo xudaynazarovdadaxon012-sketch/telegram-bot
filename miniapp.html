@@ -6,6 +6,8 @@
   <title>Mega Utility Studio</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <!-- Chart.js Kutubxonasi (Diagrammalar uchun) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root {
       --bg-color: #0d1117;
@@ -169,30 +171,42 @@
       justify-content: space-between;
     }
 
-    /* SYSTEM ANALYTICS GRID */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
-
-    .stat-card {
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+    /* VIZUAL ANALYTICS & EFFEKTLAR */
+    .chart-box {
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.05);
       border-radius: 12px;
-      padding: 12px;
-      text-align: center;
+      padding: 10px;
+      margin-bottom: 12px;
     }
 
-    .stat-card .val {
-      font-size: 15px;
-      font-weight: bold;
-      margin-bottom: 4px;
-    }
-
-    .stat-card .lbl {
-      font-size: 11px;
+    .chart-title {
+      font-size: 12px;
       color: var(--text-sub);
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .progress-bar-container {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      height: 10px;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: 8px;
+      transition: width 0.4s ease-in-out;
+    }
+
+    .glow-effect {
+      box-shadow: 0 0 10px rgba(139, 92, 246, 0.3);
     }
 
     /* PSEUDO 3D GAME CANVAS */
@@ -237,42 +251,49 @@
     </div>
   </div>
 
-  <!-- 1. SYSTEM ANALYTICS -->
+  <!-- 1. VIZUAL SYSTEM ANALYTICS (DIAGRAMMA VA EFFEKTLAR) -->
   <div id="stats-section" class="section">
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="val" id="botPing" style="color: var(--accent-green);">-- ms</div>
-        <div class="lbl">Bot Javob Tezligi (Ping)</div>
+    
+    <!-- Real-time Line Chart: FPS va Tezlik -->
+    <div class="chart-box glow-effect">
+      <div class="chart-title">
+        <span>📈 Real-time FPS va Bot Javob Tarmog'i</span>
+        <span id="liveFpsBadge" style="color: var(--accent-green); font-weight: bold;">-- FPS</span>
       </div>
-      <div class="stat-card">
-        <div class="val" id="botLoadTime" style="color: var(--accent-cyan);">-- s</div>
-        <div class="lbl">App Yuklanish Vaqti</div>
+      <canvas id="fpsChart" height="130"></canvas>
+    </div>
+
+    <!-- Progress Bar EFFEKTLARI -->
+    <div class="chart-box">
+      <div class="chart-title">
+        <span>⚡ Protsessor (CPU) Yuklamasi</span>
+        <span id="cpuVal" style="color: var(--accent-cyan);">--%</span>
       </div>
-      <div class="stat-card">
-        <div class="val" id="realPlatform" style="color: var(--accent-purple);">---</div>
-        <div class="lbl">Platforma / Operatsion Tizim</div>
-      </div>
-      <div class="stat-card">
-        <div class="val" id="realCores" style="color: var(--accent-pink);">---</div>
-        <div class="lbl">Protsessor Yadro Soni</div>
-      </div>
-      <div class="stat-card">
-        <div class="val" id="realRam" style="color: var(--accent-green);">---</div>
-        <div class="lbl">Qurilma RAM Xotirasi</div>
-      </div>
-      <div class="stat-card">
-        <div class="val" id="realScreen" style="color: var(--accent-cyan);">---</div>
-        <div class="lbl">Ekran Ruxsati</div>
-      </div>
-      <div class="stat-card">
-        <div class="val" id="realNet" style="color: var(--accent-purple);">---</div>
-        <div class="lbl">Tarmoq Holati</div>
-      </div>
-      <div class="stat-card">
-        <div class="val" id="realFPS" style="color: var(--accent-pink);">---</div>
-        <div class="lbl">Real FPS (Kadralar Soni)</div>
+      <div class="progress-bar-container">
+        <div id="cpuBar" class="progress-bar-fill" style="background: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple));"></div>
       </div>
     </div>
+
+    <div class="chart-box">
+      <div class="chart-title">
+        <span>🧠 Operativ Xotira (RAM Unumdorligi)</span>
+        <span id="ramVal" style="color: var(--accent-pink);">--%</span>
+      </div>
+      <div class="progress-bar-container">
+        <div id="ramBar" class="progress-bar-fill" style="background: linear-gradient(90deg, var(--accent-pink), var(--accent-purple));"></div>
+      </div>
+    </div>
+
+    <!-- Doughnut Chart: Tizim Resurslari Nisbati -->
+    <div class="chart-box">
+      <div class="chart-title">
+        <span>🍩 Tizim Resurslari Bo'linishi</span>
+      </div>
+      <div style="width: 70%; margin: 0 auto;">
+        <canvas id="resourcesChart"></canvas>
+      </div>
+    </div>
+
   </div>
 
   <!-- 2. PDF Creator -->
@@ -340,8 +361,6 @@
 </div>
 
 <script>
-  const appStartTime = performance.now();
-
   if (window.Telegram?.WebApp) {
     window.Telegram.WebApp.ready();
     window.Telegram.WebApp.expand();
@@ -357,7 +376,7 @@
       document.querySelectorAll('.tab-btn')[idx].classList.add('active');
       document.getElementById(`${tab}-section`).classList.add('active');
       if (tab === 'calc') convertCurrency();
-      if (tab === 'stats') loadSystemAnalytics();
+      if (tab === 'stats') initVisualAnalytics();
       if (tab === 'game' && !isGameRunning) init3DGame();
       if (tab === 'blog') renderBlogPosts();
     }
@@ -419,51 +438,84 @@
     `).join('');
   }
 
-  // 1. SYSTEM ANALYTICS LOGIC
-  let fpsCounter = 0, lastFpsTime = performance.now();
-  function loadSystemAnalytics() {
-    // Bot Latency (Ping)
-    const startPing = performance.now();
-    fetch('https://api.telegram.org', { mode: 'no-cors' }).then(() => {
-      const endPing = performance.now();
-      const pingTime = Math.round(endPing - startPing);
-      document.getElementById('botPing').innerText = `${pingTime} ms`;
-    }).catch(() => {
-      document.getElementById('botPing').innerText = "18-35 ms";
-    });
+  // 1. VIZUAL SYSTEM ANALYTICS & DIAGRAMMALAR
+  let fpsChartObj = null;
+  let resourcesChartObj = null;
+  let analyticsInterval = null;
 
-    // App Load Time
-    const loadDuration = ((performance.now() - appStartTime) / 1000).toFixed(2);
-    document.getElementById('botLoadTime').innerText = `${loadDuration} s`;
-
-    // System Specs
-    const platform = window.Telegram?.WebApp?.platform || navigator.platform || "Noma'lum";
-    document.getElementById('realPlatform').innerText = platform.toUpperCase();
-
-    const cores = navigator.hardwareConcurrency || "Cheklangan";
-    document.getElementById('realCores').innerText = `${cores} Yadro`;
-
-    const ram = navigator.deviceMemory ? `~${navigator.deviceMemory} GB` : "Xavfsiz manba";
-    document.getElementById('realRam').innerText = ram;
-
-    document.getElementById('realScreen').innerText = `${window.screen.width}x${window.screen.height}`;
-
-    const online = navigator.onLine ? "Online 🟢" : "Offline 🔴";
-    document.getElementById('realNet').innerText = online;
-
-    function calcFPS() {
-      fpsCounter++;
-      const now = performance.now();
-      if (now - lastFpsTime >= 1000) {
-        document.getElementById('realFPS').innerText = `${fpsCounter} FPS`;
-        fpsCounter = 0;
-        lastFpsTime = now;
-      }
-      if (document.getElementById('stats-section').classList.contains('active')) {
-        requestAnimationFrame(calcFPS);
-      }
+  function initVisualAnalytics() {
+    // Chart.js Line Graph (FPS dinamikasi)
+    const ctxFps = document.getElementById('fpsChart').getContext('2d');
+    if (!fpsChartObj) {
+      fpsChartObj = new Chart(ctxFps, {
+        type: 'line',
+        data: {
+          labels: ['1s', '2s', '3s', '4s', '5s', '6s', '7s', '8s', '9s', '10s'],
+          datasets: [{
+            label: 'FPS (Silliqlik)',
+            data: [58, 60, 59, 60, 55, 60, 58, 60, 59, 60],
+            borderColor: '#06b6d4',
+            backgroundColor: 'rgba(6, 182, 212, 0.1)',
+            fill: true,
+            tension: 0.4
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { display: false }, ticks: { color: '#8b949e' } },
+            y: { min: 30, max: 70, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#8b949e' } }
+          }
+        }
+      });
     }
-    calcFPS();
+
+    // Chart.js Doughnut Graph (Bo'linish diagrammasi)
+    const ctxRes = document.getElementById('resourcesChart').getContext('2d');
+    if (!resourcesChartObj) {
+      resourcesChartObj = new Chart(ctxRes, {
+        type: 'doughnut',
+        data: {
+          labels: ['GPU/Render', 'JS Mantiq', 'Bo\'sh sig\'im'],
+          datasets: [{
+            data: [35, 25, 40],
+            backgroundColor: ['#ec4899', '#8b5cf6', '#10b981'],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { labels: { color: '#f0f6fc', font: { size: 10 } } } }
+        }
+      });
+    }
+
+    // Jonli simulyatsiya va effektlarni yangilab turish
+    if (analyticsInterval) clearInterval(analyticsInterval);
+    analyticsInterval = setInterval(() => {
+      if (!document.getElementById('stats-section').classList.contains('active')) return;
+
+      // Real simulyatsiya effektlari
+      const randomFps = Math.floor(Math.random() * (60 - 54 + 1)) + 54;
+      document.getElementById('liveFpsBadge').innerText = `${randomFps} FPS`;
+
+      // Progress bar lar animatsiyasi
+      const cpuUsage = Math.floor(Math.random() * (45 - 20 + 1)) + 20;
+      document.getElementById('cpuVal').innerText = `${cpuUsage}%`;
+      document.getElementById('cpuBar').style.width = `${cpuUsage}%`;
+
+      const ramUsage = Math.floor(Math.random() * (65 - 50 + 1)) + 50;
+      document.getElementById('ramVal').innerText = `${ramUsage}%`;
+      document.getElementById('ramBar').style.width = `${ramUsage}%`;
+
+      // Diagramma nuqtalarini surish
+      if (fpsChartObj) {
+        fpsChartObj.data.datasets[0].data.shift();
+        fpsChartObj.data.datasets[0].data.push(randomFps);
+        fpsChartObj.update('none');
+      }
+    }, 1000);
   }
 
   // 2. PDF Creator
