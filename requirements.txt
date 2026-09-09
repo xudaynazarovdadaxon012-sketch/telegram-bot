@@ -1,8 +1,3 @@
 aiogram>=3.0.0
 aiohttp
-deep-translator
-qrcode
-Pillow
-flask
-cryptography
-aiosqlite
+aiofiles
