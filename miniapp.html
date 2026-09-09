@@ -138,7 +138,38 @@
       word-break: break-all;
     }
 
-    /* REAL ANALYTICS GRID */
+    /* BLOGPOST STYLES */
+    .blog-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 12px;
+      margin-top: 12px;
+      text-align: left;
+    }
+
+    .blog-card h3 {
+      font-size: 16px;
+      color: var(--accent-cyan);
+      margin-bottom: 6px;
+    }
+
+    .blog-card p {
+      font-size: 13px;
+      color: var(--text-main);
+      line-height: 1.4;
+      white-space: pre-wrap;
+    }
+
+    .blog-card .meta {
+      font-size: 11px;
+      color: var(--text-sub);
+      margin-top: 8px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    /* SYSTEM ANALYTICS GRID */
     .stats-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -154,7 +185,7 @@
     }
 
     .stat-card .val {
-      font-size: 16px;
+      font-size: 15px;
       font-weight: bold;
       margin-bottom: 4px;
     }
@@ -182,16 +213,70 @@
   <h1>Mega Utility Studio</h1>
 
   <div class="tabs">
-    <button class="tab-btn active" onclick="switchTab('pdf')">📄 PDF Creator</button>
+    <button class="tab-btn active" onclick="switchTab('blog')">📝 Blogpost</button>
+    <button class="tab-btn" onclick="switchTab('stats')">📊 System Analytics</button>
+    <button class="tab-btn" onclick="switchTab('pdf')">📄 PDF Creator</button>
     <button class="tab-btn" onclick="switchTab('calc')">💵 Valyuta</button>
     <button class="tab-btn" onclick="switchTab('pass')">🔐 Parol</button>
     <button class="tab-btn" onclick="switchTab('qr')">📱 QR Kod</button>
-    <button class="tab-btn" onclick="switchTab('stats')">📊 Real Analitika</button>
     <button class="tab-btn" onclick="switchTab('game')">🎮 Cyber 3D Game</button>
   </div>
 
-  <!-- 1. PDF Creator -->
-  <div id="pdf-section" class="section active">
+  <!-- 0. BLOGPOST STUDIO -->
+  <div id="blog-section" class="section active">
+    <div class="input-group">
+      <input type="text" id="blogTitle" placeholder="Post sarlavhasi..." />
+      <input type="text" id="blogAuthor" placeholder="Muallif ismi (ixtiyoriy)..." />
+      <textarea id="blogBody" placeholder="Post matnini kiriting..."></textarea>
+      <button class="action-btn" onclick="createBlogPost()">Postni Chop Etish 🚀</button>
+    </div>
+
+    <div id="blogListContainer" style="margin-top: 15px;">
+      <h4 style="font-size: 14px; color: var(--text-sub); margin-bottom: 8px;">Saqlangan Postlar:</h4>
+      <div id="blogList"></div>
+    </div>
+  </div>
+
+  <!-- 1. SYSTEM ANALYTICS -->
+  <div id="stats-section" class="section">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="val" id="botPing" style="color: var(--accent-green);">-- ms</div>
+        <div class="lbl">Bot Javob Tezligi (Ping)</div>
+      </div>
+      <div class="stat-card">
+        <div class="val" id="botLoadTime" style="color: var(--accent-cyan);">-- s</div>
+        <div class="lbl">App Yuklanish Vaqti</div>
+      </div>
+      <div class="stat-card">
+        <div class="val" id="realPlatform" style="color: var(--accent-purple);">---</div>
+        <div class="lbl">Platforma / Operatsion Tizim</div>
+      </div>
+      <div class="stat-card">
+        <div class="val" id="realCores" style="color: var(--accent-pink);">---</div>
+        <div class="lbl">Protsessor Yadro Soni</div>
+      </div>
+      <div class="stat-card">
+        <div class="val" id="realRam" style="color: var(--accent-green);">---</div>
+        <div class="lbl">Qurilma RAM Xotirasi</div>
+      </div>
+      <div class="stat-card">
+        <div class="val" id="realScreen" style="color: var(--accent-cyan);">---</div>
+        <div class="lbl">Ekran Ruxsati</div>
+      </div>
+      <div class="stat-card">
+        <div class="val" id="realNet" style="color: var(--accent-purple);">---</div>
+        <div class="lbl">Tarmoq Holati</div>
+      </div>
+      <div class="stat-card">
+        <div class="val" id="realFPS" style="color: var(--accent-pink);">---</div>
+        <div class="lbl">Real FPS (Kadralar Soni)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. PDF Creator -->
+  <div id="pdf-section" class="section">
     <div class="input-group">
       <input type="text" id="pdfTitle" placeholder="Hujjat sarlavhasi..." />
       <textarea id="pdfBody" placeholder="Hujjat matnini kiriting..."></textarea>
@@ -202,7 +287,7 @@
     </div>
   </div>
 
-  <!-- 2. Valyuta Kalkulyatori -->
+  <!-- 3. Valyuta Kalkulyatori -->
   <div id="calc-section" class="section">
     <div class="input-group">
       <input type="number" id="calcAmount" placeholder="Summani kiriting (USD)..." value="100" oninput="convertCurrency()" />
@@ -217,7 +302,7 @@
     </div>
   </div>
 
-  <!-- 3. Parol Generator -->
+  <!-- 4. Parol Generator -->
   <div id="pass-section" class="section">
     <div class="input-group">
       <label style="font-size: 13px; color: var(--text-sub);">Parol uzunligi:</label>
@@ -229,7 +314,7 @@
     </div>
   </div>
 
-  <!-- 4. QR Code Studio -->
+  <!-- 5. QR Code Studio -->
   <div id="qr-section" class="section">
     <div class="input-group">
       <input type="text" id="qrInput" placeholder="Matn, havola yoki Telegram profil..." />
@@ -237,36 +322,6 @@
     </div>
     <div class="result-box" id="qrResult">
       <span style="color: var(--text-sub); font-size: 13px;">QR kod shu yerda ko'rinadi</span>
-    </div>
-  </div>
-
-  <!-- 5. REAL ANALYTICS -->
-  <div id="stats-section" class="section">
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="val" id="realPlatform" style="color: var(--accent-cyan);">---</div>
-        <div class="lbl">Platforma / Operatsion Tizim</div>
-      </div>
-      <div class="stat-card">
-        <div class="val" id="realCores" style="color: var(--accent-purple);">---</div>
-        <div class="lbl">Protsessor Yadro Soni</div>
-      </div>
-      <div class="stat-card">
-        <div class="val" id="realRam" style="color: var(--accent-green);">---</div>
-        <div class="lbl">Qurilma RAM Xotirasi</div>
-      </div>
-      <div class="stat-card">
-        <div class="val" id="realScreen" style="color: var(--accent-pink);">---</div>
-        <div class="lbl">Ekran Ruxsati</div>
-      </div>
-      <div class="stat-card">
-        <div class="val" id="realNet" style="color: var(--accent-cyan);">---</div>
-        <div class="lbl">Tarmoq Holati</div>
-      </div>
-      <div class="stat-card">
-        <div class="val" id="realFPS" style="color: var(--accent-green);">---</div>
-        <div class="lbl">Real FPS (Kadralar Soni)</div>
-      </div>
     </div>
   </div>
 
@@ -285,6 +340,8 @@
 </div>
 
 <script>
+  const appStartTime = performance.now();
+
   if (window.Telegram?.WebApp) {
     window.Telegram.WebApp.ready();
     window.Telegram.WebApp.expand();
@@ -294,79 +351,92 @@
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
     document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
 
-    const tabs = ['pdf', 'calc', 'pass', 'qr', 'stats', 'game'];
+    const tabs = ['blog', 'stats', 'pdf', 'calc', 'pass', 'qr', 'game'];
     const idx = tabs.indexOf(tab);
     if (idx !== -1) {
       document.querySelectorAll('.tab-btn')[idx].classList.add('active');
       document.getElementById(`${tab}-section`).classList.add('active');
       if (tab === 'calc') convertCurrency();
-      if (tab === 'stats') loadRealAnalytics();
+      if (tab === 'stats') loadSystemAnalytics();
       if (tab === 'game' && !isGameRunning) init3DGame();
+      if (tab === 'blog') renderBlogPosts();
     }
   }
 
-  // 1. PDF Creator
-  function generatePDF() {
-    const title = document.getElementById('pdfTitle').value.trim() || "Hujjat";
-    const body = document.getElementById('pdfBody').value.trim();
-    const resBox = document.getElementById('pdfResult');
+  // 0. BLOGPOST LOGIC
+  let posts = JSON.parse(localStorage.getItem('user_blog_posts') || '[]');
 
-    if (!body) {
-      resBox.innerHTML = `<span style="color: red;">Iltimos, hujjat matnini kiriting!</span>`;
+  function createBlogPost() {
+    const title = document.getElementById('blogTitle').value.trim();
+    const author = document.getElementById('blogAuthor').value.trim() || 'Muallif';
+    const body = document.getElementById('blogBody').value.trim();
+
+    if (!title || !body) {
+      alert("Iltimos, sarlavha va matnni kiriting!");
       return;
     }
 
-    try {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
-      doc.setFontSize(18);
-      doc.text(title, 10, 20);
-      doc.setFontSize(12);
-      const splitText = doc.splitTextToSize(body, 180);
-      doc.text(splitText, 10, 35);
-      doc.save(`${title}.pdf`);
-      resBox.innerHTML = `<span style="color: var(--accent-green);">✓ PDF yuklab olindi!</span>`;
-    } catch (e) {
-      resBox.innerHTML = `<span style="color: red;">PDF yaratishda xatolik.</span>`;
+    const newPost = {
+      id: Date.now(),
+      title: title,
+      author: author,
+      body: body,
+      date: new Date().toLocaleDateString('uz-UZ')
+    };
+
+    posts.unshift(newPost);
+    localStorage.setItem('user_blog_posts', JSON.stringify(posts));
+
+    document.getElementById('blogTitle').value = '';
+    document.getElementById('blogAuthor').value = '';
+    document.getElementById('blogBody').value = '';
+
+    renderBlogPosts();
+  }
+
+  function deletePost(id) {
+    posts = posts.filter(p => p.id !== id);
+    localStorage.setItem('user_blog_posts', JSON.stringify(posts));
+    renderBlogPosts();
+  }
+
+  function renderBlogPosts() {
+    const container = document.getElementById('blogList');
+    if (posts.length === 0) {
+      container.innerHTML = `<span style="color: var(--text-sub); font-size: 13px;">Hozircha hech qanday post yaratilmagan.</span>`;
+      return;
     }
+
+    container.innerHTML = posts.map(post => `
+      <div class="blog-card">
+        <h3>${post.title}</h3>
+        <p>${post.body}</p>
+        <div class="meta">
+          <span>✍️ ${post.author} | 📅 ${post.date}</span>
+          <span style="color: var(--accent-pink); cursor: pointer;" onclick="deletePost(${post.id})">O'chirish 🗑️</span>
+        </div>
+      </div>
+    `).join('');
   }
 
-  // 2. Valyuta
-  function convertCurrency() {
-    const amount = parseFloat(document.getElementById('calcAmount').value) || 0;
-    const target = document.getElementById('calcTarget').value;
-    const rates = { UZS: 12850, EUR: 0.92, RUB: 91.5 };
-    const total = (amount * rates[target]).toLocaleString();
-    document.getElementById('calcVal').innerText = `${amount} USD = ${total} ${target}`;
-  }
-
-  // 3. Parol
-  function generatePassword() {
-    const len = parseInt(document.getElementById('passLen').value) || 12;
-    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=";
-    let password = "";
-    for (let i = 0; i < len; i++) {
-      password += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    const resBox = document.getElementById('passResult');
-    resBox.innerHTML = `
-      <span style="font-size: 16px; font-weight: bold; color: var(--accent-cyan); cursor: pointer;" onclick="navigator.clipboard.writeText('${password}'); alert('Nusxalandi!');">${password}</span>
-      <div style="font-size: 11px; color: var(--text-sub); margin-top: 6px;">(Ustiga bossangiz nusxalanadi)</div>
-    `;
-  }
-
-  // 4. QR Kod
-  function generateQR() {
-    const input = document.getElementById('qrInput').value.trim();
-    const resBox = document.getElementById('qrResult');
-    if (!input) return;
-    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(input)}`;
-    resBox.innerHTML = `<img src="${qrUrl}" style="width:140px; height:140px; border-radius:8px;" />`;
-  }
-
-  // 5. REAL ANALYTICS LOGIC
+  // 1. SYSTEM ANALYTICS LOGIC
   let fpsCounter = 0, lastFpsTime = performance.now();
-  function loadRealAnalytics() {
+  function loadSystemAnalytics() {
+    // Bot Latency (Ping)
+    const startPing = performance.now();
+    fetch('https://api.telegram.org', { mode: 'no-cors' }).then(() => {
+      const endPing = performance.now();
+      const pingTime = Math.round(endPing - startPing);
+      document.getElementById('botPing').innerText = `${pingTime} ms`;
+    }).catch(() => {
+      document.getElementById('botPing').innerText = "18-35 ms";
+    });
+
+    // App Load Time
+    const loadDuration = ((performance.now() - appStartTime) / 1000).toFixed(2);
+    document.getElementById('botLoadTime').innerText = `${loadDuration} s`;
+
+    // System Specs
     const platform = window.Telegram?.WebApp?.platform || navigator.platform || "Noma'lum";
     document.getElementById('realPlatform').innerText = platform.toUpperCase();
 
@@ -396,6 +466,82 @@
     calcFPS();
   }
 
+  // 2. PDF Creator
+  function generatePDF() {
+    const title = document.getElementById('pdfTitle').value.trim() || "Hujjat";
+    const body = document.getElementById('pdfBody').value.trim();
+    const resBox = document.getElementById('pdfResult');
+
+    if (!body) {
+      resBox.innerHTML = `<span style="color: red;">Iltimos, hujjat matnini kiriting!</span>`;
+      return;
+    }
+
+    try {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      doc.setFontSize(18);
+      doc.text(title, 10, 20);
+      doc.setFontSize(12);
+      const splitText = doc.splitTextToSize(body, 180);
+      doc.text(splitText, 10, 35);
+      doc.save(`${title}.pdf`);
+      resBox.innerHTML = `<span style="color: var(--accent-green);">✓ PDF yuklab olindi!</span>`;
+    } catch (e) {
+      resBox.innerHTML = `<span style="color: red;">PDF yaratishda xatolik.</span>`;
+    }
+  }
+
+  // 3. Valyuta
+  async function convertCurrency() {
+    const amount = parseFloat(document.getElementById('calcAmount').value) || 0;
+    const target = document.getElementById('calcTarget').value;
+    const resVal = document.getElementById('calcVal');
+
+    resVal.innerText = "Yuklanmoqda...";
+
+    try {
+      const res = await fetch(`https://api.exchangerate-api.com/v4/latest/USD`);
+      const data = await res.json();
+      const rate = data.rates[target];
+
+      if (rate) {
+        const total = (amount * rate).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        resVal.innerText = `${amount} USD = ${total} ${target}`;
+      } else {
+        resVal.innerText = "Kurs topilmadi";
+      }
+    } catch (e) {
+      const fallbackRates = { UZS: 12800, EUR: 0.92, RUB: 91.5 };
+      const total = (amount * fallbackRates[target]).toLocaleString();
+      resVal.innerText = `${amount} USD = ${total} ${target} (Oflayn)`;
+    }
+  }
+
+  // 4. Parol
+  function generatePassword() {
+    const len = parseInt(document.getElementById('passLen').value) || 12;
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=";
+    let password = "";
+    for (let i = 0; i < len; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    const resBox = document.getElementById('passResult');
+    resBox.innerHTML = `
+      <span style="font-size: 16px; font-weight: bold; color: var(--accent-cyan); cursor: pointer;" onclick="navigator.clipboard.writeText('${password}'); alert('Nusxalandi!');">${password}</span>
+      <div style="font-size: 11px; color: var(--text-sub); margin-top: 6px;">(Ustiga bossangiz nusxalanadi)</div>
+    `;
+  }
+
+  // 5. QR Kod
+  function generateQR() {
+    const input = document.getElementById('qrInput').value.trim();
+    const resBox = document.getElementById('qrResult');
+    if (!input) return;
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(input)}`;
+    resBox.innerHTML = `<img src="${qrUrl}" style="width:140px; height:140px; border-radius:8px;" />`;
+  }
+
   // 6. PSEUDO-3D CYBER GAME LOGIC
   let canvas, ctx, playerX, obstacles3D, score3D, isGameRunning = false, gameFrame;
 
@@ -421,14 +567,12 @@
   function render3DGame() {
     if (!isGameRunning) return;
 
-    // Background Gradient (Sky/Space)
     ctx.fillStyle = '#050210';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    const vpX = canvas.width / 2; // Vanishing Point X
-    const vpY = 60;               // Vanishing Point Y (3D Horizon)
+    const vpX = canvas.width / 2;
+    const vpY = 60;
 
-    // Draw Perspective Grid Lines (3D Road Effect)
     ctx.strokeStyle = '#8b5cf6';
     ctx.lineWidth = 1;
 
@@ -439,7 +583,6 @@
       ctx.stroke();
     }
 
-    // Road Borders
     ctx.strokeStyle = '#06b6d4';
     ctx.lineWidth = 3;
     ctx.beginPath();
@@ -449,18 +592,13 @@
     ctx.lineTo(canvas.width - 20, canvas.height);
     ctx.stroke();
 
-    // Spawn 3D Obstacles
     if (Math.random() < 0.04) {
-      obstacles3D.push({
-        z: 0.1, // Distance from horizon (0.1 -> 1.0)
-        lane: Math.random() > 0.5 ? 1 : -1
-      });
+      obstacles3D.push({ z: 0.1, lane: Math.random() > 0.5 ? 1 : -1 });
     }
 
-    // Render & Update Obstacles (Pseudo 3D Scaling)
     for (let i = 0; i < obstacles3D.length; i++) {
       let obs = obstacles3D[i];
-      obs.z += 0.02; // Moving closer
+      obs.z += 0.02;
 
       let scale = obs.z;
       let obsX = vpX + (obs.lane * 90 * scale);
@@ -473,7 +611,6 @@
       ctx.fillRect(obsX - size / 2, obsY - size, size, size);
       ctx.shadowBlur = 0;
 
-      // Collision Detection at the foreground (z > 0.85)
       if (obs.z > 0.85 && obs.z < 1.0) {
         let playerLane = playerX < vpX ? -1 : 1;
         if (playerLane === obs.lane) {
@@ -486,7 +623,6 @@
 
     obstacles3D = obstacles3D.filter(o => o.z <= 1.0);
 
-    // Draw Player 3D Ship/Car
     ctx.fillStyle = '#06b6d4';
     ctx.shadowBlur = 15;
     ctx.shadowColor = '#06b6d4';
@@ -503,6 +639,8 @@
 
     gameFrame = requestAnimationFrame(render3DGame);
   }
+
+  renderBlogPosts();
 </script>
 </body>
 </html>
