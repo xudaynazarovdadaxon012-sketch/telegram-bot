@@ -1,767 +1,361 @@
 <!DOCTYPE html>
 <html lang="uz">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Mega Utility Studio</title>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    :root {
-      --bg-color: #0d1117;
-      --card-bg: #161b22;
-      --accent-purple: #8b5cf6;
-      --accent-cyan: #06b6d4;
-      --accent-green: #10b981;
-      --accent-pink: #ec4899;
-      --text-main: #f0f6fc;
-      --text-sub: #8b949e;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>VIP Access - Mini App</title>
+    <!-- Telegram WebApp SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --bg-color: var(--tg-theme-bg-color, #0f172a);
+            --text-color: var(--tg-theme-text-color, #ffffff);
+            --hint-color: var(--tg-theme-hint-color, #94a3b8);
+            --btn-color: var(--tg-theme-button-color, #38bdf8);
+            --btn-text: var(--tg-theme-button-text-color, #0f172a);
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --border: rgba(255, 255, 255, 0.1);
+            --accent-gold: #f59e0b;
+        }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      -webkit-tap-highlight-color: transparent;
-    }
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+        }
 
-    body {
-      background-color: var(--bg-color);
-      color: var(--text-main);
-      padding: 12px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            align-items: center;
+            min-height: 100vh;
+        }
 
-    .container {
-      width: 100%;
-      max-width: 480px;
-    }
+        /* 1. Header Profile Box */
+        .profile-card {
+            width: 100%;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            backdrop-filter: blur(12px);
+        }
 
-    h1 {
-      text-align: center;
-      font-size: 20px;
-      margin-bottom: 12px;
-      background: linear-gradient(90deg, var(--accent-purple), var(--accent-cyan));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      font-weight: 800;
-    }
+        .user-details {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
 
-    .tabs {
-      display: flex;
-      gap: 6px;
-      overflow-x: auto;
-      padding-bottom: 8px;
-      margin-bottom: 12px;
-      scrollbar-width: none;
-    }
+        .avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #38bdf8, #818cf8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 700;
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
+        }
 
-    .tabs::-webkit-scrollbar { display: none; }
+        .user-info h3 {
+            margin: 0;
+            font-size: 15px;
+            font-weight: 600;
+        }
 
-    .tab-btn {
-      background: var(--card-bg);
-      color: var(--text-sub);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      padding: 8px 12px;
-      border-radius: 20px;
-      font-size: 13px;
-      white-space: nowrap;
-      cursor: pointer;
-      user-select: none;
-    }
+        .badge {
+            display: inline-block;
+            margin-top: 4px;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            background: rgba(148, 163, 184, 0.2);
+            color: var(--hint-color);
+        }
 
-    .tab-btn.active {
-      background: var(--accent-purple);
-      color: #fff;
-      border-color: var(--accent-purple);
-    }
+        .badge.vip {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--accent-gold);
+            border: 1px solid rgba(245, 158, 11, 0.4);
+        }
 
-    .section {
-      display: none;
-      background: var(--card-bg);
-      border-radius: 16px;
-      padding: 14px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-    }
+        /* 2. Main Pricing & Features Card */
+        .main-card {
+            width: 100%;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 24px 20px;
+            text-align: center;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+            position: relative;
+            overflow: hidden;
+        }
 
-    .section.active { display: block; }
+        .main-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(245, 158, 11, 0.08) 0%, transparent 60%);
+            pointer-events: none;
+        }
 
-    .input-group {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
+        .icon-wrapper {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 12px;
+            background: rgba(245, 158, 11, 0.15);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
 
-    input[type="text"], input[type="number"], textarea, select {
-      width: 100%;
-      background: rgba(0, 0, 0, 0.3);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      border-radius: 12px;
-      padding: 10px 14px;
-      color: #fff;
-      font-size: 14px;
-      outline: none;
-    }
+        h2 {
+            margin: 0 0 6px 0;
+            font-size: 22px;
+            font-weight: 700;
+        }
 
-    textarea { resize: none; height: 100px; }
+        .subtitle {
+            color: var(--hint-color);
+            font-size: 13px;
+            margin-bottom: 20px;
+        }
 
-    button.action-btn {
-      background: linear-gradient(135deg, var(--accent-purple), var(--accent-cyan));
-      border: none;
-      border-radius: 12px;
-      padding: 12px;
-      color: #fff;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      text-align: center;
-    }
+        /* Feature List */
+        .features {
+            text-align: left;
+            margin-bottom: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
 
-    .result-box {
-      min-height: 100px;
-      background: rgba(0, 0, 0, 0.3);
-      border-radius: 12px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      margin-top: 10px;
-      padding: 12px;
-      text-align: center;
-      word-break: break-all;
-    }
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            color: var(--text-color);
+        }
 
-    /* BLOGPOST STYLES */
-    .blog-card {
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 12px;
-      padding: 12px;
-      margin-top: 12px;
-      text-align: left;
-    }
+        .feature-item span {
+            color: #4ade80;
+            font-weight: bold;
+        }
 
-    .blog-card h3 {
-      font-size: 16px;
-      color: var(--accent-cyan);
-      margin-bottom: 6px;
-    }
+        /* Price & CTA */
+        .price-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
 
-    .blog-card p {
-      font-size: 13px;
-      color: var(--text-main);
-      line-height: 1.4;
-      white-space: pre-wrap;
-    }
+        .price-val {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--accent-gold);
+        }
 
-    .blog-card .meta {
-      font-size: 11px;
-      color: var(--text-sub);
-      margin-top: 8px;
-      display: flex;
-      justify-content: space-between;
-    }
+        .star-icon {
+            font-size: 28px;
+        }
 
-    /* VIZUAL ANALYTICS STYLES */
-    .chart-box {
-      background: rgba(0, 0, 0, 0.2);
-      border: 1px solid rgba(255, 255, 255, 0.05);
-      border-radius: 12px;
-      padding: 10px;
-      margin-bottom: 12px;
-    }
+        .buy-btn {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: #ffffff;
+            border: none;
+            width: 100%;
+            padding: 16px;
+            border-radius: 14px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 16px rgba(245, 158, 11, 0.3);
+            transition: transform 0.15s, opacity 0.15s;
+        }
 
-    .chart-title {
-      font-size: 12px;
-      color: var(--text-sub);
-      margin-bottom: 8px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
+        .buy-btn:active {
+            transform: scale(0.97);
+            opacity: 0.9;
+        }
 
-    .progress-bar-container {
-      width: 100%;
-      background: rgba(255, 255, 255, 0.08);
-      border-radius: 8px;
-      height: 10px;
-      overflow: hidden;
-      margin-top: 4px;
-    }
+        /* 3. Referral Program Section */
+        .ref-card {
+            width: 100%;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            backdrop-filter: blur(12px);
+        }
 
-    .progress-bar-fill {
-      height: 100%;
-      width: 0%;
-      border-radius: 8px;
-      transition: width 0.4s ease-in-out;
-    }
+        .ref-info h4 {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 600;
+        }
 
-    .glow-effect {
-      box-shadow: 0 0 10px rgba(139, 92, 246, 0.3);
-    }
+        .ref-info p {
+            margin: 4px 0 0 0;
+            font-size: 12px;
+            color: var(--hint-color);
+        }
 
-    /* REAL 3D CANVAS STYLES */
-    #gameCanvas {
-      width: 100%;
-      height: 230px;
-      background: #020208;
-      border-radius: 12px;
-      border: 1px solid var(--accent-purple);
-      display: block;
-      cursor: pointer;
-      box-shadow: 0 0 15px rgba(139, 92, 246, 0.2);
-    }
-  </style>
+        .copy-btn {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text-color);
+            border: 1px solid var(--border);
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .copy-btn:active {
+            background: rgba(255, 255, 255, 0.2);
+        }
+    </style>
 </head>
 <body>
 
-<div class="container">
-  <h1>Mega Utility Studio</h1>
-
-  <div class="tabs">
-    <button class="tab-btn active" onclick="switchTab('blog')">📝 Blogpost</button>
-    <button class="tab-btn" onclick="switchTab('stats')">📊 System Analytics</button>
-    <button class="tab-btn" onclick="switchTab('pdf')">📄 PDF Creator</button>
-    <button class="tab-btn" onclick="switchTab('calc')">💵 Valyuta</button>
-    <button class="tab-btn" onclick="switchTab('pass')">🔐 Parol</button>
-    <button class="tab-btn" onclick="switchTab('qr')">📱 QR Kod</button>
-    <button class="tab-btn" onclick="switchTab('game')">🎮 Cyber 3D Game</button>
-  </div>
-
-  <!-- 0. BLOGPOST STUDIO -->
-  <div id="blog-section" class="section active">
-    <div class="input-group">
-      <input type="text" id="blogTitle" placeholder="Post sarlavhasi..." />
-      <input type="text" id="blogAuthor" placeholder="Muallif ismi (ixtiyoriy)..." />
-      <textarea id="blogBody" placeholder="Post matnini kiriting..."></textarea>
-      <button class="action-btn" onclick="createBlogPost()">Postni Chop Etish 🚀</button>
-    </div>
-
-    <div id="blogListContainer" style="margin-top: 15px;">
-      <h4 style="font-size: 14px; color: var(--text-sub); margin-bottom: 8px;">Saqlangan Postlar:</h4>
-      <div id="blogList"></div>
-    </div>
-  </div>
-
-  <!-- 1. SYSTEM ANALYTICS -->
-  <div id="stats-section" class="section">
-    <div class="chart-box glow-effect">
-      <div class="chart-title">
-        <span>📈 Real-time FPS va Bot Javob Tarmog'i</span>
-        <span id="liveFpsBadge" style="color: var(--accent-green); font-weight: bold;">-- FPS</span>
-      </div>
-      <canvas id="fpsChart" height="130"></canvas>
-    </div>
-
-    <div class="chart-box">
-      <div class="chart-title">
-        <span>⚡ Protsessor (CPU) Yuklamasi</span>
-        <span id="cpuVal" style="color: var(--accent-cyan);">--%</span>
-      </div>
-      <div class="progress-bar-container">
-        <div id="cpuBar" class="progress-bar-fill" style="background: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple));"></div>
-      </div>
-    </div>
-
-    <div class="chart-box">
-      <div class="chart-title">
-        <span>🧠 Operativ Xotira (RAM Unumdorligi)</span>
-        <span id="ramVal" style="color: var(--accent-pink);">--%</span>
-      </div>
-      <div class="progress-bar-container">
-        <div id="ramBar" class="progress-bar-fill" style="background: linear-gradient(90deg, var(--accent-pink), var(--accent-purple));"></div>
-      </div>
-    </div>
-
-    <div class="chart-box">
-      <div class="chart-title">
-        <span>🍩 Tizim Resurslari Bo'linishi</span>
-      </div>
-      <div style="width: 70%; margin: 0 auto;">
-        <canvas id="resourcesChart"></canvas>
-      </div>
-    </div>
-  </div>
-
-  <!-- 2. PDF Creator -->
-  <div id="pdf-section" class="section">
-    <div class="input-group">
-      <input type="text" id="pdfTitle" placeholder="Hujjat sarlavhasi..." />
-      <textarea id="pdfBody" placeholder="Hujjat matnini kiriting..."></textarea>
-      <button class="action-btn" onclick="generatePDF()">PDF Fayl Yaratish 📄</button>
-    </div>
-    <div class="result-box" id="pdfResult">
-      <span style="color: var(--text-sub); font-size: 13px;">Tayyor bo'lgach yuklab olish havolasi chiqadi</span>
-    </div>
-  </div>
-
-  <!-- 3. Valyuta Kalkulyatori -->
-  <div id="calc-section" class="section">
-    <div class="input-group">
-      <input type="number" id="calcAmount" placeholder="Summani kiriting (USD)..." value="100" oninput="convertCurrency()" />
-      <select id="calcTarget" onchange="convertCurrency()">
-        <option value="UZS">O'zbek so'miga (UZS)</option>
-        <option value="EUR">Yevroga (EUR)</option>
-        <option value="RUB">Rublega (RUB)</option>
-      </select>
-    </div>
-    <div class="result-box" id="calcResult">
-      <span style="font-size: 18px; font-weight: bold; color: var(--accent-green);" id="calcVal">---</span>
-    </div>
-  </div>
-
-  <!-- 4. Parol Generator -->
-  <div id="pass-section" class="section">
-    <div class="input-group">
-      <label style="font-size: 13px; color: var(--text-sub);">Parol uzunligi:</label>
-      <input type="number" id="passLen" value="12" min="6" max="32" />
-      <button class="action-btn" onclick="generatePassword()">Maksimal Xavfsiz Parol Yaratish 🔐</button>
-    </div>
-    <div class="result-box" id="passResult">
-      <span style="font-size: 16px; font-weight: bold; color: var(--accent-cyan);" id="passVal">Tugmani bosing</span>
-    </div>
-  </div>
-
-  <!-- 5. QR Code Studio -->
-  <div id="qr-section" class="section">
-    <div class="input-group">
-      <input type="text" id="qrInput" placeholder="Matn, havola yoki Telegram profil..." />
-      <button class="action-btn" onclick="generateQR()">QR Kod Yaratish 📱</button>
-    </div>
-    <div class="result-box" id="qrResult">
-      <span style="color: var(--text-sub); font-size: 13px;">QR kod shu yerda ko'rinadi</span>
-    </div>
-  </div>
-
-  <!-- 6. PSEUDO-3D CYBER GAME WITH REAL 3D OBJECTS -->
-  <div id="game-section" class="section">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-      <span style="font-weight: bold; color: var(--accent-cyan);">3D Cyber Tunnel 🎮</span>
-      <span style="font-size: 13px;">Ball: <strong id="gameScore" style="color: var(--accent-pink);">0</strong></span>
-    </div>
-    <canvas id="gameCanvas" onclick="movePlayer()"></canvas>
-    <div style="display: flex; gap: 8px; margin-top: 10px;">
-      <button class="action-btn" style="flex: 1;" onclick="movePlayerLeft()">◄ Chapga</button>
-      <button class="action-btn" style="flex: 1;" onclick="movePlayerRight()">O'ngga ►</button>
-    </div>
-  </div>
-</div>
-
-<script>
-  if (window.Telegram?.WebApp) {
-    window.Telegram.WebApp.ready();
-    window.Telegram.WebApp.expand();
-  }
-
-  function switchTab(tab) {
-    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-    document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
-
-    const tabs = ['blog', 'stats', 'pdf', 'calc', 'pass', 'qr', 'game'];
-    const idx = tabs.indexOf(tab);
-    if (idx !== -1) {
-      document.querySelectorAll('.tab-btn')[idx].classList.add('active');
-      document.getElementById(`${tab}-section`).classList.add('active');
-      if (tab === 'calc') convertCurrency();
-      if (tab === 'stats') initVisualAnalytics();
-      if (tab === 'game' && !isGameRunning) init3DGame();
-      if (tab === 'blog') renderBlogPosts();
-    }
-  }
-
-  // 0. BLOGPOST LOGIC
-  let posts = JSON.parse(localStorage.getItem('user_blog_posts') || '[]');
-
-  function createBlogPost() {
-    const title = document.getElementById('blogTitle').value.trim();
-    const author = document.getElementById('blogAuthor').value.trim() || 'Muallif';
-    const body = document.getElementById('blogBody').value.trim();
-
-    if (!title || !body) {
-      alert("Iltimos, sarlavha va matnni kiriting!");
-      return;
-    }
-
-    const newPost = {
-      id: Date.now(),
-      title: title,
-      author: author,
-      body: body,
-      date: new Date().toLocaleDateString('uz-UZ')
-    };
-
-    posts.unshift(newPost);
-    localStorage.setItem('user_blog_posts', JSON.stringify(posts));
-
-    document.getElementById('blogTitle').value = '';
-    document.getElementById('blogAuthor').value = '';
-    document.getElementById('blogBody').value = '';
-
-    renderBlogPosts();
-  }
-
-  function deletePost(id) {
-    posts = posts.filter(p => p.id !== id);
-    localStorage.setItem('user_blog_posts', JSON.stringify(posts));
-    renderBlogPosts();
-  }
-
-  function renderBlogPosts() {
-    const container = document.getElementById('blogList');
-    if (posts.length === 0) {
-      container.innerHTML = `<span style="color: var(--text-sub); font-size: 13px;">Hozircha hech qanday post yaratilmagan.</span>`;
-      return;
-    }
-
-    container.innerHTML = posts.map(post => `
-      <div class="blog-card">
-        <h3>${post.title}</h3>
-        <p>${post.body}</p>
-        <div class="meta">
-          <span>✍️ ${post.author} | 📅 ${post.date}</span>
-          <span style="color: var(--accent-pink); cursor: pointer;" onclick="deletePost(${post.id})">O'chirish 🗑️</span>
+    <!-- Foydalanuvchi Profili -->
+    <div class="profile-card">
+        <div class="user-details">
+            <div class="avatar" id="user-avatar">U</div>
+            <div class="user-info">
+                <h3 id="user-name">Foydalanuvchi</h3>
+                <span class="badge" id="user-status">FREE ACCOUNT</span>
+            </div>
         </div>
-      </div>
-    `).join('');
-  }
+    </div>
 
-  // 1. VIZUAL SYSTEM ANALYTICS
-  let fpsChartObj = null;
-  let resourcesChartObj = null;
-  let analyticsInterval = null;
+    <!-- VIP Tarif va Xaridor uchun Imkoniyatlar -->
+    <div class="main-card">
+        <div class="icon-wrapper">⭐</div>
+        <h2>VIP Access</h2>
+        <div class="subtitle">Barcha eksklyuziv AI va SaaS imkoniyatlarini oching</div>
 
-  function initVisualAnalytics() {
-    const ctxFps = document.getElementById('fpsChart').getContext('2d');
-    if (!fpsChartObj) {
-      fpsChartObj = new Chart(ctxFps, {
-        type: 'line',
-        data: {
-          labels: ['1s', '2s', '3s', '4s', '5s', '6s', '7s', '8s', '9s', '10s'],
-          datasets: [{
-            label: 'FPS',
-            data: [58, 60, 59, 60, 55, 60, 58, 60, 59, 60],
-            borderColor: '#06b6d4',
-            backgroundColor: 'rgba(6, 182, 212, 0.1)',
-            fill: true,
-            tension: 0.4
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: { legend: { display: false } },
-          scales: {
-            x: { grid: { display: false }, ticks: { color: '#8b949e' } },
-            y: { min: 30, max: 70, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#8b949e' } }
-          }
+        <div class="features">
+            <div class="feature-item"><span>✓</span> Cheksiz AI so'rovlar va tezkor javoblar</div>
+            <div class="feature-item"><span>✓</span> VIP rejimdagi ustuvor server ishlovi</div>
+            <div class="feature-item"><span>✓</span> Reklamalarsiz to'liq erkin foydalanish</div>
+            <div class="feature-item"><span>✓</span> Yopiq VIP hamjamiyat va qo'llab-quvvatlash</div>
+        </div>
+
+        <div class="price-container">
+            <span class="price-val">100</span>
+            <span class="star-icon">⭐</span>
+        </div>
+
+        <button class="buy-btn" onclick="buyVip()">VIP Statusni faollashtirish</button>
+    </div>
+
+    <!-- Referal Tizimi -->
+    <div class="ref-card">
+        <div class="ref-info">
+            <h4>Do'stlarni taklif qilish</h4>
+            <p>Har bir taklif uchun keshbek oling</p>
+        </div>
+        <button class="copy-btn" onclick="copyRefLink()">Nusxalash</button>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        tg.ready();
+
+        // SDK orqali user ma'lumotlarini o'qish
+        const user = tg.initDataUnsafe?.user;
+
+        if (user) {
+            document.getElementById('user-name').innerText = `${user.first_name} ${user.last_name || ''}`;
+            document.getElementById('user-avatar').innerText = user.first_name ? user.first_name[0].toUpperCase() : 'U';
         }
-      });
-    }
 
-    const ctxRes = document.getElementById('resourcesChart').getContext('2d');
-    if (!resourcesChartObj) {
-      resourcesChartObj = new Chart(ctxRes, {
-        type: 'doughnut',
-        data: {
-          labels: ['GPU/Render', 'JS Mantiq', 'Bo\'sh sig\'im'],
-          datasets: [{
-            data: [35, 25, 40],
-            backgroundColor: ['#ec4899', '#8b5cf6', '#10b981'],
-            borderWidth: 0
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: { legend: { labels: { color: '#f0f6fc', font: { size: 10 } } } }
+        // Telegram Stars orqali to'lov yuborish
+        async function buyVip() {
+            if (!user) {
+                tg.showAlert("Foydalanuvchi ma'lumoti topilmadi. Telegram orqali kiring!");
+                return;
+            }
+
+            // Haptic Feedback (Chiroyli tebranish effekti)
+            if (tg.HapticFeedback) {
+                tg.HapticFeedback.impactOccurred('medium');
+            }
+
+            try {
+                const response = await fetch('/api/create-invoice', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: user.id })
+                });
+
+                const data = await response.json();
+
+                if (data.ok && data.invoice_url) {
+                    // Telegram ichida invoice oynasini ochish
+                    tg.openInvoice(data.invoice_url, (status) => {
+                        if (status === 'paid') {
+                            tg.showAlert('🎉 VIP Status muvaffaqiyatli faollashtirildi!');
+                            const statusBadge = document.getElementById('user-status');
+                            statusBadge.innerText = 'VIP MEMBER';
+                            statusBadge.classList.add('vip');
+                        } else if (status === 'failed') {
+                            tg.showAlert('❌ To\'lov amalga oshmadi yoki bekor qilindi.');
+                        }
+                    });
+                } else {
+                    tg.showAlert("Xatolik: " + (data.error || "Invoice yaratib bo'lmadi."));
+                }
+            } catch (err) {
+                console.error(err);
+                tg.showAlert("Server bilan aloqa uzildi.");
+            }
         }
-      });
-    }
 
-    if (analyticsInterval) clearInterval(analyticsInterval);
-    analyticsInterval = setInterval(() => {
-      if (!document.getElementById('stats-section').classList.contains('active')) return;
-
-      const randomFps = Math.floor(Math.random() * (60 - 54 + 1)) + 54;
-      document.getElementById('liveFpsBadge').innerText = `${randomFps} FPS`;
-
-      const cpuUsage = Math.floor(Math.random() * (45 - 20 + 1)) + 20;
-      document.getElementById('cpuVal').innerText = `${cpuUsage}%`;
-      document.getElementById('cpuBar').style.width = `${cpuUsage}%`;
-
-      const ramUsage = Math.floor(Math.random() * (65 - 50 + 1)) + 50;
-      document.getElementById('ramVal').innerText = `${ramUsage}%`;
-      document.getElementById('ramBar').style.width = `${ramUsage}%`;
-
-      if (fpsChartObj) {
-        fpsChartObj.data.datasets[0].data.shift();
-        fpsChartObj.data.datasets[0].data.push(randomFps);
-        fpsChartObj.update('none');
-      }
-    }, 1000);
-  }
-
-  // 2. PDF Creator
-  function generatePDF() {
-    const title = document.getElementById('pdfTitle').value.trim() || "Hujjat";
-    const body = document.getElementById('pdfBody').value.trim();
-    const resBox = document.getElementById('pdfResult');
-
-    if (!body) {
-      resBox.innerHTML = `<span style="color: red;">Iltimos, hujjat matnini kiriting!</span>`;
-      return;
-    }
-
-    try {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
-      doc.setFontSize(18);
-      doc.text(title, 10, 20);
-      doc.setFontSize(12);
-      const splitText = doc.splitTextToSize(body, 180);
-      doc.text(splitText, 10, 35);
-      doc.save(`${title}.pdf`);
-      resBox.innerHTML = `<span style="color: var(--accent-green);">✓ PDF yuklab olindi!</span>`;
-    } catch (e) {
-      resBox.innerHTML = `<span style="color: red;">PDF yaratishda xatolik.</span>`;
-    }
-  }
-
-  // 3. Valyuta
-  async function convertCurrency() {
-    const amount = parseFloat(document.getElementById('calcAmount').value) || 0;
-    const target = document.getElementById('calcTarget').value;
-    const resVal = document.getElementById('calcVal');
-
-    resVal.innerText = "Yuklanmoqda...";
-
-    try {
-      const res = await fetch(`https://api.exchangerate-api.com/v4/latest/USD`);
-      const data = await res.json();
-      const rate = data.rates[target];
-
-      if (rate) {
-        const total = (amount * rate).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        resVal.innerText = `${amount} USD = ${total} ${target}`;
-      } else {
-        resVal.innerText = "Kurs topilmadi";
-      }
-    } catch (e) {
-      const fallbackRates = { UZS: 12800, EUR: 0.92, RUB: 91.5 };
-      const total = (amount * fallbackRates[target]).toLocaleString();
-      resVal.innerText = `${amount} USD = ${total} ${target} (Oflayn)`;
-    }
-  }
-
-  // 4. Parol
-  function generatePassword() {
-    const len = parseInt(document.getElementById('passLen').value) || 12;
-    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=";
-    let password = "";
-    for (let i = 0; i < len; i++) {
-      password += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    const resBox = document.getElementById('passResult');
-    resBox.innerHTML = `
-      <span style="font-size: 16px; font-weight: bold; color: var(--accent-cyan); cursor: pointer;" onclick="navigator.clipboard.writeText('${password}'); alert('Nusxalandi!');">${password}</span>
-      <div style="font-size: 11px; color: var(--text-sub); margin-top: 6px;">(Ustiga bossangiz nusxalanadi)</div>
-    `;
-  }
-
-  // 5. QR Kod
-  function generateQR() {
-    const input = document.getElementById('qrInput').value.trim();
-    const resBox = document.getElementById('qrResult');
-    if (!input) return;
-    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(input)}`;
-    resBox.innerHTML = `<img src="${qrUrl}" style="width:140px; height:140px; border-radius:8px;" />`;
-  }
-
-  // 6. REAL 3D EFFECT CYBER GAME
-  let canvas, ctx, playerX, obstacles3D, score3D, isGameRunning = false, gameFrame;
-
-  function init3DGame() {
-    canvas = document.getElementById('gameCanvas');
-    ctx = canvas.getContext('2d');
-    canvas.width = canvas.offsetWidth;
-    canvas.height = 230;
-
-    playerX = canvas.width / 2;
-    obstacles3D = [];
-    score3D = 0;
-    isGameRunning = true;
-
-    if (gameFrame) cancelAnimationFrame(gameFrame);
-    render3DGame();
-  }
-
-  function movePlayerLeft() { playerX = Math.max(50, playerX - 40); }
-  function movePlayerRight() { playerX = Math.min(canvas.width - 50, playerX + 40); }
-  function movePlayer() { if (playerX > canvas.width / 2) movePlayerLeft(); else movePlayerRight(); }
-
-  // 3D KUB (BLOCK) CHIZISH FUNKSIYASI
-  function draw3DCube(x, y, size, depth, colorHex) {
-    const half = size / 2;
-    
-    // Front Face (Old yuzasi)
-    ctx.fillStyle = colorHex;
-    ctx.fillRect(x - half, y - size, size, size);
-
-    // Top Face (Tepa yuzasi)
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-    ctx.beginPath();
-    ctx.moveTo(x - half, y - size);
-    ctx.lineTo(x - half + depth, y - size - depth);
-    ctx.lineTo(x + half + depth, y - size - depth);
-    ctx.lineTo(x + half, y - size);
-    ctx.closePath();
-    ctx.fill();
-
-    // Side Face (Yon yuzasi)
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
-    ctx.beginPath();
-    ctx.moveTo(x + half, y - size);
-    ctx.lineTo(x + half + depth, y - size - depth);
-    ctx.lineTo(x + half + depth, y - depth);
-    ctx.lineTo(x + half, y);
-    ctx.closePath();
-    ctx.fill();
-
-    // Border Lines (Chegaralari)
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 0.5;
-    ctx.strokeRect(x - half, y - size, size, size);
-  }
-
-  // 3D SHIP (O'YINCHI KEMASI) CHIZISH FUNKSIYASI
-  function draw3DShip(x, y) {
-    ctx.shadowBlur = 15;
-    ctx.shadowColor = '#06b6d4';
-
-    // Ship Base
-    ctx.fillStyle = '#06b6d4';
-    ctx.beginPath();
-    ctx.moveTo(x, y - 35);
-    ctx.lineTo(x - 22, y);
-    ctx.lineTo(x + 22, y);
-    ctx.closePath();
-    ctx.fill();
-
-    // Ship Top Cockpit (3D Piramida effekti)
-    ctx.fillStyle = '#ffffff';
-    ctx.beginPath();
-    ctx.moveTo(x, y - 35);
-    ctx.lineTo(x - 8, y - 10);
-    ctx.lineTo(x + 8, y - 10);
-    ctx.closePath();
-    ctx.fill();
-
-    // Left Wing 3D Side
-    ctx.fillStyle = '#0284c7';
-    ctx.beginPath();
-    ctx.moveTo(x - 22, y);
-    ctx.lineTo(x - 8, y - 10);
-    ctx.lineTo(x, y);
-    ctx.closePath();
-    ctx.fill();
-
-    // Right Wing 3D Side
-    ctx.fillStyle = '#0369a1';
-    ctx.beginPath();
-    ctx.moveTo(x + 22, y);
-    ctx.lineTo(x + 8, y - 10);
-    ctx.lineTo(x, y);
-    ctx.closePath();
-    ctx.fill();
-
-    ctx.shadowBlur = 0;
-  }
-
-  function render3DGame() {
-    if (!isGameRunning) return;
-
-    // Foni
-    ctx.fillStyle = '#03020c';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    const vpX = canvas.width / 2;
-    const vpY = 50;
-
-    // Grid (Tunnel chiziqlari)
-    ctx.strokeStyle = 'rgba(139, 92, 246, 0.25)';
-    ctx.lineWidth = 1;
-
-    for (let x = -canvas.width; x <= canvas.width * 2; x += 35) {
-      ctx.beginPath();
-      ctx.moveTo(vpX, vpY);
-      ctx.lineTo(x, canvas.height);
-      ctx.stroke();
-    }
-
-    // Tunnel Chegaralari
-    ctx.strokeStyle = '#06b6d4';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(vpX, vpY);
-    ctx.lineTo(15, canvas.height);
-    ctx.moveTo(vpX, vpY);
-    ctx.lineTo(canvas.width - 15, canvas.height);
-    ctx.stroke();
-
-    // Yangi 3D to'siqlarni hosil qilish
-    if (Math.random() < 0.04) {
-      obstacles3D.push({ z: 0.05, lane: Math.random() > 0.5 ? 1 : -1 });
-    }
-
-    // To'siqlarni harakatlantirish va 3D chizish
-    for (let i = 0; i < obstacles3D.length; i++) {
-      let obs = obstacles3D[i];
-      obs.z += 0.018;
-
-      let scale = obs.z;
-      let obsX = vpX + (obs.lane * 100 * scale);
-      let obsY = vpY + ((canvas.height - vpY) * scale);
-      let size = 36 * scale;
-      let depth = 12 * scale;
-
-      // Glow effekti
-      ctx.shadowBlur = 12 * scale;
-      ctx.shadowColor = '#ec4899';
-
-      // 3D Kubni chizish
-      draw3DCube(obsX, obsY, size, depth, '#ec4899');
-      ctx.shadowBlur = 0;
-
-      // To'qnashuvni aniqlash
-      if (obs.z > 0.82 && obs.z < 0.98) {
-        let playerLane = playerX < vpX ? -1 : 1;
-        if (playerLane === obs.lane) {
-          isGameRunning = false;
-          alert(`O'yin tugadi! Natijangiz: ${Math.floor(score3D / 5)}`);
-          return;
+        // Referal ssilkani nusxalash
+        function copyRefLink() {
+            if (tg.HapticFeedback) {
+                tg.HapticFeedback.notificationOccurred('success');
+            }
+            if (user) {
+                const refLink = `https://t.me/bot_username?start=ref_${user.id}`;
+                navigator.clipboard.writeText(refLink);
+                tg.showAlert("Referal havola buferga nusxalandi!");
+            } else {
+                tg.showAlert("Referal havola yaratish uchun Telegram profil kerak.");
+            }
         }
-      }
-    }
-
-    // O'tib ketgan to'siqlarni o'chirish
-    obstacles3D = obstacles3D.filter(o => o.z <= 1.0);
-
-    // 3D O'yinchi kemasini chizish
-    draw3DShip(playerX, canvas.height - 15);
-
-    score3D++;
-    document.getElementById('gameScore').innerText = Math.floor(score3D / 5);
-
-    gameFrame = requestAnimationFrame(render3DGame);
-  }
-
-  renderBlogPosts();
-</script>
+    </script>
 </body>
 </html>
