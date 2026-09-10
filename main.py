@@ -1,174 +1,95 @@
-import asyncio
-import logging
 import os
-import aiosqlite
+import asyncio
 from aiogram import Bot, Dispatcher, F, types
-from aiogram.filters import CommandStart, Command
-from aiogram.types import (
-    InlineKeyboardButton, 
-    InlineKeyboardMarkup, 
-    WebAppInfo, 
-    LabeledPrice, 
-    PreCheckoutQuery
-)
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo, LabeledPrice, PreCheckoutQuery
+from aiohttp import web
 
-# ---------------------------------------------------------
-# CONFIGURE & ENVIRONMENT
-# ---------------------------------------------------------
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-WEBAPP_URL = "https://telegram-bot-7n6t.onrender.com"
+RENDER_URL = os.getenv("RENDER_EXTERNAL_URL", "https://telegram-bot-7n6t.onrender.com")
+PORT = int(os.getenv("PORT", 10000))
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
-# ---------------------------------------------------------
-# 1. DATABASE INITIALIZATION (SQL)
-# ---------------------------------------------------------
-async def init_db():
-    async with aiosqlite.connect("database.db") as db:
-        # Foydalanuvchilar jadvali
-        await db.execute("""
-            CREATE TABLE IF NOT EXISTS users (
-                user_id INTEGER PRIMARY KEY,
-                username TEXT,
-                score INTEGER DEFAULT 0,
-                coins INTEGER DEFAULT 100,
-                is_vip INTEGER DEFAULT 0,
-                referrer_id INTEGER,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        """)
-        # To'lovlar tarixi
-        await db.execute("""
-            CREATE TABLE IF NOT EXISTS payments (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER,
-                amount INTEGER,
-                service_type TEXT,
-                status TEXT,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        """)
-        await db.commit()
+# --- BOT HANDLERS ---
 
-# ---------------------------------------------------------
-# 2. START & MAIN MENU
-# ---------------------------------------------------------
-@dp.message(CommandStart())
-async def cmd_start(message: types.Message):
-    user_id = message.from_user.id
-    username = message.from_user.username or "User"
-    
-    args = message.text.split()
-    referrer_id = int(args[1]) if len(args) > 1 and args[1].isdigit() and int(args[1]) != user_id else None
-
-    async with aiosqlite.connect("database.db") as db:
-        async with db.execute("SELECT user_id FROM users WHERE user_id = ?", (user_id,)) as cursor:
-            user_exists = await cursor.fetchone()
-
-        if not user_exists:
-            await db.execute(
-                "INSERT INTO users (user_id, username, referrer_id) VALUES (?, ?, ?)",
-                (user_id, username, referrer_id)
-            )
-            if referrer_id:
-                await db.execute("UPDATE users SET coins = coins + 500 WHERE user_id = ?", (referrer_id,))
-            await db.commit()
-
-    kb = InlineKeyboardMarkup(
+@dp.message(F.text == "/start")
+async def start_cmd(message: types.Message):
+    keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text="🚀 Launch Mega WebApp & 3D Game", web_app=WebAppInfo(url=WEBAPP_URL))],
-            [InlineKeyboardButton(text="⭐ Get VIP Pass (50 Stars)", callback_data="buy_vip")],
-            [InlineKeyboardButton(text="🔗 Referal Havola", callback_data="ref_link")]
+            [
+                InlineKeyboardButton(
+                    text="⭐ VIP Status (Mini App)",
+                    web_app=WebAppInfo(url=f"{RENDER_URL}/miniapp")
+                )
+            ],
+            [
+                InlineKeyboardButton(text="ℹ️ Yordam", callback_data="help_info")
+            ]
         ]
     )
-    
     await message.answer(
-        f"⚡ **Mega Utility & Cyber Studio Hub**\n\n"
-        f"Xush kelibsiz, **{message.from_user.first_name}**!\n"
-        f"3D o'yin, analitika va barcha utilitlar ishga tayyor.",
-        reply_markup=kb,
+        f"👋 Salom, **{message.from_user.first_name}**!\n\n"
+        "**Mega AI Assistant** SaaS loyihasiga xush kelibsiz.\n"
+        "VIP imkoniyatlarni faollashtirish uchun pastdagi tugmani bosing:",
+        reply_markup=keyboard,
         parse_mode="Markdown"
     )
 
-# ---------------------------------------------------------
-# 3. REFERAL TIZIMI
-# ---------------------------------------------------------
-@dp.callback_query(F.data == "ref_link")
-async def send_ref_link(callback: types.CallbackQuery):
-    bot_info = await bot.get_me()
-    ref_link = f"https://t.me/{bot_info.username}?start={callback.from_user.id}"
-    
-    await callback.message.answer(
-        f"🚀 **Sizning referal havolangiz:**\n`{ref_link}`\n\n"
-        f"Do'stlaringizni taklif qiling va har bir do'stingiz uchun **500 Tanga** oling!",
-        parse_mode="Markdown"
-    )
-    await callback.answer()
-
-# ---------------------------------------------------------
-# 4. MONETIZATION (TELEGRAM STARS & VIP PASS)
-# ---------------------------------------------------------
-@dp.callback_query(F.data == "buy_vip")
-async def send_vip_invoice(callback: types.CallbackQuery):
-    prices = [LabeledPrice(label="VIP Lifetime Access", amount=50)] # 50 Stars
-    
-    await bot.send_invoice(
-        chat_id=callback.from_user.id,
-        title="VIP Status Access",
-        description="3D o'yinda premium imkoniyatlar va cheksiz analitikani ochish.",
-        provider_token="",
-        currency="XTR",
-        prices=prices,
-        start_parameter="buy-vip-access",
-        payload="vip_subscription"
-    )
-    await callback.answer()
+@dp.callback_query(F.data == "help_info")
+async def help_callback(call: types.CallbackQuery):
+    await call.message.answer("💡 Ushbu bot va Mini App orqali VIP obunalarni Telegram Stars valyutasida xarid qilishingiz mumkin.")
+    await call.answer()
 
 @dp.pre_checkout_query()
-async def process_pre_checkout(pre_checkout_query: PreCheckoutQuery):
+async def process_pre_checkout_query(pre_checkout_query: PreCheckoutQuery):
     await bot.answer_pre_checkout_query(pre_checkout_query.id, ok=True)
 
 @dp.message(F.successful_payment)
 async def process_successful_payment(message: types.Message):
-    user_id = message.from_user.id
-    
-    async with aiosqlite.connect("database.db") as db:
-        await db.execute("UPDATE users SET is_vip = 1, coins = coins + 2000 WHERE user_id = ?", (user_id,))
-        await db.execute("INSERT INTO payments (user_id, amount, service_type, status) VALUES (?, ?, ?, ?)", 
-                         (user_id, 50, "VIP_PASS", "SUCCESS"))
-        await db.commit()
+    await message.answer("🎉 **Tabriklaymiz!** To'lovingiz muvaffaqiyatli qabul qilindi. VIP status faollashtirildi!")
 
-    await message.answer("🎉 Tabriklaymiz! Siz VIP maqomini qo'lga kiritdingiz!")
+# --- WEB SERVER ROUTES ---
 
-# ---------------------------------------------------------
-# 5. WHITELABEL ADMIN CONTROL PANEL
-# ---------------------------------------------------------
-@dp.message(Command("admin"))
-async def cmd_admin(message: types.Message):
-    async with aiosqlite.connect("database.db") as db:
-        async with db.execute("SELECT COUNT(*) FROM users") as c1:
-            total_users = (await c1.fetchone())[0]
-        async with db.execute("SELECT COUNT(*) FROM users WHERE is_vip = 1") as c2:
-            vip_users = (await c2.fetchone())[0]
-        async with db.execute("SELECT SUM(amount) FROM payments WHERE status='SUCCESS'") as c3:
-            total_revenue = (await c3.fetchone())[0] or 0
+async def serve_miniapp(request):
+    return web.FileResponse('./templates/miniapp.html')
 
-    await message.answer(
-        f"⚙️ **Whitelabel Admin Control Panel**\n\n"
-        f"👥 Jami foydalanuvchilar: **{total_users} ta**\n"
-        f"👑 VIP a'zolar: **{vip_users} ta**\n"
-        f"💰 Umumiy tushum: **{total_revenue} Telegram Stars**\n"
-        f"🗄️ Baza: **SQLite Active**",
-        parse_mode="Markdown"
-    )
+async def create_stars_invoice(request):
+    try:
+        data = await request.json()
+        user_id = data.get("user_id")
 
-# ---------------------------------------------------------
-# 6. RUNNER
-# ---------------------------------------------------------
+        if not user_id:
+            return web.json_response({"ok": False, "error": "User ID topilmadi"}, status=400)
+
+        invoice_link = await bot.create_invoice_link(
+            title="VIP Status Obunasi",
+            description="1 Oylik Premium VIP kirish huquqi",
+            payload=f"vip_sub_{user_id}",
+            provider_token="",
+            currency="XTR",
+            prices=[LabeledPrice(label="VIP Access", amount=100)]
+        )
+        return web.json_response({"ok": True, "invoice_url": invoice_link})
+    except Exception as e:
+        return web.json_response({"ok": False, "error": str(e)}, status=500)
+
+async def health_check(request):
+    return web.Response(text="Bot is Live!")
+
+# --- MAIN RUNNER ---
+
 async def main():
-    logging.basicConfig(level=logging.INFO)
-    await init_db()
+    app = web.Application()
+    app.router.add_get('/', health_check)
+    app.router.add_get('/miniapp', serve_miniapp)
+    app.router.add_post('/api/create-invoice', create_stars_invoice)
+
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, "0.0.0.0", PORT)
+    await site.start()
+
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
