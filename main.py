@@ -1,5 +1,6 @@
 import os
 import asyncio
+import aiosqlite
 from aiogram import Bot, Dispatcher, F, types
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo, LabeledPrice, PreCheckoutQuery
 from aiohttp import web
@@ -7,14 +8,42 @@ from aiohttp import web
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 RENDER_URL = os.getenv("RENDER_EXTERNAL_URL", "https://telegram-bot-7n6t.onrender.com")
 PORT = int(os.getenv("PORT", 10000))
+ADMIN_ID = int(os.getenv("ADMIN_ID", 0))  # O'zingizning Telegram ID'ingizni kiriting
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
+
+DB_PATH = "database.db"
+
+# --- DATABASE INIT ---
+async def init_db():
+    async with aiosqlite.connect(DB_PATH) as db:
+        await db.execute("""
+            CREATE TABLE IF NOT EXISTS users (
+                user_id INTEGER PRIMARY KEY,
+                full_name TEXT,
+                is_vip INTEGER DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        await db.commit()
+
+async def add_user(user_id: int, full_name: str):
+    async with aiosqlite.connect(DB_PATH) as db:
+        await db.execute("INSERT OR IGNORE INTO users (user_id, full_name) VALUES (?, ?)", (user_id, full_name))
+        await db.commit()
+
+async def set_vip(user_id: int):
+    async with aiosqlite.connect(DB_PATH) as db:
+        await db.execute("UPDATE users SET is_vip = 1 WHERE user_id = ?", (user_id,))
+        await db.commit()
 
 # --- BOT HANDLERS ---
 
 @dp.message(F.text == "/start")
 async def start_cmd(message: types.Message):
+    await add_user(message.from_user.id, message.from_user.full_name)
+    
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
             [
@@ -22,24 +51,33 @@ async def start_cmd(message: types.Message):
                     text="⭐ VIP Status (Mini App)",
                     web_app=WebAppInfo(url=f"{RENDER_URL}/miniapp")
                 )
-            ],
-            [
-                InlineKeyboardButton(text="ℹ️ Yordam", callback_data="help_info")
             ]
         ]
     )
     await message.answer(
         f"👋 Salom, **{message.from_user.first_name}**!\n\n"
-        "**Mega AI Assistant** SaaS loyihasiga xush kelibsiz.\n"
-        "VIP imkoniyatlarni faollashtirish uchun pastdagi tugmani bosing:",
+        "**Mega AI & SaaS Assistant** platformasiga xush kelibsiz.\n"
+        "Barcha imkoniyatlar va VIP darajani Mini App orqali boshqaring:",
         reply_markup=keyboard,
         parse_mode="Markdown"
     )
 
-@dp.callback_query(F.data == "help_info")
-async def help_callback(call: types.CallbackQuery):
-    await call.message.answer("💡 Ushbu bot va Mini App orqali VIP obunalarni Telegram Stars valyutasida xarid qilishingiz mumkin.")
-    await call.answer()
+@dp.message(F.text == "/admin")
+async def admin_cmd(message: types.Message):
+    # Admin statistikasi
+    async with aiosqlite.connect(DB_PATH) as db:
+        async with db.execute("SELECT COUNT(*) FROM users") as cursor:
+            total_users = (await cursor.fetchone())[0]
+        async with db.execute("SELECT COUNT(*) FROM users WHERE is_vip = 1") as cursor:
+            vip_users = (await cursor.fetchone())[0]
+
+    await message.answer(
+        f"📊 **Admin Boshqaruv Paneli**\n\n"
+        f"👥 Jami foydalanuvchilar: **{total_users}** ta\n"
+        f"👑 VIP a'zolar: **{vip_users}** ta\n"
+        f"💰 Umumiy tushum: **{vip_users * 100} ⭐️**",
+        parse_mode="Markdown"
+    )
 
 @dp.pre_checkout_query()
 async def process_pre_checkout_query(pre_checkout_query: PreCheckoutQuery):
@@ -47,9 +85,10 @@ async def process_pre_checkout_query(pre_checkout_query: PreCheckoutQuery):
 
 @dp.message(F.successful_payment)
 async def process_successful_payment(message: types.Message):
-    await message.answer("🎉 **Tabriklaymiz!** To'lovingiz muvaffaqiyatli qabul qilindi. VIP status faollashtirildi!")
+    await set_vip(message.from_user.id)
+    await message.answer("🎉 **Tabriklaymiz!** Siz muvaffaqiyatli VIP statusga ega bo'ldingiz.")
 
-# --- WEB SERVER ROUTES ---
+# --- WEB ROUTES ---
 
 async def serve_miniapp(request):
     return web.FileResponse('./templates/miniapp.html')
@@ -80,6 +119,8 @@ async def health_check(request):
 # --- MAIN RUNNER ---
 
 async def main():
+    await init_db()
+    
     app = web.Application()
     app.router.add_get('/', health_check)
     app.router.add_get('/miniapp', serve_miniapp)
