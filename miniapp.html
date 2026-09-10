@@ -205,16 +205,22 @@
     </div>
 
     <!-- MODUL 2: POMODORO -->
-    <div id="tab-pomo" class="tab-content">
-        <div class="card" style="border-color: rgba(255, 0, 127, 0.3); text-align:center;">
-            <h3 style="margin-top:0; color:var(--neon-pink);">⏱️ Neon Pomodoro (25 Min)</h3>
-            <div class="timer-val" id="timer">25:00</div>
-            <div style="display:flex; gap:8px;">
-                <button class="btn-action" style="background:var(--neon-pink); color:#fff;" onclick="startTimer()">Boshlash</button>
-                <button class="btn-action" style="background:rgba(255,255,255,0.1); color:#fff;" onclick="resetTimer()">Reset</button>
-            </div>
+<div id="tab-pomo" class="tab-content">
+    <div class="card" style="border-color: rgba(255, 0, 127, 0.3); text-align:center;">
+        <h3 style="margin-top:0; color:var(--neon-pink);">⏱️ Cyber Fokus Taymer</h3>
+        
+        <div style="display: flex; gap: 8px; justify-content: center; margin-bottom: 12px;">
+            <input type="number" id="pomoMinutesInput" class="input-box" style="width: 100%; margin-bottom: 0; text-align: center;" placeholder="Vaqt (daqiqa)" value="25" min="1" max="180">
+            <button class="btn-action" style="background:var(--neon-purple); color:#fff; width: auto; padding: 0 16px; white-space: nowrap;" onclick="setCustomTimer()">Sozlash</button>
+        </div>
+
+        <div class="timer-val" id="timer">25:00</div>
+        <div style="display:flex; gap:8px;">
+            <button class="btn-action" style="background:var(--neon-pink); color:#fff;" onclick="startTimer()">Boshlash</button>
+            <button class="btn-action" style="background:rgba(255,255,255,0.1); color:#fff;" onclick="resetTimer()">Reset</button>
         </div>
     </div>
+</div>
 
     <!-- MODUL 3: ESLATMALAR -->
     <div id="tab-notes" class="tab-content">
@@ -345,19 +351,51 @@
         }
 
         /* 2. POMODORO */
-        let timeLeft = 1500, timerInterval = null;
-        function startTimer() {
-            if (timerInterval) return;
-            timerInterval = setInterval(() => {
-                if (timeLeft > 0) {
-                    timeLeft--;
-                    let m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
-                    let s = (timeLeft % 60).toString().padStart(2, '0');
-                    document.getElementById('timer').innerText = `${m}:${s}`;
-                } else { clearInterval(timerInterval); alert("Fokus vaqti tugadi!"); }
-            }, 1000);
+       /* 2. POMODORO */
+let defaultMinutes = 25;
+let timeLeft = defaultMinutes * 60;
+let timerInterval = null;
+
+function renderTimer() {
+    let m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+    let s = (timeLeft % 60).toString().padStart(2, '0');
+    document.getElementById('timer').innerText = `${m}:${s}`;
+}
+
+function setCustomTimer() {
+    const inputVal = parseInt(document.getElementById('pomoMinutesInput').value);
+    if (!inputVal || inputVal < 1) {
+        alert("Iltimos, kamida 1 daqiqa kiriting!");
+        return;
+    }
+    
+    clearInterval(timerInterval);
+    timerInterval = null;
+    defaultMinutes = inputVal;
+    timeLeft = defaultMinutes * 60;
+    renderTimer();
+}
+
+function startTimer() {
+    if (timerInterval) return;
+    timerInterval = setInterval(() => {
+        if (timeLeft > 0) {
+            timeLeft--;
+            renderTimer();
+        } else { 
+            clearInterval(timerInterval); 
+            timerInterval = null;
+            alert("Fokus vaqti tugadi!"); 
         }
-        function resetTimer() { clearInterval(timerInterval); timerInterval = null; timeLeft = 1500; document.getElementById('timer').innerText = "25:00"; }
+    }, 1000);
+}
+
+function resetTimer() { 
+    clearInterval(timerInterval); 
+    timerInterval = null; 
+    timeLeft = defaultMinutes * 60; 
+    renderTimer(); 
+}
 
         /* 3. ESLATMALAR */
         function saveNote() {
