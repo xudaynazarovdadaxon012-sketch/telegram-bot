@@ -6,9 +6,9 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 from aiohttp import web
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
+# Render domeningiz aniq ko'rsatilgan
 RENDER_URL = os.getenv("RENDER_EXTERNAL_URL", "https://telegram-bot-7n6t.onrender.com")
 PORT = int(os.getenv("PORT", 10000))
-ADMIN_ID = int(os.getenv("ADMIN_ID", 0))  # O'zingizning Telegram ID'ingizni kiriting
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
@@ -44,11 +44,12 @@ async def set_vip(user_id: int):
 async def start_cmd(message: types.Message):
     await add_user(message.from_user.id, message.from_user.full_name)
     
+    # Telegram Bot ichidagi tugma (Mini App)
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
             [
                 InlineKeyboardButton(
-                    text="⭐ VIP Status (Mini App)",
+                    text="⭐ VIP Status & SaaS App",
                     web_app=WebAppInfo(url=f"{RENDER_URL}/miniapp")
                 )
             ]
@@ -57,14 +58,13 @@ async def start_cmd(message: types.Message):
     await message.answer(
         f"👋 Salom, **{message.from_user.first_name}**!\n\n"
         "**Mega AI & SaaS Assistant** platformasiga xush kelibsiz.\n"
-        "Barcha imkoniyatlar va VIP darajani Mini App orqali boshqaring:",
+        "Quyidagi tugma orqali Mini App interfeysiga kiring:",
         reply_markup=keyboard,
         parse_mode="Markdown"
     )
 
 @dp.message(F.text == "/admin")
 async def admin_cmd(message: types.Message):
-    # Admin statistikasi
     async with aiosqlite.connect(DB_PATH) as db:
         async with db.execute("SELECT COUNT(*) FROM users") as cursor:
             total_users = (await cursor.fetchone())[0]
