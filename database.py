@@ -2,7 +2,7 @@ import sqlite3
 from datetime import datetime, timedelta
 
 def init_db():
-    """Ma'lumotlar bazasini yaratish"""
+    """Ma'lumotlar bazasi va jadvallarni yaratish"""
     conn = sqlite3.connect("bot_data.db")
     cursor = conn.cursor()
     cursor.execute('''
@@ -12,24 +12,25 @@ def init_db():
             coins INTEGER DEFAULT 0,
             invited_count INTEGER DEFAULT 0,
             last_streak TEXT,
-            streak_days INTEGER DEFAULT 0
+            streak_days INTEGER DEFAULT 0,
+            is_vip INTEGER DEFAULT 0
         )
     ''')
     conn.commit()
     conn.close()
 
 def get_or_create_user(user_id: int, referrer_id: int = None):
-    """Foydalanuvchini olish yoki yangi qo'shish"""
+    """Foydalanuvchini olish yoki yangi yaratish"""
     conn = sqlite3.connect("bot_data.db")
     cursor = conn.cursor()
     
-    cursor.execute("SELECT user_id, coins, invited_count FROM users WHERE user_id = ?", (user_id,))
+    cursor.execute("SELECT user_id, coins, invited_count, is_vip FROM users WHERE user_id = ?", (user_id,))
     user = cursor.fetchone()
     
     if not user:
         cursor.execute(
-            "INSERT INTO users (user_id, referrer_id, coins, invited_count) VALUES (?, ?, ?, ?)",
-            (user_id, referrer_id, 0, 0)
+            "INSERT INTO users (user_id, referrer_id, coins, invited_count, is_vip) VALUES (?, ?, ?, ?, ?)",
+            (user_id, referrer_id, 0, 0, 0)
         )
         
         if referrer_id and referrer_id != user_id:
@@ -39,11 +40,27 @@ def get_or_create_user(user_id: int, referrer_id: int = None):
             )
             
         conn.commit()
-        cursor.execute("SELECT user_id, coins, invited_count FROM users WHERE user_id = ?", (user_id,))
+        cursor.execute("SELECT user_id, coins, invited_count, is_vip FROM users WHERE user_id = ?", (user_id,))
         user = cursor.fetchone()
         
     conn.close()
     return user
+
+def add_coins(user_id: int, amount: int):
+    """Foydalanuvchiga coin qo'shish"""
+    conn = sqlite3.connect("bot_data.db")
+    cursor = conn.cursor()
+    cursor.execute("UPDATE users SET coins = coins + ? WHERE user_id = ?", (amount, user_id))
+    conn.commit()
+    conn.close()
+
+def set_vip(user_id: int):
+    """VIP status berish (ImportError xatosi shu funksiya yo'qligi uchun chiqqan)"""
+    conn = sqlite3.connect("bot_data.db")
+    cursor = conn.cursor()
+    cursor.execute("UPDATE users SET is_vip = 1 WHERE user_id = ?", (user_id,))
+    conn.commit()
+    conn.close()
 
 def claim_daily_streak(user_id: int):
     """Kunlik bonus olish"""
