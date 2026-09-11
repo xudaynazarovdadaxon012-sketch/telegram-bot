@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ultra Cyber Hub — Big Pro App</title>
+    <title>Ultra Cyber Hub — All in One</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
@@ -14,6 +14,8 @@
             --accent-blue: #4facfe;
             --accent-purple: #7928ca;
             --accent-pink: #ff0080;
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
             --text-main: #ffffff;
             --text-sub: #a0aec0;
         }
@@ -35,7 +37,7 @@
             min-height: 100vh;
         }
 
-        /* Balance Card — Kengaytirilgan va yirik */
+        /* Yirik Balans Paneli */
         .balance-card {
             position: relative;
             background: var(--card-glass);
@@ -76,7 +78,7 @@
             box-shadow: 0 4px 15px rgba(255, 0, 128, 0.3);
         }
 
-        /* Scrollable Nav Tabs — Yirik va bosishga qulay */
+        /* Scrollable Nav Tabs */
         .nav-tabs {
             display: flex;
             gap: 12px;
@@ -109,7 +111,18 @@
             transform: translateY(-3px) scale(1.02);
         }
 
-        /* Action Cards — Kattalashtirilgan va kengaytirilgan */
+        /* Admin Tab Maxsus Stili */
+        .tab-btn.admin-tab {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: var(--accent-red);
+            color: #fca5a5;
+        }
+        .tab-btn.admin-tab.active {
+            background: linear-gradient(135deg, #ef4444, #f43f5e);
+            color: #fff;
+        }
+
+        /* Kartalar */
         .card {
             background: var(--card-glass);
             backdrop-filter: blur(16px);
@@ -123,19 +136,9 @@
             box-shadow: 0 6px 20px rgba(0,0,0,0.3);
         }
 
-        .card-info h4 {
-            margin: 0;
-            font-size: 17px;
-            font-weight: 800;
-        }
-        
-        .card-info p {
-            margin: 6px 0 0;
-            font-size: 13px;
-            color: var(--text-sub);
-        }
+        .card-info h4 { margin: 0; font-size: 17px; font-weight: 800; }
+        .card-info p { margin: 6px 0 0; font-size: 13px; color: var(--text-sub); }
 
-        /* Yirik Kiber Tugma */
         .cyber-btn {
             background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink));
             color: #fff;
@@ -148,15 +151,13 @@
             box-shadow: 0 4px 15px rgba(121, 40, 202, 0.4);
             transition: transform 0.2s ease;
         }
-
-        .cyber-btn:active {
-            transform: scale(0.93);
-        }
+        .cyber-btn:active { transform: scale(0.93); }
+        .cyber-btn.danger { background: linear-gradient(135deg, #f43f5e, #e11d48); }
+        .cyber-btn.success { background: linear-gradient(135deg, #10b981, #059669); }
 
         .tab-content { display: none; }
         .tab-content.active { display: block; }
 
-        /* Reyting Elementlari */
         .rank-item {
             display: flex;
             align-items: center;
@@ -166,6 +167,36 @@
             border-radius: 16px;
             margin-bottom: 10px;
             font-size: 15px;
+        }
+
+        /* Admin Form Elementlari */
+        input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1.5px solid var(--card-border);
+            padding: 14px;
+            border-radius: 14px;
+            color: #fff;
+            font-size: 15px;
+            margin-bottom: 12px;
+            outline: none;
+        }
+        input:focus { border-color: var(--accent-cyan); }
+
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+        .stat-card { background: rgba(255,255,255,0.03); border: 1px solid var(--card-border); border-radius: 16px; padding: 14px; text-align: center; }
+        .stat-card h3 { margin: 6px 0 0; font-size: 22px; color: var(--accent-cyan); }
+        .stat-card p { margin: 0; font-size: 12px; color: var(--text-sub); }
+
+        .withdraw-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            margin-bottom: 8px;
         }
     </style>
 </head>
@@ -178,7 +209,7 @@
         <span class="level-badge" id="userLevel">LVL 1 — Novice</span>
     </div>
 
-    <!-- Kengaytirilgan va Yirik Tablar -->
+    <!-- Scrollable Tablar -->
     <div class="nav-tabs">
         <button class="tab-btn active" onclick="switchTab('bonuses', this)">⚡ Bonuslar</button>
         <button class="tab-btn" onclick="switchTab('tasks', this)">🎯 Vazifalar</button>
@@ -186,6 +217,8 @@
         <button class="tab-btn" onclick="switchTab('leaderboard', this)">🏆 Reyting</button>
         <button class="tab-btn" onclick="switchTab('ref', this)">🚀 Do'stlar</button>
         <button class="tab-btn" onclick="switchTab('withdraw', this)">💳 Yechish</button>
+        <!-- Admin Tab (Odatiy holatda yashirin bo'ladi) -->
+        <button id="adminTabBtn" class="tab-btn admin-tab" style="display: none;" onclick="switchTab('admin', this)">⚙️ Admin Panel</button>
     </div>
 
     <!-- TAB 1: Bonuslar -->
@@ -252,7 +285,7 @@
         <div class="card" style="flex-direction: column; text-align: left; gap: 14px;">
             <div class="card-info">
                 <h4>🚀 Do'stlarni taklif qiling</h4>
-                <p>Har bir taklif qilingan do'st uchun +300 Coin va uning daromadidan 10% bonus oling.</p>
+                <p>Har bir taklif qilingan do'st uchun +300 Coin oling.</p>
             </div>
             <button class="cyber-btn" style="width: 100%; padding: 16px; font-size: 16px;" onclick="shareRef()">Taklif havolasini yuborish</button>
         </div>
@@ -269,11 +302,39 @@
         </div>
     </div>
 
+    <!-- TAB 7: ADMIN PANEL (Faqat Admin Ko'ra Oladi) -->
+    <div id="admin" class="tab-content">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <p>Foydalanuvchilar</p>
+                <h3 id="totalUsers">0</h3>
+            </div>
+            <div class="stat-card">
+                <p>Jami Coinlar</p>
+                <h3 id="totalCoins">0</h3>
+            </div>
+        </div>
+
+        <div class="card" style="flex-direction: column; align-items: stretch;">
+            <h4 style="margin-bottom: 12px;">💰 Balansni O'zgartirish</h4>
+            <input type="number" id="targetUserId" placeholder="User Telegram ID">
+            <input type="number" id="coinAmount" placeholder="Coin miqdori (Masalan: 500 yoki -500)">
+            <button class="cyber-btn" style="width: 100%; padding: 14px;" onclick="updateUserCoins()">Bajarish</button>
+        </div>
+
+        <div class="card" style="flex-direction: column; align-items: stretch;">
+            <h4 style="margin-bottom: 12px;">💳 Yechib Olish So'rovlari</h4>
+            <div id="withdrawList">
+                <p style="font-size: 13px; color: var(--text-sub); text-align: center;">Kutayotgan so'rovlar yo'q</p>
+            </div>
+        </div>
+    </div>
+
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        const BACKEND_URL = "https://your-backend-service.onrender.com";
+        const BACKEND_URL = "https://your-backend-service.onrender.com"; // Render manzilingiz
         const user = tg.initDataUnsafe?.user || { id: 777777, username: "User" };
 
         function triggerHaptic() {
@@ -286,6 +347,10 @@
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
             btn.classList.add('active');
+
+            if(tabId === 'admin') {
+                loadAdminStats();
+            }
         }
 
         async function loadUserData() {
@@ -297,7 +362,23 @@
                     let lvl = Math.floor(data.coins / 1000) + 1;
                     document.getElementById('userLevel').innerText = `LVL ${lvl} — Pro Cyber`;
                 }
+
+                // Admin ekanligini tekshirish
+                checkAdminStatus();
             } catch(e) { console.error(e); }
+        }
+
+        async function checkAdminStatus() {
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/admin/stats`, {
+                    headers: { "x-user-id": user.id }
+                });
+                const data = await res.json();
+                if(data.success) {
+                    // Agar xavfsizlik tekshiruvidan o'tsa Admin Tab ko'rinadi
+                    document.getElementById('adminTabBtn').style.display = 'inline-block';
+                }
+            } catch(e) {}
         }
 
         async function claimBonus(type) {
@@ -357,6 +438,82 @@
                 loadUserData();
             } else {
                 tg.showAlert(`⚠️ ${data.message}`);
+            }
+        }
+
+        /* --- ADMIN PANEL FUNCTIONS --- */
+        async function loadAdminStats() {
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/admin/stats`, {
+                    headers: { "x-user-id": user.id }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('totalUsers').innerText = data.total_users;
+                    document.getElementById('totalCoins').innerText = data.total_coins;
+                    renderWithdraws(data.withdraws);
+                }
+            } catch(e) { console.error(e); }
+        }
+
+        async function updateUserCoins() {
+            const targetId = document.getElementById('targetUserId').value;
+            const amount = document.getElementById('coinAmount').value;
+
+            if(!targetId || !amount) return tg.showAlert("Ma'lumotlarni kiriting!");
+
+            const res = await fetch(`${BACKEND_URL}/api/admin/update_coins`, {
+                method: "POST",
+                headers: { 
+                    "Content-Type": "application/json",
+                    "x-user-id": user.id
+                },
+                body: JSON.stringify({ user_id: parseInt(targetId), amount: parseInt(amount) })
+            });
+
+            const data = await res.json();
+            if(data.success) {
+                tg.showAlert("✅ Balans o'zgartirildi!");
+                loadAdminStats();
+            } else {
+                tg.showAlert(`⚠️ ${data.message}`);
+            }
+        }
+
+        function renderWithdraws(list) {
+            const container = document.getElementById('withdrawList');
+            if(!list || list.length === 0) {
+                container.innerHTML = "<p style='font-size: 13px; color: var(--text-sub); text-align: center;'>So'rovlar yo'q</p>";
+                return;
+            }
+
+            container.innerHTML = list.map(item => `
+                <div class="withdraw-item">
+                    <div>
+                        <strong>ID: ${item.user_id}</strong>
+                        <p style="margin:2px 0 0; font-size:12px; color:var(--text-sub);">${item.amount} Coin ➔ ${item.method}</p>
+                    </div>
+                    <div style="display:flex; gap:6px;">
+                        <button class="cyber-btn success" style="padding:6px 12px; font-size:12px;" onclick="handleWithdraw(${item.id}, 'approved')">✓</button>
+                        <button class="cyber-btn danger" style="padding:6px 12px; font-size:12px;" onclick="handleWithdraw(${item.id}, 'rejected')">✕</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function handleWithdraw(withdrawId, status) {
+            const res = await fetch(`${BACKEND_URL}/api/admin/handle_withdraw`, {
+                method: "POST",
+                headers: { 
+                    "Content-Type": "application/json",
+                    "x-user-id": user.id
+                },
+                body: JSON.stringify({ withdraw_id: withdrawId, status: status })
+            });
+            const data = await res.json();
+            if(data.success) {
+                tg.showAlert("✅ Bajarildi");
+                loadAdminStats();
             }
         }
 
