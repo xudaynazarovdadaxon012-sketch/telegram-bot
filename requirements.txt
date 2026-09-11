@@ -1,5 +1,4 @@
-fastapi
-uvicorn
-aiogram
-pydantic
+Flask
+flask-cors
 requests
+gunicorn
