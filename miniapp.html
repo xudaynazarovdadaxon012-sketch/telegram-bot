@@ -110,26 +110,71 @@
         <div id="bonus-status-container" style="margin-top: 15px;"></div>
     </div>
 
-    <!-- 8. Admin -->
-    <div id="tab-admin" class="tab-content card" style="display:none;">
-        <h3>👑 Admin Panel</h3>
-        <textarea id="adm-broadcast-text" placeholder="Ommaviy e'lon..."></textarea>
-        <button class="btn-action" onclick="sendBroadcast()">Ommaviy Yuborish 🚀</button>
-        <hr style="border-color:#262626; margin: 15px 0;">
-        <input type="number" id="adm-target-id" placeholder="User Telegram ID">
-        <textarea id="adm-direct-text" placeholder="Shaxsiy xabar..."></textarea>
-        <button class="btn-action" onclick="sendDirect()">Userga Yuborish ✉️</button>
+    <!-- 8. Admin Panel (Instagram Style Profile) -->
+    <div id="tab-admin" class="tab-content card" style="display:none; text-align: left; background: #000; border: 1px solid #262626; border-radius: 20px; padding: 15px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <div style="width: 70px; height: 70px; border-radius: 50%; background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); padding: 3px;">
+                    <div style="width: 100%; height: 100%; background: #000; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px;">
+                        👑
+                    </div>
+                </div>
+                <div>
+                    <h3 style="font-size: 18px; margin: 0;">Admin Console <span style="color:#00f5d4; font-size:12px;">✔</span></h3>
+                    <p style="color: #8e8e8e; font-size: 13px;">@super_admin</p>
+                </div>
+            </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-around; text-align: center; border-top: 1px solid #262626; border-bottom: 1px solid #262626; padding: 12px 0; margin-bottom: 15px;">
+            <div>
+                <b id="adm-stat-posts" style="font-size: 18px;">0</b>
+                <div style="color: #8e8e8e; font-size: 11px;">Jami User</div>
+            </div>
+            <div onclick="openActiveUsersModal()" style="cursor: pointer; background: rgba(0,245,212,0.1); padding: 4px 10px; border-radius: 10px; border: 1px solid #00f5d4;">
+                <b id="adm-stat-followers" style="font-size: 18px; color: #00f5d4;">0 🟢</b>
+                <div style="color: #00f5d4; font-size: 11px; font-weight: bold;">Hozir Aktiv 👆</div>
+            </div>
+            <div>
+                <b id="adm-stat-following" style="font-size: 18px;">0</b>
+                <div style="color: #8e8e8e; font-size: 11px;">24h Aktiv</div>
+            </div>
+        </div>
+
+        <p id="adm-bio" style="font-size: 12px; color: #e1e1e1; margin-bottom: 15px; white-space: pre-line;"></p>
+
+        <button class="btn-action" style="margin-bottom: 8px; background: #262626;" onclick="toggleAdminTool('broadcast')">📢 Ommaviy Xabar Yuborish</button>
+        <button class="btn-action" style="background: #262626;" onclick="toggleAdminTool('direct')">✉️ Bir kishiga Direct Yuborish</button>
+
+        <div id="adm-tool-broadcast" style="display:none; margin-top: 15px;">
+            <textarea id="adm-broadcast-text" placeholder="Barcha foydalanuvchilarga yuboriladigan xabar..."></textarea>
+            <button class="btn-action" onclick="sendBroadcast()">Hamma foydalanuvchilarga yuborish 🚀</button>
+        </div>
+
+        <div id="adm-tool-direct" style="display:none; margin-top: 15px;">
+            <input type="number" id="adm-target-id" placeholder="Telegram ID kiritish">
+            <textarea id="adm-direct-text" placeholder="Shaxsiy xabar matni..."></textarea>
+            <button class="btn-action" onclick="sendDirect()">Direct Yuborish ✉️</button>
+        </div>
+    </div>
+
+    <!-- Aktiv Foydalanuvchilar Modal Oynasi -->
+    <div id="active-users-modal" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.92); z-index: 9999; padding: 20px; box-sizing: border-box; overflow-y: auto;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #262626; padding-bottom: 10px;">
+            <h3 style="margin: 0;">🟢 Hozirgi Aktiv Foydalanuvchilar</h3>
+            <button onclick="closeActiveUsersModal()" style="background: none; border: none; color: #fff; font-size: 24px; cursor: pointer;">✕</button>
+        </div>
+        <div id="active-users-list-container"></div>
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        // ⚠️ Render platformasidagi haqiqiy backend manzilingizni kiriting:
         const BACKEND_URL = "https://telegram-bot-7n6t.onrender.com";
 
         const user = tg.initDataUnsafe.user || { id: 123456, username: "DemoUser" };
-        let userCoins = 0, currentEnergy = 1000, maxEnergy = 1000, tapLevel = 1, globalRefLink = "", nextBonusTime = 0;
+        let userCoins = 0, currentEnergy = 1000, maxEnergy = 1000, tapLevel = 1, globalRefLink = "", nextBonusTime = 0, currentAdminUsers = [];
 
         function switchTab(tabName, btnElement) {
             document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
@@ -140,13 +185,19 @@
             if(btnElement) btnElement.classList.add('active');
 
             if(tabName === 'top') loadLeaderboard();
+            if(tabName === 'admin') loadAdminData();
         }
 
         function updateUI() {
-            document.getElementById('ui-balance').innerText = userCoins;
-            document.getElementById('ui-energy-text').innerText = `${currentEnergy} / ${maxEnergy}`;
-            document.getElementById('ui-energy-fill').style.width = `${(currentEnergy / maxEnergy) * 100}%`;
-            document.getElementById('boost-tap-lvl').innerText = tapLevel;
+            const elBal = document.getElementById('ui-balance');
+            const elEngTxt = document.getElementById('ui-energy-text');
+            const elEngFill = document.getElementById('ui-energy-fill');
+            const elTapLvl = document.getElementById('boost-tap-lvl');
+
+            if(elBal) elBal.innerText = userCoins;
+            if(elEngTxt) elEngTxt.innerText = `${currentEnergy} / ${maxEnergy}`;
+            if(elEngFill) elEngFill.style.width = `${(currentEnergy / maxEnergy) * 100}%`;
+            if(elTapLvl) elTapLvl.innerText = tapLevel;
         }
 
         async function loadUserData() {
@@ -160,14 +211,17 @@
                     tapLevel = data.tap_level;
                     globalRefLink = data.ref_link;
 
-                    if(data.wallet) document.getElementById('wallet-input').value = data.wallet;
-                    if(data.is_admin) document.getElementById('admin-tab-btn').style.display = 'block';
+                    const walletEl = document.getElementById('wallet-input');
+                    const adminTabEl = document.getElementById('admin-tab-btn');
+
+                    if(walletEl && data.wallet) walletEl.value = data.wallet;
+                    if(adminTabEl && data.is_admin) adminTabEl.style.display = 'block';
 
                     updateUI();
                     renderTasks(data.tasks, data.completed_tasks);
                     checkBonusAvailability(data.last_daily_claim);
                 }
-            } catch(e) { console.error(e); }
+            } catch(e) { console.error("Data load error:", e); }
         }
 
         async function handleTap() {
@@ -183,11 +237,12 @@
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ user_id: user.id, amount: 1 })
-            });
+            }).catch(e => console.error("Tap sync error:", e));
         }
 
         function checkBonusAvailability(lastClaimTs) {
             const container = document.getElementById('bonus-status-container');
+            if(!container) return;
             const now = Math.floor(Date.now() / 1000);
             const cooldown = 86400;
 
@@ -220,19 +275,21 @@
         }
 
         async function claimDaily() {
-            const res = await fetch(`${BACKEND_URL}/api/claim_daily`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ user_id: user.id, amount: 1 })
-            });
-            const data = await res.json();
-            tg.showAlert(data.message);
-            if(data.success) loadUserData();
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/claim_daily`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ user_id: user.id, amount: 1 })
+                });
+                const data = await res.json();
+                tg.showAlert(data.message);
+                if(data.success) loadUserData();
+            } catch(e) { tg.showAlert("Xatolik yuz berdi!"); }
         }
 
         function renderTasks(tasks, completedIds) {
             const container = document.getElementById('tasks-list-container');
-            if(!container) return;
+            if(!container || !tasks) return;
             let html = "";
             tasks.forEach(t => {
                 const isDone = completedIds && completedIds.includes(t.id);
@@ -247,55 +304,65 @@
         }
 
         async function doTask(taskId) {
-            const res = await fetch(`${BACKEND_URL}/api/complete_task`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ user_id: user.id, task_id: taskId })
-            });
-            const data = await res.json();
-            tg.showAlert(data.message);
-            if(data.success) loadUserData();
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/complete_task`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ user_id: user.id, task_id: taskId })
+                });
+                const data = await res.json();
+                tg.showAlert(data.message);
+                if(data.success) loadUserData();
+            } catch(e) { tg.showAlert("Vazifani tekshirishda xatolik!"); }
         }
 
         async function loadLeaderboard() {
             const container = document.getElementById('leaderboard-container');
-            const res = await fetch(`${BACKEND_URL}/api/leaderboard`);
-            const data = await res.json();
-            if(data.success) {
-                let html = "";
-                data.leaderboard.forEach(item => {
-                    html += `<div class="list-item"><div><b>#${item.rank} @${item.username}</b></div><div style="color:#00f5d4;">${item.coins} Coin</div></div>`;
-                });
-                container.innerHTML = html;
-            }
+            if(!container) return;
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/leaderboard`);
+                const data = await res.json();
+                if(data.success) {
+                    let html = "";
+                    data.leaderboard.forEach(item => {
+                        html += `<div class="list-item"><div><b>#${item.rank} @${item.username}</b></div><div style="color:#00f5d4;">${item.coins} Coin</div></div>`;
+                    });
+                    container.innerHTML = html;
+                }
+            } catch(e) { console.error("Leaderboard error:", e); }
         }
 
         async function buyBoost(type) {
-            const res = await fetch(`${BACKEND_URL}/api/buy_boost`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ user_id: user.id, boost_type: type })
-            });
-            const data = await res.json();
-            tg.showAlert(data.message);
-            if(data.success) loadUserData();
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/buy_boost`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ user_id: user.id, boost_type: type })
+                });
+                const data = await res.json();
+                tg.showAlert(data.message);
+                if(data.success) loadUserData();
+            } catch(e) { tg.showAlert("Boost xaridida xatolik!"); }
         }
 
         async function saveWallet() {
             const addr = document.getElementById('wallet-input').value;
-            const res = await fetch(`${BACKEND_URL}/api/connect_wallet`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ user_id: user.id, wallet_address: addr })
-            });
-            const data = await res.json();
-            tg.showAlert(data.message);
+            if(!addr) return tg.showAlert("⚠️ Hamyon manzilini kiriting!");
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/connect_wallet`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ user_id: user.id, wallet_address: addr })
+                });
+                const data = await res.json();
+                tg.showAlert(data.message);
+            } catch(e) { tg.showAlert("Hamyon saqlashda xatolik!"); }
         }
 
         function copyRefLink(btn) {
-            if(!globalRefLink) return tg.showAlert("⚠️ Havola topilmadi!");
+            const linkToCopy = globalRefLink || `https://t.me/share/url?url=${user.id}`;
             const area = document.createElement("textarea");
-            area.value = globalRefLink;
+            area.value = linkToCopy;
             document.body.appendChild(area);
             area.select();
             document.execCommand("copy");
@@ -307,30 +374,110 @@
         }
 
         function shareRefLink() {
-            if(globalRefLink) tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(globalRefLink)}&text=${encodeURIComponent("O'yinga qo'shil!")}`);
+            const linkToShare = globalRefLink || `https://t.me/share/url?url=${user.id}`;
+            tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(linkToShare)}&text=${encodeURIComponent("O'yinga qo'shil va coin yig'!")}`);
+        }
+
+        // --- INSTAGRAM STYLE ADMIN FUNCTIONALITIES ---
+        async function loadAdminData() {
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/admin/insta_profile?user_id=${user.id}`);
+                const data = await res.json();
+
+                if (data.success) {
+                    document.getElementById('adm-stat-posts').innerText = data.profile.posts;
+                    document.getElementById('adm-stat-followers').innerText = `${data.profile.followers} 🟢`;
+                    document.getElementById('adm-stat-following').innerText = data.profile.following;
+                    document.getElementById('adm-bio').innerText = data.profile.bio;
+
+                    currentAdminUsers = data.users;
+                } else {
+                    tg.showAlert("⚠️ Admin huquqi topilmadi!");
+                }
+            } catch(e) { console.error("Admin load error:", e); }
+        }
+
+        function openActiveUsersModal() {
+            const modal = document.getElementById('active-users-modal');
+            const container = document.getElementById('active-users-list-container');
+            if (!container || !modal) return;
+
+            let html = "";
+            if (currentAdminUsers.length === 0) {
+                html = "<p style='color:#8e8e8e; text-align:center;'>Foydalanuvchilar topilmadi.</p>";
+            } else {
+                currentAdminUsers.forEach(u => {
+                    const statusBadge = u.is_online 
+                        ? `<span style="color:#00f5d4; font-size:11px; font-weight:bold;">🟢 Online</span>` 
+                        : `<span style="color:#8e8e8e; font-size:11px;">⚪️ ${Math.floor(u.last_active_sec / 60)} daq oldin</span>`;
+
+                    html += `
+                        <div class="list-item" style="display:flex; justify-content:space-between; align-items:center; padding: 10px 0; border-bottom:1px solid #262626;">
+                            <div style="display:flex; align-items:center; gap:10px;">
+                                <div style="width:40px; height:40px; border-radius:50%; background:#262626; display:flex; align-items:center; justify-content:center; font-weight:bold;">
+                                    ${u.username ? u.username.charAt(0).toUpperCase() : 'U'}
+                                </div>
+                                <div>
+                                    <b>@${u.username || 'User'}</b> <span style="font-size:10px; color:#8e8e8e;">(ID: ${u.user_id})</span>
+                                    <div>${statusBadge} • <span style="color:#ffbe0b;">${u.coins} Coin</span></div>
+                                </div>
+                            </div>
+                            <button class="btn-action" style="width:auto; padding:5px 10px; font-size:11px; background:#229ED9;" onclick="selectUserForDirect('${u.user_id}')">Direct ✉️</button>
+                        </div>
+                    `;
+                });
+            }
+            container.innerHTML = html;
+            modal.style.display = "block";
+        }
+
+        function closeActiveUsersModal() {
+            const modal = document.getElementById('active-users-modal');
+            if(modal) modal.style.display = "none";
+        }
+
+        function selectUserForDirect(targetUserId) {
+            closeActiveUsersModal();
+            toggleAdminTool('direct');
+            const targetInput = document.getElementById('adm-target-id');
+            if(targetInput) targetInput.value = targetUserId;
+            tg.showAlert(`ID: ${targetUserId} tanlandi. Xabaringizni yozing.`);
+        }
+
+        function toggleAdminTool(tool) {
+            const bcTool = document.getElementById('adm-tool-broadcast');
+            const dirTool = document.getElementById('adm-tool-direct');
+            if(bcTool) bcTool.style.display = (tool === 'broadcast') ? 'block' : 'none';
+            if(dirTool) dirTool.style.display = (tool === 'direct') ? 'block' : 'none';
         }
 
         async function sendBroadcast() {
             const msg = document.getElementById('adm-broadcast-text').value;
-            const res = await fetch(`${BACKEND_URL}/api/admin/broadcast`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ admin_id: user.id, message: msg })
-            });
-            const data = await res.json();
-            tg.showAlert(data.message);
+            if(!msg) return tg.showAlert("Xabar matnini kiriting!");
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/admin/broadcast`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ admin_id: user.id, message: msg })
+                });
+                const data = await res.json();
+                tg.showAlert(data.message);
+            } catch(e) { tg.showAlert("Yuborishda xatolik!"); }
         }
 
         async function sendDirect() {
             const targetId = document.getElementById('adm-target-id').value;
             const msg = document.getElementById('adm-direct-text').value;
-            const res = await fetch(`${BACKEND_URL}/api/admin/send_direct`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ admin_id: user.id, target_user_id: parseInt(targetId), message: msg })
-            });
-            const data = await res.json();
-            tg.showAlert(data.message);
+            if(!targetId || !msg) return tg.showAlert("ID va xabarni kiriting!");
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/admin/send_direct`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ admin_id: user.id, target_user_id: parseInt(targetId), message: msg })
+                });
+                const data = await res.json();
+                tg.showAlert(data.message);
+            } catch(e) { tg.showAlert("Direct yuborishda xatolik!"); }
         }
 
         setInterval(() => {
