@@ -144,12 +144,22 @@ def get_admin_stats():
     total_users = row[0] if row else 0
     total_coins = row[1] if row and row[1] else 0
 
+    user_list = []
+    if users:
+        for u in users:
+            user_list.append({
+                "user_id": u[0],
+                "username": u[1],
+                "coins": u[2],
+                "wallet": u[3]
+            })
+
     return {
         "posts": total_users,
         "followers": total_coins,
         "following": 1,
         "bio": "Cyber Pro Hub Official Backend Status: ONLINE 🟢",
-        "users": [{"user_id": u[0], "username": u[1], "coins": u[2], "wallet": u[3]} for u[u in users]] if users else []
+        "users": user_list
     }
 
 def get_all_user_ids():
