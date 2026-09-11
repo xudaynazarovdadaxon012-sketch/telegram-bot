@@ -1,96 +1,83 @@
-import sqlite3
-from datetime import datetime, timedelta
+import json
+import os
+from datetime import datetime
 
-def init_db():
-    """Ma'lumotlar bazasi va jadvallarni yaratish"""
-    conn = sqlite3.connect("bot_data.db")
-    cursor = conn.cursor()
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS users (
-            user_id INTEGER PRIMARY KEY,
-            referrer_id INTEGER,
-            coins INTEGER DEFAULT 0,
-            invited_count INTEGER DEFAULT 0,
-            last_streak TEXT,
-            streak_days INTEGER DEFAULT 0,
-            is_vip INTEGER DEFAULT 0
-        )
-    ''')
-    conn.commit()
-    conn.close()
+DB_FILE = "database.json"
 
-def get_or_create_user(user_id: int, referrer_id: int = None):
-    """Foydalanuvchini olish yoki yangi yaratish"""
-    conn = sqlite3.connect("bot_data.db")
-    cursor = conn.cursor()
-    
-    cursor.execute("SELECT user_id, coins, invited_count, is_vip FROM users WHERE user_id = ?", (user_id,))
-    user = cursor.fetchone()
-    
-    if not user:
-        cursor.execute(
-            "INSERT INTO users (user_id, referrer_id, coins, invited_count, is_vip) VALUES (?, ?, ?, ?, ?)",
-            (user_id, referrer_id, 0, 0, 0)
-        )
-        
-        if referrer_id and referrer_id != user_id:
-            cursor.execute(
-                "UPDATE users SET coins = coins + 100, invited_count = invited_count + 1 WHERE user_id = ?",
-                (referrer_id,)
-            )
-            
-        conn.commit()
-        cursor.execute("SELECT user_id, coins, invited_count, is_vip FROM users WHERE user_id = ?", (user_id,))
-        user = cursor.fetchone()
-        
-    conn.close()
-    return user
+def get_default_db():
+    return {
+        "users": {},
+        "promos": {
+            "CY83R-9X2Q": 500,
+            "W3LC-77KP-99": 1000,
+            "B300-X7M2": 300,
+            "M3GA-88ZZ-2026": 5000
+        },
+        "used_promos": {},
+        "daily_claims": {},
+        "completed_tasks": {},
+        "referrals": {}
+    }
 
-def add_coins(user_id: int, amount: int):
-    """Foydalanuvchiga coin qo'shish"""
-    conn = sqlite3.connect("bot_data.db")
-    cursor = conn.cursor()
-    cursor.execute("UPDATE users SET coins = coins + ? WHERE user_id = ?", (amount, user_id))
-    conn.commit()
-    conn.close()
+def load_db():
+    if not os.path.exists(DB_FILE):
+        db = get_default_db()
+        save_db(db)
+        return db
+    try:
+        with open(DB_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception as e:
+        print(f"Baza o'qishda xatolik: {e}")
+        return get_default_db()
 
-def set_vip(user_id: int):
-    """VIP status berish (ImportError xatosi shu funksiya yo'qligi uchun chiqqan)"""
-    conn = sqlite3.connect("bot_data.db")
-    cursor = conn.cursor()
-    cursor.execute("UPDATE users SET is_vip = 1 WHERE user_id = ?", (user_id,))
-    conn.commit()
-    conn.close()
+def save_db(db):
+    try:
+        with open(DB_FILE, "w", encoding="utf-8") as f:
+            json.dump(db, f, ensure_ascii=False, indent=4)
+    except Exception as e:
+        print(f"Bazaga saqlashda xatolik: {e}")
 
-def claim_daily_streak(user_id: int):
-    """Kunlik bonus olish"""
-    conn = sqlite3.connect("bot_data.db")
-    cursor = conn.cursor()
-    cursor.execute("SELECT last_streak, streak_days FROM users WHERE user_id = ?", (user_id,))
-    row = cursor.fetchone()
+def init_user(user_id: int, username: str = "User"):
+    db = load_db()
+    str_id = str(user_id)
     
-    today = datetime.now().date()
-    
-    if not row or not row[0]:
-        cursor.execute("UPDATE users SET coins = coins + 50, streak_days = 1, last_streak = ? WHERE user_id = ?", (str(today), user_id))
-        conn.commit()
-        conn.close()
-        return True, 1, 50
-    
-    last_date = datetime.strptime(row[0], "%Y-%m-%d").date()
-    streak = row[1]
-    
-    if last_date == today:
-        conn.close()
-        return False, streak, 0
-        
-    if last_date == today - timedelta(days=1):
-        streak += 1
+    if str_id not in db["users"]:
+        db["users"][str_id] = {
+            "coins": 0,
+            "username": username,
+            "joined_at": datetime.now().strftime("%Y-%m-%d %H:%M"),
+            "taps_count": 0,
+            "energy": 1000,
+            "max_energy": 1000,
+            "last_energy_update": datetime.now().timestamp(),
+            "tap_level": 1,
+            "wallet": ""
+        }
     else:
-        streak = 1
+        u = db["users"][str_id]
+        if "energy" not in u: u["energy"] = 1000
+        if "max_energy" not in u: u["max_energy"] = 1000
+        if "last_energy_update" not in u: u["last_energy_update"] = datetime.now().timestamp()
+        if "tap_level" not in u: u["tap_level"] = 1
+        if "wallet" not in u: u["wallet"] = ""
         
-    reward = streak * 50
-    cursor.execute("UPDATE users SET coins = coins + ?, streak_days = ?, last_streak = ? WHERE user_id = ?", (reward, streak, str(today), user_id))
-    conn.commit()
-    conn.close()
-    return True, streak, reward
+    save_db(db)
+    return db
+
+def update_user_energy(user_id: int):
+    db = load_db()
+    str_id = str(user_id)
+    
+    if str_id in db["users"]:
+        u = db["users"][str_id]
+        now = datetime.now().timestamp()
+        passed_sec = int(now - u.get("last_energy_update", now))
+        
+        if passed_sec > 0:
+            added_energy = passed_sec * 2
+            u["energy"] = min(u.get("max_energy", 1000), u.get("energy", 1000) + added_energy)
+            u["last_energy_update"] = now
+            save_db(db)
+            
+    return db
