@@ -2,187 +2,337 @@
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ultra Cyber Hub - 10 Modul</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ultra Cyber Hub</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://adsgram.ai/js/adsgram-ad-controller.js"></script>
     <style>
         :root {
-            --bg-color: #080b10;
-            --card-bg: #0f172a;
-            --border-color: #1e293b;
+            --bg-color: #05070a;
+            --card-bg: #0d1527;
+            --card-border: #1e293b;
             --accent-cyan: #00f2ff;
-            --accent-gold: #ffd700;
+            --accent-blue: #3b82f6;
+            --accent-gold: #f59e0b;
+            --accent-green: #10b981;
             --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
         }
 
         body {
-            font-family: 'Segoe UI', Roboto, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-main);
-            margin: 0;
             padding: 16px;
             display: flex;
             flex-direction: column;
             gap: 16px;
+            min-height: 100vh;
         }
 
-        .user-card {
-            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
-            border: 1px solid var(--accent-cyan);
-            border-radius: 16px;
-            padding: 16px;
+        /* Top Profile Header */
+        .profile-card {
+            background: linear-gradient(135deg, #0d1527 0%, #172554 100%);
+            border: 1px solid rgba(0, 242, 255, 0.3);
+            border-radius: 20px;
+            padding: 18px 20px;
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            box-shadow: 0 0 15px rgba(0, 242, 255, 0.2);
+            justify-content: space-between;
+            box-shadow: 0 8px 32px rgba(0, 242, 255, 0.15);
         }
 
-        .modules-grid {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 8px;
-            background: var(--card-bg);
-            padding: 12px;
-            border-radius: 16px;
-            border: 1px solid var(--border-color);
+        .user-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
         }
 
-        .module-btn {
-            background: #1e293b;
-            border: 1px solid transparent;
-            border-radius: 10px;
-            padding: 12px 0;
-            color: #fff;
+        .user-name {
             font-size: 18px;
-            cursor: pointer;
-            transition: all 0.2s;
+            font-weight: 700;
+            color: #fff;
         }
 
-        .module-btn.active {
-            border-color: var(--accent-cyan);
-            background: rgba(0, 242, 255, 0.15);
-            box-shadow: 0 0 10px rgba(0, 242, 255, 0.4);
+        .user-status {
+            font-size: 12px;
+            color: var(--accent-cyan);
+            font-weight: 600;
         }
 
-        .content-card {
+        .balance-badge {
+            background: rgba(245, 158, 11, 0.15);
+            border: 1px solid var(--accent-gold);
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--accent-gold);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Horizontal Scrollable Navigation Tabs */
+        .tabs-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+
+        .tabs-wrapper::-webkit-scrollbar {
+            display: none;
+        }
+
+        .tabs-container {
+            display: flex;
+            gap: 10px;
+            width: max-content;
+        }
+
+        .tab-btn {
             background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 20px;
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            padding: 12px 18px;
+            color: var(--text-muted);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.25s ease;
+            white-space: nowrap;
         }
 
-        .action-btn {
-            background: var(--accent-cyan);
+        .tab-btn.active {
+            background: linear-gradient(135deg, rgba(0, 242, 255, 0.2) 0%, rgba(59, 130, 246, 0.2) 100%);
+            border-color: var(--accent-cyan);
+            color: #fff;
+            box-shadow: 0 0 15px rgba(0, 242, 255, 0.25);
+        }
+
+        /* Module Main View */
+        .module-content {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            min-height: 320px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .module-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid var(--card-border);
+            padding-bottom: 12px;
+        }
+
+        .module-header h2 {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .module-desc {
+            font-size: 13px;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        /* Form elements */
+        input[type="text"], input[type="number"], textarea {
+            width: 100%;
+            background: #020617;
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 14px;
+            color: #fff;
+            font-size: 14px;
+            outline: none;
+            font-family: inherit;
+        }
+
+        input:focus, textarea:focus {
+            border-color: var(--accent-cyan);
+        }
+
+        .primary-btn {
+            background: linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-blue) 100%);
             color: #000;
+            font-weight: 700;
+            font-size: 15px;
             border: none;
-            border-radius: 10px;
-            padding: 12px;
-            font-weight: bold;
+            border-radius: 14px;
+            padding: 14px;
             width: 100%;
             cursor: pointer;
-            margin-top: 10px;
-            box-shadow: 0 0 12px rgba(0, 242, 255, 0.3);
+            box-shadow: 0 4px 15px rgba(0, 242, 255, 0.25);
         }
 
         .stars-btn {
-            background: linear-gradient(45deg, #ffaa00, #ff5500);
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
             color: #fff;
+            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.25);
         }
 
-        input[type="text"] {
-            width: 100%;
-            box-sizing: border-box;
-            background: #020617;
-            border: 1px solid var(--border-color);
+        .data-item {
+            background: #1e293b;
+            padding: 12px 16px;
             border-radius: 10px;
-            padding: 12px;
-            color: #fff;
-            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 14px;
         }
     </style>
 </head>
 <body>
 
-    <div class="user-card">
-        <div>
-            <h2 id="username" style="margin:0; font-size:16px;">𓆩D a d a x o n𓆪</h2>
-            <small style="color:var(--accent-cyan)">Ultra Cyber Hub (10 Modul)</small>
+    <!-- User Header -->
+    <div class="profile-card">
+        <div class="user-info">
+            <span class="user-name" id="user-name">𓆩D a d a x o n𓆪</span>
+            <span class="user-status">⚡ Ultra Cyber Hub Pro</span>
         </div>
-        <div style="text-align: right;">
-            <span id="user-coins" style="font-size: 20px; font-weight: bold; color: var(--accent-gold);">150</span> 🪙
+        <div class="balance-badge">
+            🪙 <span id="user-coins">150</span>
         </div>
     </div>
 
-    <!-- 10 Modul Grid -->
-    <div class="modules-grid">
-        <button class="module-btn active" onclick="switchTab(1)">⚡</button>
-        <button class="module-btn" onclick="switchTab(2)">⏱️</button>
-        <button class="module-btn" onclick="switchTab(3)">🔮</button>
-        <button class="module-btn" onclick="switchTab(4)">📅</button>
-        <button class="module-btn" onclick="switchTab(5)">🎯</button>
-        <button class="module-btn" onclick="switchTab(6)">🎰</button>
-        <button class="module-btn" onclick="switchTab(7)">💰</button>
-        <button class="module-btn" onclick="switchTab(8)">⭐</button>
-        <button class="module-btn" onclick="switchTab(9)">🔗</button>
-        <button class="module-btn" onclick="switchTab(10)">📊</button>
+    <!-- 10 ta Keng Karta-Tablar -->
+    <div class="tabs-wrapper">
+        <div class="tabs-container">
+            <button class="tab-btn active" onclick="switchTab(1)">⚡ Tasks</button>
+            <button class="tab-btn" onclick="switchTab(2)">⏱️ Pomodoro</button>
+            <button class="tab-btn" onclick="switchTab(3)">💸 Expenses</button>
+            <button class="tab-btn" onclick="switchTab(4)">📅 Daily Streak</button>
+            <button class="tab-btn" onclick="switchTab(5)">🎯 Habits</button>
+            <button class="tab-btn" onclick="switchTab(6)">📝 Notes</button>
+            <button class="tab-btn" onclick="switchTab(7)">💰 Earn Ads</button>
+            <button class="tab-btn" onclick="switchTab(8)">⭐ VIP Store</button>
+            <button class="tab-btn" onclick="switchTab(9)">🔗 Referrals</button>
+            <button class="tab-btn" onclick="switchTab(10)">📊 Analytics</button>
+        </div>
     </div>
 
-    <div class="content-card" id="tab-content">
-        <!-- Dynamic content rendering -->
-    </div>
+    <!-- Modul Tarkib Oynasi -->
+    <div class="module-content" id="module-content"></div>
 
     <script>
         const tg = window.Telegram.WebApp;
+        
+        // Ekranni to'liq yoyish
+        tg.ready();
         tg.expand();
 
         const user = tg.initDataUnsafe?.user;
         if (user) {
-            document.getElementById('username').innerText = user.first_name;
+            document.getElementById('user-name').innerText = user.first_name;
         }
 
         const AdController = window.Adsgram?.init({ blockId: "YOUR_ADSGRAM_BLOCK_ID" });
 
         function switchTab(moduleNum) {
-            const btns = document.querySelectorAll('.module-btn');
+            const btns = document.querySelectorAll('.tab-btn');
             btns.forEach((btn, idx) => btn.classList.toggle('active', idx === moduleNum - 1));
 
-            const content = document.getElementById('tab-content');
+            const content = document.getElementById('module-content');
 
             switch(moduleNum) {
                 case 1:
                     content.innerHTML = `
-                        <h3>⚡ Cyber Tasks</h3>
-                        <input type="text" id="task-input" placeholder="Yangi vazifa...">
-                        <button class="action-btn" onclick="addTask()">Qo'shish</button>
-                        <div id="task-list" style="margin-top:12px;"></div>`;
+                        <div class="module-header"><span>⚡</span><h2>Task Manager</h2></div>
+                        <p class="module-desc">Kunlik bajarilishi kerak bo'lgan vazifalar ro'yxatini shakllantiring.</p>
+                        <input type="text" id="task-input" placeholder="Yangi vazifani kiriting...">
+                        <button class="primary-btn" onclick="addTask()">+ Qo'shish</button>
+                        <div id="task-list" style="display:flex; flex-direction:column; gap:8px;"></div>
+                    `;
                     break;
                 case 2:
-                    content.innerHTML = `<h3>⏱️ Pomodoro Timer</h3><p>Fokus vaqti: 25:00</p><button class="action-btn">Boshlash</button>`;
+                    content.innerHTML = `
+                        <div class="module-header"><span>⏱️</span><h2>Focus Pomodoro</h2></div>
+                        <p class="module-desc">Ish va o'qish jarayonida samaradorlikni oshirish uchun 25 daqiqalik taymer.</p>
+                        <div style="font-size: 42px; font-weight: 800; text-align: center; color: var(--accent-cyan); margin: 15px 0;">25:00</div>
+                        <button class="primary-btn">▶️ Taymerni Boshlash</button>
+                    `;
                     break;
                 case 3:
-                    content.innerHTML = `<h3>🔮 AI Predictor</h3><p>Bugungi kiber bashoratingizni oling.</p><button class="action-btn" onclick="tg.showAlert('🔮 Bugun muvaffaqiyatli kun bo\\'ladi!')">Bashorat olish</button>`;
+                    content.innerHTML = `
+                        <div class="module-header"><span>💸</span><h2>Expense Tracker</h2></div>
+                        <p class="module-desc">Bugungi xarajatlaringiz va moliyaviy hisobingizni kiriting.</p>
+                        <input type="text" id="exp-name" placeholder="Xarajat nomi (Masalan: Tushlik)">
+                        <input type="number" id="exp-amount" placeholder="Summasi ($ yoki so'm)">
+                        <button class="primary-btn" onclick="addExpense()">+ Xarajatni Saqlash</button>
+                        <div id="exp-list" style="display:flex; flex-direction:column; gap:8px;"></div>
+                    `;
                     break;
                 case 4:
-                    content.innerHTML = `<h3>📅 Daily Streak</h3><p>Har kuni kirib coin bonusingizni oshiring!</p><button class="action-btn" onclick="tg.showAlert('🎉 Kunlik bonus olindi!')">🎁 Bonusni olish</button>`;
+                    content.innerHTML = `
+                        <div class="module-header"><span>📅</span><h2>Daily Streak</h2></div>
+                        <p class="module-desc">Har kuni uzluksiz ilovaga kirib bonus tangalaringizni oling.</p>
+                        <button class="primary-btn" onclick="tg.showAlert('🎉 Kunlik bonus balansingizga qo\\'shildi!')">🎁 Bonusni Olish</button>
+                    `;
                     break;
                 case 5:
-                    content.innerHTML = `<h3>🎯 Cyber Habits</h3><p>Odatlaringizni kuzatib boring.</p><button class="action-btn">+ Yangi odat</button>`;
+                    content.innerHTML = `
+                        <div class="module-header"><span>🎯</span><h2>Habit Tracker</h2></div>
+                        <p class="module-desc">Foydali odatlarni shakllantiring va kuzating.</p>
+                        <input type="text" id="habit-input" placeholder="Odat nomi (Masalan: Kitob o'qish)">
+                        <button class="primary-btn" onclick="addHabit()">+ Odat Qo'shish</button>
+                        <div id="habit-list" style="display:flex; flex-direction:column; gap:8px;"></div>
+                    `;
                     break;
                 case 6:
-                    content.innerHTML = `<h3>🎰 Omad G'ildiragi</h3><p>Aylantiring va tanga yutib oling!</p><button class="action-btn" onclick="spinWheel()">🎡 G'ildirakni aylantirish</button>`;
+                    content.innerHTML = `
+                        <div class="module-header"><span>📝</span><h2>Smart Notes</h2></div>
+                        <p class="module-desc">Muhim g'oyalar va qaydlaringizni saqlab qo'ying.</p>
+                        <textarea id="note-input" rows="3" placeholder="Qaydlaringizni yozing..."></textarea>
+                        <button class="primary-btn" onclick="addNote()">💾 Qaydni Saqlash</button>
+                        <div id="note-list" style="display:flex; flex-direction:column; gap:8px;"></div>
+                    `;
                     break;
                 case 7:
-                    content.innerHTML = `<h3>💰 Adsgram Reklama</h3><p>Video reklama ko'rib +30 Coins oling.</p><button class="action-btn" onclick="showAd()">📺 Reklama Ko'rish</button>`;
+                    content.innerHTML = `
+                        <div class="module-header"><span>💰</span><h2>Adsgram Monemizatsiya</h2></div>
+                        <p class="module-desc">Video reklama ko'rish orqali hisobingizga +30 Coins qo'shing.</p>
+                        <button class="primary-btn" onclick="showAd()">📺 Reklama Ko'rish (+30 Coins)</button>
+                    `;
                     break;
                 case 8:
-                    content.innerHTML = `<h3>⭐ VIP Purchase</h3><p>Telegram Stars orqali eksklyuziv statusga ega bo'ling.</p><button class="action-btn stars-btn" onclick="buyStars()">⭐ VIP xarid qilish (50 Stars)</button>`;
+                    content.innerHTML = `
+                        <div class="module-header"><span>⭐</span><h2>VIP Store</h2></div>
+                        <p class="module-desc">Telegram Stars orqali VIP maqom va barcha modullarga to'liq kirish huquqini oling.</p>
+                        <button class="primary-btn stars-btn" onclick="buyStars()">⭐ VIP Xarid Qilish (50 Stars)</button>
+                    `;
                     break;
                 case 9:
-                    content.innerHTML = `<h3>🔗 Referal Tizimi</h3><p>Do'stlaringizni taklif qiling va 100 Coins oling!</p><button class="action-btn" onclick="copyRef()">📋 Havolani nusxalash</button>`;
+                    content.innerHTML = `
+                        <div class="module-header"><span>🔗</span><h2>Referral Network</h2></div>
+                        <p class="module-desc">Do'stlaringizni taklif qiling va har bir faol taklif uchun +100 Coins oling!</p>
+                        <button class="primary-btn" onclick="copyRef()">📋 Taklif Havolasini Nusxalash</button>
+                    `;
                     break;
                 case 10:
-                    content.innerHTML = `<h3>📊 Statistika</h3><p>Jami jamg'arilgan tangalar va faollik darajangiz.</p>`;
+                    content.innerHTML = `
+                        <div class="module-header"><span>📊</span><h2>Analytics Hub</h2></div>
+                        <p class="module-desc">Shaxsiy unumdorlik va jamg'arilgan resurslar ko'rsatkichi.</p>
+                        <div class="data-item"><span>Jamg'arilgan Coins:</span> <strong style="color:var(--accent-gold)">150</strong></div>
+                        <div class="data-item"><span>Bajarilgan Vazifalar:</span> <strong style="color:var(--accent-green)">12 ta</strong></div>
+                        <div class="data-item"><span>VIP Maqom:</span> <strong style="color:var(--accent-cyan)">Faol ✅</strong></div>
+                    `;
                     break;
             }
         }
@@ -193,35 +343,58 @@
             const input = document.getElementById('task-input');
             const list = document.getElementById('task-list');
             if (input.value.trim() !== '') {
-                list.innerHTML += `<div style="background:#1e293b; padding:8px; border-radius:6px; margin-bottom:6px;">• ${input.value}</div>`;
+                list.innerHTML += `<div class="data-item"><span>• ${input.value}</span> <span style="color:var(--accent-cyan)">✅</span></div>`;
                 input.value = '';
             }
         }
 
-        function spinWheel() {
-            const wins = [10, 20, 50, 100];
-            const reward = wins[Math.floor(Math.random() * wins.length)];
-            tg.showAlert(`🎉 Tabriklaymiz! Siz ${reward} Coins yutib aldingiz!`);
+        function addExpense() {
+            const name = document.getElementById('exp-name');
+            const amount = document.getElementById('exp-amount');
+            const list = document.getElementById('exp-list');
+            if (name.value.trim() !== '' && amount.value.trim() !== '') {
+                list.innerHTML += `<div class="data-item"><span>• ${name.value}</span> <strong style="color:#ef4444">-${amount.value}</strong></div>`;
+                name.value = '';
+                amount.value = '';
+            }
+        }
+
+        function addHabit() {
+            const input = document.getElementById('habit-input');
+            const list = document.getElementById('habit-list');
+            if (input.value.trim() !== '') {
+                list.innerHTML += `<div class="data-item"><span>📌 ${input.value}</span> <span style="color:var(--accent-green)">0/30 kun</span></div>`;
+                input.value = '';
+            }
+        }
+
+        function addNote() {
+            const input = document.getElementById('note-input');
+            const list = document.getElementById('note-list');
+            if (input.value.trim() !== '') {
+                list.innerHTML += `<div class="data-item"><span>📝 ${input.value}</span></div>`;
+                input.value = '';
+            }
         }
 
         function showAd() {
             if (AdController) {
                 AdController.show().then(() => {
-                    tg.showAlert("🎉 Reklama ko'rildi! +30 Coins berildi.");
+                    tg.showAlert("🎉 Reklama ko'rib bo'lindi! +30 Coins qo'shildi.");
                 }).catch(() => {
-                    tg.showAlert("⚠️ Reklama ko'rsatishda xatolik yuz berdi.");
+                    tg.showAlert("⚠️ Reklama mavjud emas.");
                 });
             } else {
-                tg.showAlert("🎉 Demo reklama ko'rildi! +30 Coins berildi.");
+                tg.showAlert("🎉 Demo reklama ko'rildi! +30 Coins qo'shildi.");
             }
         }
 
         function buyStars() {
-            tg.showAlert("⭐ Stars to'lovi so'rovi yuborildi.");
+            tg.showAlert("⭐ Telegram Stars to'lovi so'rovi yuborildi.");
         }
 
         function copyRef() {
-            const refLink = `https://t.me/${tg.initDataUnsafe?.bot?.username || 'bot_username'}?start=${user?.id || ''}`;
+            const refLink = `https://t.me/${tg.initDataUnsafe?.bot?.username || 'bot'}?start=${user?.id || ''}`;
             navigator.clipboard.writeText(refLink);
             tg.showAlert("📋 Taklif havolangiz nusxalandi!");
         }
