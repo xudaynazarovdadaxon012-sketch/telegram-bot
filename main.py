@@ -1,203 +1,146 @@
 import os
+import threading
+import time
 import requests
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-
-# database.py faylidagi funksiyalarni import qilamiz
-from database import (
-    get_or_create_user, 
-    update_user_tap, 
-    update_user_wallet,
-    buy_boost_upgrade, 
-    claim_daily_bonus, 
-    complete_user_task,
-    get_top_leaderboard, 
-    get_admin_stats, 
-    get_all_user_ids
-)
+import database as db
 
 app = Flask(__name__)
 CORS(app)
 
-BOT_TOKEN = os.environ.get("BOT_TOKEN")
-ADMIN_IDS_RAW = os.environ.get("ADMIN_IDS", "")
-ADMIN_IDS = [int(x.strip()) for x in ADMIN_IDS_RAW.split(",") if x.strip()]
+# Environment variable'lardan token va admin ID'larni olish
+BOT_TOKEN = os.environ.get("BOT_TOKEN", "")
+ADMIN_IDS = [int(i) for i in os.environ.get("ADMIN_IDS", "").split(",") if i.isdigit()]
 
-INITIAL_TASKS = [
-    {"id": "task_1", "title": "Telegram kanalga obuna bo'ling", "reward": 500},
-    {"id": "task_2", "title": "Do'stingizni taklif qiling", "reward": 1000}
-]
+# ==================== TELEGRAM BOT POLLING ====================
+def run_bot_polling():
+    if not BOT_TOKEN:
+        print("BOT_TOKEN topilmadi! Environment variables ni tekshiring.")
+        return
 
-# 1. Foydalanuvchi ma'lumotlarini olish
-@app.route('/api/get_user', methods=['GET'])
-def get_user():
-    user_id = request.args.get('user_id', type=int)
-    username = request.args.get('username', type=str, default="User")
-    if not user_id:
-        return jsonify({"success": False, "message": "user_id kiritilmadi"}), 400
+    offset = 0
+    print("Telegram Bot Polling ishga tushdi...")
+    
+    while True:
+        try:
+            url = f"https://api.telegram.org/bot{BOT_TOKEN}/getUpdates?offset={offset}&timeout=30"
+            response = requests.get(url, timeout=35).json()
 
-    usr = get_or_create_user(user_id, username)
-    is_admin = user_id in ADMIN_IDS
+            if response.get("ok"):
+                for result in response.get("result", []):
+                    offset = result["update_id"] + 1
+                    message = result.get("message", {})
+                    chat_id = message.get("chat", {}).get("id")
+                    text = message.get("text", "")
+                    username = message.get("from", {}).get("username", "User")
 
-    return jsonify({
-        "success": True,
-        "coins": usr["coins"],
-        "energy": usr["energy"],
-        "max_energy": usr["max_energy"],
-        "tap_level": usr["tap_level"],
-        "wallet": usr["wallet"],
-        "last_daily_claim": usr["last_daily_claim"],
-        "tasks": INITIAL_TASKS,
-        "completed_tasks": usr["completed_tasks"],
-        "ref_link": f"https://t.me/CyberPro_bot?start={user_id}",
-        "is_admin": is_admin
-    })
+                    if text == "/start":
+                        # Foydalanuvchini bazada yaratish yoki olish
+                        db.get_or_create_user(chat_id, username)
 
-# 2. Tap qilish
-@app.route('/api/tap', methods=['POST'])
+                        send_url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+                        payload = {
+                            "chat_id": chat_id,
+                            "text": f"Xush kelibsiz, @{username}! Cyber Pro Hub Mini App'ni ochish uchun pastdagi tugmani bosing.",
+                            "reply_markup": {
+                                "inline_keyboard": [[
+                                    {"text": "🚀 Cyber Pro Hub Mini App", "web_app": {"url": "https://telegram-bot-7n6t.onrender.com"}}
+                                ]]
+                            }
+                        }
+                        requests.post(send_url, json=payload)
+        except Exception as e:
+            print(f"Bot Polling xatoligi: {e}")
+            time.sleep(3)
+
+# Bot pollingni orqa fonda (thread) yurgizish
+threading.Thread(target=run_bot_polling, daemon=True).start()
+
+
+# ==================== FLASK API ENDPOINTS ====================
+
+@app.route("/")
+def home():
+    return "Cyber Pro Hub Backend Status: ONLINE 🟢"
+
+@app.route("/api/user/<int:user_id>", methods=["GET"])
+def get_user(user_id):
+    user_data = db.get_or_create_user(user_id)
+    return jsonify(user_data)
+
+@app.route("/api/tap", methods=["POST"])
 def tap():
     data = request.json or {}
-    user_id = data.get('user_id')
-    amount = data.get('amount', 1)
+    user_id = data.get("user_id")
+    coins_added = data.get("coins_added", 1)
+    energy_used = data.get("energy_used", 1)
 
     if not user_id:
-        return jsonify({"success": False, "message": "User ID yetishmayapti"}), 400
+        return jsonify({"error": "user_id kerak"}), 400
 
-    usr = get_or_create_user(user_id)
-    tap_power = usr["tap_level"] * amount
+    success = db.update_user_tap(user_id, coins_added, energy_used)
+    if success:
+        return jsonify({"status": "success"})
+    return jsonify({"error": "Energiya yetarli emas"}), 400
 
-    success = update_user_tap(user_id, coins_added=tap_power, energy_used=tap_power)
-    if not success:
-        return jsonify({"success": False, "message": "Energiya yetarli emas"}), 400
-
-    updated_usr = get_or_create_user(user_id)
-    return jsonify({
-        "success": True, 
-        "coins": updated_usr["coins"], 
-        "energy": updated_usr["energy"]
-    })
-
-# 3. Boost sotib olish
-@app.route('/api/buy_boost', methods=['POST'])
-def buy_boost():
+@app.route("/api/wallet", methods=["POST"])
+def wallet():
     data = request.json or {}
-    user_id = data.get('user_id')
-    boost_type = data.get('boost_type')
-
-    usr = get_or_create_user(user_id)
-
-    cost = 0
-    if boost_type == 'multitap':
-        cost = usr["tap_level"] * 100
-    elif boost_type == 'max_energy':
-        cost = 500
-    else:
-        return jsonify({"success": False, "message": "Noma'lum boost turi"}), 400
-
-    success, msg = buy_boost_upgrade(user_id, boost_type, cost)
-    return jsonify({"success": success, "message": msg})
-
-# 4. Hamyonni saqlash
-@app.route('/api/connect_wallet', methods=['POST'])
-def connect_wallet():
-    data = request.json or {}
-    user_id = data.get('user_id')
-    wallet = data.get('wallet_address', '').strip()
+    user_id = data.get("user_id")
+    wallet_address = data.get("wallet", "")
 
     if not user_id:
-        return jsonify({"success": False, "message": "Xatolik"}), 400
+        return jsonify({"error": "user_id kerak"}), 400
 
-    update_user_wallet(user_id, wallet)
-    return jsonify({"success": True, "message": "Hamyon muvaffaqiyatli saqlandi! 💎"})
+    db.update_user_wallet(user_id, wallet_address)
+    return jsonify({"status": "success", "wallet": wallet_address})
 
-# 5. Vazifani bajarish
-@app.route('/api/complete_task', methods=['POST'])
-def complete_task():
+@app.route("/api/boost", methods=["POST"])
+def boost():
     data = request.json or {}
-    user_id = data.get('user_id')
-    task_id = data.get('task_id')
+    user_id = data.get("user_id")
+    boost_type = data.get("boost_type")
+    cost = data.get("cost", 0)
 
-    task = next((t for t in INITIAL_TASKS if t["id"] == task_id), None)
-    if not task:
-        return jsonify({"success": False, "message": "Vazifa topilmadi"}), 404
+    success, message = db.buy_boost_upgrade(user_id, boost_type, cost)
+    if success:
+        return jsonify({"status": "success", "message": message})
+    return jsonify({"error": message}), 400
 
-    success, msg = complete_user_task(user_id, task_id, task["reward"])
-    return jsonify({"success": success, "message": msg})
-
-# 6. Kunlik bonus olish
-@app.route('/api/claim_daily', methods=['POST'])
+@app.route("/api/claim-daily", methods=["POST"])
 def claim_daily():
     data = request.json or {}
-    user_id = data.get('user_id')
+    user_id = data.get("user_id")
 
-    success, msg = claim_daily_bonus(user_id, reward=1000)
-    return jsonify({"success": success, "message": msg})
+    success, message = db.claim_daily_bonus(user_id)
+    if success:
+        return jsonify({"status": "success", "message": message})
+    return jsonify({"error": message}), 400
 
-# 7. TOP 10 Liderlar
-@app.route('/api/leaderboard', methods=['GET'])
+@app.route("/api/task", methods=["POST"])
+def complete_task():
+    data = request.json or {}
+    user_id = data.get("user_id")
+    task_id = data.get("task_id")
+    reward = data.get("reward", 500)
+
+    success, message = db.complete_user_task(user_id, task_id, reward)
+    if success:
+        return jsonify({"status": "success", "message": message})
+    return jsonify({"error": message}), 400
+
+@app.route("/api/leaderboard", methods=["GET"])
 def leaderboard():
-    top_list = get_top_leaderboard(limit=10)
-    return jsonify({"success": True, "leaderboard": top_list})
+    top_users = db.get_top_leaderboard()
+    return jsonify(top_users)
 
-# 8. Admin Profil API (Instagram Style)
-@app.route('/api/admin/insta_profile', methods=['GET'])
-def admin_insta_profile():
-    admin_id = request.args.get('user_id', type=int)
-    if admin_id not in ADMIN_IDS:
-        return jsonify({"success": False, "message": "Ruxsat berilmagan"}), 403
+@app.route("/api/admin/stats", methods=["GET"])
+def admin_stats():
+    stats = db.get_admin_stats()
+    return jsonify(stats)
 
-    stats = get_admin_stats()
-    return jsonify({
-        "success": True,
-        "profile": {
-            "posts": stats["posts"],
-            "followers": stats["followers"],
-            "following": stats["following"],
-            "bio": stats["bio"]
-        },
-        "users": stats["users"]
-    })
 
-# 9. Admin Direct xabar yuborish
-@app.route('/api/admin/send_direct', methods=['POST'])
-def send_direct():
-    data = request.json or {}
-    admin_id = data.get('admin_id')
-    target_user_id = data.get('target_user_id')
-    message = data.get('message')
-
-    if admin_id not in ADMIN_IDS:
-        return jsonify({"success": False, "message": "Ruxsat berilmagan"}), 403
-
-    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-    payload = {"chat_id": target_user_id, "text": f"💬 Admin xabari:\n\n{message}"}
-    res = requests.post(url, json=payload)
-
-    if res.status_code == 200:
-        return jsonify({"success": True, "message": "Direct xabar yuborildi! ✉️"})
-    return jsonify({"success": False, "message": "Xabar yuborishda xatolik"}), 500
-
-# 10. Admin Broadcast xabar yuborish
-@app.route('/api/admin/broadcast', methods=['POST'])
-def send_broadcast():
-    data = request.json or {}
-    admin_id = data.get('admin_id')
-    message = data.get('message')
-
-    if admin_id not in ADMIN_IDS:
-        return jsonify({"success": False, "message": "Ruxsat berilmagan"}), 403
-
-    all_ids = get_all_user_ids()
-    count = 0
-    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-
-    for u_id in all_ids:
-        payload = {"chat_id": u_id, "text": f"📢 E'lon:\n\n{message}"}
-        r = requests.post(url, json=payload)
-        if r.status_code == 200:
-            count += 1
-
-    return jsonify({"success": True, "message": f"Xabar {count} ta foydalanuvchiga yuborildi! 🚀"})
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
