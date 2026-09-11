@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mega Cyber Hub + Monetization</title>
+    <title>Ultra Cyber Hub - 10 Modul</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://adsgram.ai/js/adsgram-ad-controller.js"></script>
     <style>
@@ -35,6 +35,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            box-shadow: 0 0 15px rgba(0, 242, 255, 0.2);
         }
 
         .modules-grid {
@@ -51,15 +52,17 @@
             background: #1e293b;
             border: 1px solid transparent;
             border-radius: 10px;
-            padding: 10px;
+            padding: 12px 0;
             color: #fff;
-            font-size: 16px;
+            font-size: 18px;
             cursor: pointer;
+            transition: all 0.2s;
         }
 
         .module-btn.active {
             border-color: var(--accent-cyan);
-            background: rgba(0, 242, 255, 0.1);
+            background: rgba(0, 242, 255, 0.15);
+            box-shadow: 0 0 10px rgba(0, 242, 255, 0.4);
         }
 
         .content-card {
@@ -79,11 +82,23 @@
             width: 100%;
             cursor: pointer;
             margin-top: 10px;
+            box-shadow: 0 0 12px rgba(0, 242, 255, 0.3);
         }
 
         .stars-btn {
             background: linear-gradient(45deg, #ffaa00, #ff5500);
             color: #fff;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            box-sizing: border-box;
+            background: #020617;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 12px;
+            color: #fff;
+            margin-bottom: 8px;
         }
     </style>
 </head>
@@ -92,34 +107,41 @@
     <div class="user-card">
         <div>
             <h2 id="username" style="margin:0; font-size:16px;">𓆩D a d a x o n𓆪</h2>
-            <small style="color:var(--accent-cyan)">Ultra Cyber Hub</small>
+            <small style="color:var(--accent-cyan)">Ultra Cyber Hub (10 Modul)</small>
         </div>
         <div style="text-align: right;">
-            <span id="user-coins" style="font-size: 20px; font-weight: bold; color: var(--accent-gold);">0</span> 🪙
+            <span id="user-coins" style="font-size: 20px; font-weight: bold; color: var(--accent-gold);">150</span> 🪙
         </div>
     </div>
 
-    <!-- 10 modul iconlari -->
+    <!-- 10 Modul Grid -->
     <div class="modules-grid">
         <button class="module-btn active" onclick="switchTab(1)">⚡</button>
         <button class="module-btn" onclick="switchTab(2)">⏱️</button>
         <button class="module-btn" onclick="switchTab(3)">🔮</button>
-        <button class="module-btn" onclick="switchTab(4)">📅</button> <!-- Daily Bonus -->
+        <button class="module-btn" onclick="switchTab(4)">📅</button>
         <button class="module-btn" onclick="switchTab(5)">🎯</button>
-        <button class="module-btn" onclick="switchTab(6)">🎰</button> <!-- Wheel Spin -->
-        <button class="module-btn" onclick="switchTab(7)">💰</button> <!-- Adsgram -->
-        <button class="module-btn" onclick="switchTab(8)">⭐</button> <!-- Stars Payment -->
-        <button class="module-btn" onclick="switchTab(9)">🎲</button>
+        <button class="module-btn" onclick="switchTab(6)">🎰</button>
+        <button class="module-btn" onclick="switchTab(7)">💰</button>
+        <button class="module-btn" onclick="switchTab(8)">⭐</button>
+        <button class="module-btn" onclick="switchTab(9)">🔗</button>
         <button class="module-btn" onclick="switchTab(10)">📊</button>
     </div>
 
     <div class="content-card" id="tab-content">
-        <!-- Tab kontentlari dinamik ravishda o'zgaradi -->
+        <!-- Dynamic content rendering -->
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
+
+        const user = tg.initDataUnsafe?.user;
+        if (user) {
+            document.getElementById('username').innerText = user.first_name;
+        }
+
+        const AdController = window.Adsgram?.init({ blockId: "YOUR_ADSGRAM_BLOCK_ID" });
 
         function switchTab(moduleNum) {
             const btns = document.querySelectorAll('.module-btn');
@@ -127,55 +149,81 @@
 
             const content = document.getElementById('tab-content');
 
-            if (moduleNum === 4) {
-                // Kunlik bonus (Daily Streak)
-                content.innerHTML = `
-                    <h3>📅 Kunlik Bonus (Streak)</h3>
-                    <p>Har kuni kirib bonus oling va tangalaringizni ko'paytiring!</p>
-                    <button class="action-btn" onclick="claimStreak()">🎁 Bugungi bonusni olish</button>`;
-            } else if (moduleNum === 6) {
-                // Omad g'ildiragi
-                content.innerHTML = `
-                    <h3>🎰 Omad G'ildiragi</h3>
-                    <p>Aylantiring va tasodifiy mukofot yutib oling!</p>
-                    <button class="action-btn" onclick="spinWheel()">🎡 G'ildirakni aylantirish (10 Coins)</button>`;
-            } else if (moduleNum === 8) {
-                // Telegram Stars orqali VIP olish
-                content.innerHTML = `
-                    <h3>⭐ Premium / Donat (Stars)</h3>
-                    <p>Telegram Stars orqali VIP maqom va reklamasiz rejimni yoqing.</p>
-                    <button class="action-btn stars-btn" onclick="buyStarsVIP()">⭐ 50 Stars - VIP Maqom</button>`;
-            } else if (moduleNum === 7) {
-                // Adsgram reklama
-                content.innerHTML = `
-                    <h3>💰 Reklama Ko'rish</h3>
-                    <p>Har bir ko'rilgan reklama uchun +30 coins beriladi.</p>
-                    <button class="action-btn" onclick="showAd()">📺 Reklama ko'rish</button>`;
-            } else {
-                content.innerHTML = `<h3>Modul #${moduleNum}</h3><p>Modul faol holatda.</p>`;
+            switch(moduleNum) {
+                case 1:
+                    content.innerHTML = `
+                        <h3>⚡ Cyber Tasks</h3>
+                        <input type="text" id="task-input" placeholder="Yangi vazifa...">
+                        <button class="action-btn" onclick="addTask()">Qo'shish</button>
+                        <div id="task-list" style="margin-top:12px;"></div>`;
+                    break;
+                case 2:
+                    content.innerHTML = `<h3>⏱️ Pomodoro Timer</h3><p>Fokus vaqti: 25:00</p><button class="action-btn">Boshlash</button>`;
+                    break;
+                case 3:
+                    content.innerHTML = `<h3>🔮 AI Predictor</h3><p>Bugungi kiber bashoratingizni oling.</p><button class="action-btn" onclick="tg.showAlert('🔮 Bugun muvaffaqiyatli kun bo\\'ladi!')">Bashorat olish</button>`;
+                    break;
+                case 4:
+                    content.innerHTML = `<h3>📅 Daily Streak</h3><p>Har kuni kirib coin bonusingizni oshiring!</p><button class="action-btn" onclick="tg.showAlert('🎉 Kunlik bonus olindi!')">🎁 Bonusni olish</button>`;
+                    break;
+                case 5:
+                    content.innerHTML = `<h3>🎯 Cyber Habits</h3><p>Odatlaringizni kuzatib boring.</p><button class="action-btn">+ Yangi odat</button>`;
+                    break;
+                case 6:
+                    content.innerHTML = `<h3>🎰 Omad G'ildiragi</h3><p>Aylantiring va tanga yutib oling!</p><button class="action-btn" onclick="spinWheel()">🎡 G'ildirakni aylantirish</button>`;
+                    break;
+                case 7:
+                    content.innerHTML = `<h3>💰 Adsgram Reklama</h3><p>Video reklama ko'rib +30 Coins oling.</p><button class="action-btn" onclick="showAd()">📺 Reklama Ko'rish</button>`;
+                    break;
+                case 8:
+                    content.innerHTML = `<h3>⭐ VIP Purchase</h3><p>Telegram Stars orqali eksklyuziv statusga ega bo'ling.</p><button class="action-btn stars-btn" onclick="buyStars()">⭐ VIP xarid qilish (50 Stars)</button>`;
+                    break;
+                case 9:
+                    content.innerHTML = `<h3>🔗 Referal Tizimi</h3><p>Do'stlaringizni taklif qiling va 100 Coins oling!</p><button class="action-btn" onclick="copyRef()">📋 Havolani nusxalash</button>`;
+                    break;
+                case 10:
+                    content.innerHTML = `<h3>📊 Statistika</h3><p>Jami jamg'arilgan tangalar va faollik darajangiz.</p>`;
+                    break;
             }
         }
 
-        // Boshlang'ich tab
         switchTab(1);
 
-        function claimStreak() {
-            tg.showAlert("🎉 Kunlik bonus olindi!");
+        function addTask() {
+            const input = document.getElementById('task-input');
+            const list = document.getElementById('task-list');
+            if (input.value.trim() !== '') {
+                list.innerHTML += `<div style="background:#1e293b; padding:8px; border-radius:6px; margin-bottom:6px;">• ${input.value}</div>`;
+                input.value = '';
+            }
         }
 
         function spinWheel() {
-            const prizes = [10, 20, 50, 100, 0];
-            const win = prizes[Math.floor(Math.random() * prizes.length)];
-            tg.showAlert(`🎉 Siz ${win} coins yutib oldingiz!`);
-        }
-
-        function buyStarsVIP() {
-            // Telegram Stars to'lovini chaqirish
-            tg.openInvoice("https://t.me/invoice_link_here");
+            const wins = [10, 20, 50, 100];
+            const reward = wins[Math.floor(Math.random() * wins.length)];
+            tg.showAlert(`🎉 Tabriklaymiz! Siz ${reward} Coins yutib aldingiz!`);
         }
 
         function showAd() {
-            tg.showAlert("📺 Reklama ko'rildi! +30 Coins berildi.");
+            if (AdController) {
+                AdController.show().then(() => {
+                    tg.showAlert("🎉 Reklama ko'rildi! +30 Coins berildi.");
+                }).catch(() => {
+                    tg.showAlert("⚠️ Reklama ko'rsatishda xatolik yuz berdi.");
+                });
+            } else {
+                tg.showAlert("🎉 Demo reklama ko'rildi! +30 Coins berildi.");
+            }
+        }
+
+        function buyStars() {
+            tg.showAlert("⭐ Stars to'lovi so'rovi yuborildi.");
+        }
+
+        function copyRef() {
+            const refLink = `https://t.me/${tg.initDataUnsafe?.bot?.username || 'bot_username'}?start=${user?.id || ''}`;
+            navigator.clipboard.writeText(refLink);
+            tg.showAlert("📋 Taklif havolangiz nusxalandi!");
         }
     </script>
 </body>
