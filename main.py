@@ -1,110 +1,96 @@
 import os
-import asyncio
-import aiosqlite
-from aiogram import Bot, Dispatcher, F, types
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
-from aiohttp import web
+import logging
+from aiogram import Bot, Dispatcher, types, F
+from aiogram.filters import CommandStart
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo, LabeledPrice, PreCheckoutQuery
+from database import init_db, get_or_create_user, claim_daily_streak
 
+# Server muhitidan o'zgaruvchilarni olish
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-RENDER_URL = os.getenv("RENDER_EXTERNAL_URL", "https://telegram-bot-7n6t.onrender.com")
-PORT = int(os.getenv("PORT", 10000))
+SPONSOR_CHANNEL = os.getenv("SPONSOR_CHANNEL", "")
+WEB_APP_URL = os.getenv("WEB_APP_URL", "https://xudaynazarovdadaxon012-sketch.github.io/telegram-bot/") # GitHub Pages linki
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
-DB_PATH = "database.db"
+# Bazani ishga tushirish
+init_db()
 
-# --- DATABASE INIT ---
-async def init_db():
-    async with aiosqlite.connect(DB_PATH) as db:
-        await db.execute("""
-            CREATE TABLE IF NOT EXISTS users (
-                user_id INTEGER PRIMARY KEY,
-                full_name TEXT
-            )
-        """)
-        await db.execute("""
-            CREATE TABLE IF NOT EXISTS tasks (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER,
-                task_text TEXT
-            )
-        """)
-        await db.commit()
+async def check_subscription(user_id: int) -> bool:
+    """Homiy kanalga a'zolikni tekshirish (Kanal bo'lmasa avtomatik o'tkazadi)"""
+    if not SPONSOR_CHANNEL:
+        return True
+    try:
+        member = await bot.get_chat_member(chat_id=SPONSOR_CHANNEL, user_id=user_id)
+        return member.status in ["creator", "administrator", "member"]
+    except Exception:
+        return True
 
-async def add_user(user_id: int, full_name: str):
-    async with aiosqlite.connect(DB_PATH) as db:
-        await db.execute("INSERT OR IGNORE INTO users (user_id, full_name) VALUES (?, ?)", (user_id, full_name))
-        await db.commit()
-
-# --- BOT HANDLERS ---
-@dp.message(F.text == "/start")
-async def start_cmd(message: types.Message):
-    await add_user(message.from_user.id, message.from_user.full_name)
+@dp.message(CommandStart())
+async def start_handler(message: types.Message):
+    user_id = message.from_user.id
     
-    keyboard = InlineKeyboardMarkup(
-        inline_keyboard=[
-            [
-                InlineKeyboardButton(
-                    text="🚀 Ultra Cyber Hub (10 Modul)",
-                    web_app=WebAppInfo(url=f"{RENDER_URL}/miniapp")
-                )
-            ]
-        ]
-    )
+    # Referal ID ni aniqlash (/start 1234567)
+    args = message.text.split()
+    referrer_id = int(args[1]) if len(args) > 1 and args[1].isdigit() else None
+
+    user = get_or_create_user(user_id, referrer_id)
+    
+    # Kanalga a'zolikni tekshirish
+    is_subscribed = await check_subscription(user_id)
+    if not is_subscribed:
+        channel_link = SPONSOR_CHANNEL.replace('@', '')
+        kb = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="📢 Kanalga a'zo bo'lish", url=f"https://t.me/{channel_link}")],
+            [InlineKeyboardButton(text="✅ Tekshirish", callback_data="check_sub")]
+        ])
+        await message.answer("⚠️ Botdan foydalanish uchun homiy kanalimizga a'zo bo'ling:", reply_markup=kb)
+        return
+
+    # Asosiy tugmalar (Web App bilan)
+    kb = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="🚀 Cyber Hub (Mini App)", web_app=WebAppInfo(url=WEB_APP_URL))],
+        [InlineKeyboardButton(text="🎁 Kunlik Bonus", callback_data="daily_bonus")],
+        [InlineKeyboardButton(text="⭐ VIP Sotib Olish (Stars)", callback_data="buy_stars")]
+    ])
+    
     await message.answer(
-        f"👋 Salom, **{message.from_user.first_name}**!\n\n"
-        "**Ultra Cyber Workspace** platformasiga xush kelibsiz.\n"
-        "Siz uchun 10 ta unikal neon modulli unumdorlik markazi tayyor bo'ldi. Boshlash uchun tugmani bosing:",
-        reply_markup=keyboard,
+        f"👋 Salom, {message.from_user.first_name}!\n\n"
+        f"💰 Balansingiz: **{user[1]} Coins**\n"
+        f"👥 Taklif qilgan do'stlaringiz: **{user[2]} ta**\n\n"
+        f"Pastdagi tugma orqali Mini App-ni oching:",
+        reply_markup=kb,
         parse_mode="Markdown"
     )
 
-# --- WEB ROUTES ---
-async def serve_miniapp(request):
-    return web.FileResponse('./templates/miniapp.html')
+# Kunlik bonus callback
+@dp.callback_query(F.data == "daily_bonus")
+async def daily_bonus_handler(callback: types.CallbackQuery):
+    status, streak, reward = claim_daily_streak(callback.from_user.id)
+    if status:
+        await callback.answer(f"🎉 Tabriklaymiz! {streak}-kunlik bonus: +{reward} Coins!", show_alert=True)
+    else:
+        await callback.answer("⚠️ Siz bugungi bonusni olib bo'lgansiz. Ertaga qayta kiring!", show_alert=True)
 
-async def get_tasks(request):
-    user_id = request.query.get("user_id")
-    if not user_id:
-        return web.json_response({"ok": False, "tasks": []})
-    
-    async with aiosqlite.connect(DB_PATH) as db:
-        async with db.execute("SELECT task_text FROM tasks WHERE user_id = ?", (user_id,)) as cursor:
-            rows = await cursor.fetchall()
-            tasks = [{"text": r[0]} for r in rows]
-    return web.json_response({"ok": True, "tasks": tasks})
+# Telegram Stars To'lovi (In-App Purchase)
+@dp.callback_query(F.data == "buy_stars")
+async def send_invoice(callback: types.CallbackQuery):
+    prices = [LabeledPrice(label="VIP Maqom", amount=50)] # 50 Telegram Stars
+    await bot.send_invoice(
+        chat_id=callback.from_user.id,
+        title="VIP Maqom xaridi",
+        description="Botda reklamasiz rejim va eksklyuziv imkoniyatlarni yoqish.",
+        payload="vip_status_pack",
+        currency="XTR", # Telegram Stars valyutasi kodi
+        prices=prices
+    )
 
-async def add_task_api(request):
-    data = await request.json()
-    user_id = data.get("user_id")
-    task_text = data.get("text")
-    if user_id and task_text:
-        async with aiosqlite.connect(DB_PATH) as db:
-            await db.execute("INSERT INTO tasks (user_id, task_text) VALUES (?, ?)", (user_id, task_text))
-            await db.commit()
-        return web.json_response({"ok": True})
-    return web.json_response({"ok": False}, status=400)
+# Stars to'lovi so'rovini tasdiqlash (Pre-checkout)
+@dp.pre_checkout_query()
+async def pre_checkout_handler(query: PreCheckoutQuery):
+    await bot.answer_pre_checkout_query(query.id, ok=True)
 
-async def health_check(request):
-    return web.Response(text="Bot is Live!")
-
-# --- MAIN RUNNER ---
-async def main():
-    await init_db()
-    
-    app = web.Application()
-    app.router.add_get('/', health_check)
-    app.router.add_get('/miniapp', serve_miniapp)
-    app.router.add_get('/api/tasks', get_tasks)
-    app.router.add_post('/api/tasks/add', add_task_api)
-
-    runner = web.AppRunner(app)
-    await runner.setup()
-    site = web.TCPSite(runner, "0.0.0.0", PORT)
-    await site.start()
-
-    await dp.start_polling(bot)
-
-if __name__ == "__main__":
-    asyncio.run(main())
+# To'lov muvaffaqiyatli amalga oshganda
+@dp.message(F.successful_payment)
+async def successful_payment_handler(message: types.Message):
+    await message.answer("🎉 To'lov muvaffaqiyatli amalga oshirildi! VIP maqomingiz faollashtirildi.")
