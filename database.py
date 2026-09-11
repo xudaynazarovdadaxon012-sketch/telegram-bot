@@ -2,7 +2,7 @@ import sqlite3
 from datetime import datetime, timedelta
 
 def init_db():
-    """Ma'lumotlar bazasini yaratish va tayyorlash"""
+    """Ma'lumotlar bazasini yaratish"""
     conn = sqlite3.connect("bot_data.db")
     cursor = conn.cursor()
     cursor.execute('''
@@ -19,7 +19,7 @@ def init_db():
     conn.close()
 
 def get_or_create_user(user_id: int, referrer_id: int = None):
-    """Foydalanuvchini bazadan olish yoki yangi qo'shish"""
+    """Foydalanuvchini olish yoki yangi qo'shish"""
     conn = sqlite3.connect("bot_data.db")
     cursor = conn.cursor()
     
@@ -27,13 +27,11 @@ def get_or_create_user(user_id: int, referrer_id: int = None):
     user = cursor.fetchone()
     
     if not user:
-        # Yangi foydalanuvchini qo'shish
         cursor.execute(
             "INSERT INTO users (user_id, referrer_id, coins, invited_count) VALUES (?, ?, ?, ?)",
             (user_id, referrer_id, 0, 0)
         )
         
-        # Agar taklif qilgan do'sti bo'lsa, taklif qilganga 100 coins berish
         if referrer_id and referrer_id != user_id:
             cursor.execute(
                 "UPDATE users SET coins = coins + 100, invited_count = invited_count + 1 WHERE user_id = ?",
@@ -47,16 +45,8 @@ def get_or_create_user(user_id: int, referrer_id: int = None):
     conn.close()
     return user
 
-def add_coins(user_id: int, amount: int):
-    """Foydalanuvchiga coin qo'shish"""
-    conn = sqlite3.connect("bot_data.db")
-    cursor = conn.cursor()
-    cursor.execute("UPDATE users SET coins = coins + ? WHERE user_id = ?", (amount, user_id))
-    conn.commit()
-    conn.close()
-
 def claim_daily_streak(user_id: int):
-    """Kunlik bonus olish mantiqi"""
+    """Kunlik bonus olish"""
     conn = sqlite3.connect("bot_data.db")
     cursor = conn.cursor()
     cursor.execute("SELECT last_streak, streak_days FROM users WHERE user_id = ?", (user_id,))
