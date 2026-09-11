@@ -100,7 +100,13 @@ async def get_user(user_id: int):
     u = db["users"][str_id]
 
     refs_count = len(db["referrals"].get(str_id, []))
-    bot_info = await bot.get_me()
+    
+    # Bot username'ini xavfsiz olish
+    try:
+        bot_info = await bot.get_me()
+        bot_username = bot_info.username
+    except Exception:
+        bot_username = "@kunlik_vazifalar_2026_bot" # ⚠️ Shu yerga botingizning haqiqiy usename'ini yozib qo'ying (masalan: CyberPro_bot)
 
     return {
         "success": True,
@@ -111,12 +117,11 @@ async def get_user(user_id: int):
         "wallet": u.get("wallet", ""),
         "is_admin": (user_id == ADMIN_ID or ADMIN_ID == 0),
         "ref_count": refs_count,
-        "ref_link": f"https://t.me/{bot_info.username}?start={user_id}",
+        "ref_link": f"https://t.me/{bot_username}?start={user_id}",
         "completed_tasks": db["completed_tasks"].get(str_id, []),
         "last_daily_claim": db["daily_claims"].get(str_id, 0),
         "tasks": TASKS
     }
-
 @app.post("/api/tap")
 async def tap_coin(data: CoinModel):
     init_user(data.user_id)
