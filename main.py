@@ -19,7 +19,7 @@ from database import (
 app = Flask(__name__)
 CORS(app)
 
-BOT_TOKEN = os.environ.get("BOT_TOKEN"))
+BOT_TOKEN = os.environ.get("BOT_TOKEN")
 ADMIN_IDS_RAW = os.environ.get("ADMIN_IDS", "")
 ADMIN_IDS = [int(x.strip()) for x in ADMIN_IDS_RAW.split(",") if x.strip()]
 
