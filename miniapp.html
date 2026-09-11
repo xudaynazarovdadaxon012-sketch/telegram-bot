@@ -3,401 +3,364 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ultra Cyber Hub</title>
+    <title>Ultra Cyber Hub — Big Pro App</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://adsgram.ai/js/adsgram-ad-controller.js"></script>
     <style>
         :root {
-            --bg-color: #05070a;
-            --card-bg: #0d1527;
-            --card-border: #1e293b;
-            --accent-cyan: #00f2ff;
-            --accent-blue: #3b82f6;
-            --accent-gold: #f59e0b;
-            --accent-green: #10b981;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
+            --bg-grad: radial-gradient(circle at top left, #0d1117, #020408);
+            --card-glass: rgba(22, 27, 34, 0.85);
+            --card-border: rgba(255, 255, 255, 0.15);
+            --accent-cyan: #00f2fe;
+            --accent-blue: #4facfe;
+            --accent-purple: #7928ca;
+            --accent-pink: #ff0080;
+            --text-main: #ffffff;
+            --text-sub: #a0aec0;
         }
 
         * {
             box-sizing: border-box;
-            margin: 0;
-            padding: 0;
+            -webkit-tap-highlight-color: transparent;
             user-select: none;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-color);
+            background: var(--bg-grad);
+            background-attachment: fixed;
             color: var(--text-main);
-            padding: 16px;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            padding-bottom: 40px;
             min-height: 100vh;
         }
 
-        /* Top Profile Header */
-        .profile-card {
-            background: linear-gradient(135deg, #0d1527 0%, #172554 100%);
-            border: 1px solid rgba(0, 242, 255, 0.3);
-            border-radius: 20px;
-            padding: 18px 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            box-shadow: 0 8px 32px rgba(0, 242, 255, 0.15);
+        /* Balance Card — Kengaytirilgan va yirik */
+        .balance-card {
+            position: relative;
+            background: var(--card-glass);
+            backdrop-filter: blur(20px);
+            border: 2px solid var(--card-border);
+            border-radius: 28px;
+            padding: 28px 20px;
+            text-align: center;
+            overflow: hidden;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+            margin-bottom: 24px;
         }
 
-        .user-info {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-
-        .user-name {
-            font-size: 18px;
-            font-weight: 700;
-            color: #fff;
-        }
-
-        .user-status {
-            font-size: 12px;
-            color: var(--accent-cyan);
-            font-weight: 600;
-        }
-
-        .balance-badge {
-            background: rgba(245, 158, 11, 0.15);
-            border: 1px solid var(--accent-gold);
-            padding: 8px 16px;
-            border-radius: 30px;
-            font-size: 16px;
+        .balance-title {
+            font-size: 13px;
             font-weight: 800;
-            color: var(--accent-gold);
-            display: flex;
-            align-items: center;
-            gap: 6px;
+            letter-spacing: 2px;
+            color: var(--text-sub);
+            text-transform: uppercase;
         }
 
-        /* Horizontal Scrollable Navigation Tabs */
-        .tabs-wrapper {
-            width: 100%;
+        .balance-amount {
+            font-size: 52px;
+            font-weight: 900;
+            margin: 10px 0;
+            background: linear-gradient(135deg, #ffffff 0%, #b0b0b0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .level-badge {
+            display: inline-block;
+            background: linear-gradient(45deg, var(--accent-purple), var(--accent-pink));
+            padding: 8px 18px;
+            border-radius: 16px;
+            font-size: 14px;
+            font-weight: 800;
+            box-shadow: 0 4px 15px rgba(255, 0, 128, 0.3);
+        }
+
+        /* Scrollable Nav Tabs — Yirik va bosishga qulay */
+        .nav-tabs {
+            display: flex;
+            gap: 12px;
             overflow-x: auto;
+            padding: 6px 2px 14px 2px;
+            margin-bottom: 20px;
             scrollbar-width: none;
         }
-
-        .tabs-wrapper::-webkit-scrollbar {
-            display: none;
-        }
-
-        .tabs-container {
-            display: flex;
-            gap: 10px;
-            width: max-content;
-        }
+        .nav-tabs::-webkit-scrollbar { display: none; }
 
         .tab-btn {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 14px;
-            padding: 12px 18px;
-            color: var(--text-muted);
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.25s ease;
+            background: var(--card-glass);
+            backdrop-filter: blur(12px);
+            border: 1.5px solid var(--card-border);
+            color: var(--text-sub);
+            padding: 14px 22px;
+            border-radius: 20px;
+            font-size: 15px;
+            font-weight: 700;
             white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .tab-btn.active {
-            background: linear-gradient(135deg, rgba(0, 242, 255, 0.2) 0%, rgba(59, 130, 246, 0.2) 100%);
-            border-color: var(--accent-cyan);
-            color: #fff;
-            box-shadow: 0 0 15px rgba(0, 242, 255, 0.25);
-        }
-
-        /* Module Main View */
-        .module-content {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 20px;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-            min-height: 320px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-        }
-
-        .module-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            border-bottom: 1px solid var(--card-border);
-            padding-bottom: 12px;
-        }
-
-        .module-header h2 {
-            font-size: 18px;
-            font-weight: 700;
-        }
-
-        .module-desc {
-            font-size: 13px;
-            color: var(--text-muted);
-            line-height: 1.5;
-        }
-
-        /* Form elements */
-        input[type="text"], input[type="number"], textarea {
-            width: 100%;
-            background: #020617;
-            border: 1px solid var(--card-border);
-            border-radius: 12px;
-            padding: 14px;
-            color: #fff;
-            font-size: 14px;
-            outline: none;
-            font-family: inherit;
-        }
-
-        input:focus, textarea:focus {
-            border-color: var(--accent-cyan);
-        }
-
-        .primary-btn {
-            background: linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-blue) 100%);
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
             color: #000;
-            font-weight: 700;
-            font-size: 15px;
-            border: none;
-            border-radius: 14px;
-            padding: 14px;
-            width: 100%;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0, 242, 255, 0.25);
+            border-color: transparent;
+            box-shadow: 0 6px 20px rgba(0, 242, 254, 0.4);
+            transform: translateY(-3px) scale(1.02);
         }
 
-        .stars-btn {
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        /* Action Cards — Kattalashtirilgan va kengaytirilgan */
+        .card {
+            background: var(--card-glass);
+            backdrop-filter: blur(16px);
+            border: 1.5px solid var(--card-border);
+            border-radius: 22px;
+            padding: 22px;
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .card-info h4 {
+            margin: 0;
+            font-size: 17px;
+            font-weight: 800;
+        }
+        
+        .card-info p {
+            margin: 6px 0 0;
+            font-size: 13px;
+            color: var(--text-sub);
+        }
+
+        /* Yirik Kiber Tugma */
+        .cyber-btn {
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink));
             color: #fff;
-            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.25);
+            border: none;
+            padding: 12px 22px;
+            border-radius: 16px;
+            font-weight: 800;
+            font-size: 14px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(121, 40, 202, 0.4);
+            transition: transform 0.2s ease;
         }
 
-        .data-item {
-            background: #1e293b;
-            padding: 12px 16px;
-            border-radius: 10px;
+        .cyber-btn:active {
+            transform: scale(0.93);
+        }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* Reyting Elementlari */
+        .rank-item {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            font-size: 14px;
+            padding: 14px 18px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            margin-bottom: 10px;
+            font-size: 15px;
         }
     </style>
 </head>
 <body>
 
-    <!-- User Header -->
-    <div class="profile-card">
-        <div class="user-info">
-            <span class="user-name" id="user-name">𓆩D a d a x o n𓆪</span>
-            <span class="user-status">⚡ Ultra Cyber Hub Pro</span>
+    <!-- Yirik Balans Paneli -->
+    <div class="balance-card">
+        <div class="balance-title">UMUMIY BALANS VA DARAJA</div>
+        <div class="balance-amount" id="userCoins">0</div>
+        <span class="level-badge" id="userLevel">LVL 1 — Novice</span>
+    </div>
+
+    <!-- Kengaytirilgan va Yirik Tablar -->
+    <div class="nav-tabs">
+        <button class="tab-btn active" onclick="switchTab('bonuses', this)">⚡ Bonuslar</button>
+        <button class="tab-btn" onclick="switchTab('tasks', this)">🎯 Vazifalar</button>
+        <button class="tab-btn" onclick="switchTab('games', this)">🎰 O'yinlar</button>
+        <button class="tab-btn" onclick="switchTab('leaderboard', this)">🏆 Reyting</button>
+        <button class="tab-btn" onclick="switchTab('ref', this)">🚀 Do'stlar</button>
+        <button class="tab-btn" onclick="switchTab('withdraw', this)">💳 Yechish</button>
+    </div>
+
+    <!-- TAB 1: Bonuslar -->
+    <div id="bonuses" class="tab-content active">
+        <div class="card">
+            <div class="card-info">
+                <h4>⏱ Soatlik Bonus</h4>
+                <p>Har soatda +50 Coin oling</p>
+            </div>
+            <button class="cyber-btn" onclick="claimBonus('hourly')">Olish</button>
         </div>
-        <div class="balance-badge">
-            🪙 <span id="user-coins">150</span>
+        <div class="card">
+            <div class="card-info">
+                <h4>📅 Kunlik Bonus</h4>
+                <p>Har kuni +200 Coin oling</p>
+            </div>
+            <button class="cyber-btn" onclick="claimBonus('daily')">Olish</button>
         </div>
     </div>
 
-    <!-- 10 ta Keng Karta-Tablar -->
-    <div class="tabs-wrapper">
-        <div class="tabs-container">
-            <button class="tab-btn active" onclick="switchTab(1)">⚡ Tasks</button>
-            <button class="tab-btn" onclick="switchTab(2)">⏱️ Pomodoro</button>
-            <button class="tab-btn" onclick="switchTab(3)">💸 Expenses</button>
-            <button class="tab-btn" onclick="switchTab(4)">📅 Daily Streak</button>
-            <button class="tab-btn" onclick="switchTab(5)">🎯 Habits</button>
-            <button class="tab-btn" onclick="switchTab(6)">📝 Notes</button>
-            <button class="tab-btn" onclick="switchTab(7)">💰 Earn Ads</button>
-            <button class="tab-btn" onclick="switchTab(8)">⭐ VIP Store</button>
-            <button class="tab-btn" onclick="switchTab(9)">🔗 Referrals</button>
-            <button class="tab-btn" onclick="switchTab(10)">📊 Analytics</button>
+    <!-- TAB 2: Vazifalar -->
+    <div id="tasks" class="tab-content">
+        <div class="card">
+            <div class="card-info">
+                <h4>📢 Telegram Kanal</h4>
+                <p>Kanalimizga a'zo bo'ling (+500 Coin)</p>
+            </div>
+            <button class="cyber-btn" onclick="completeTask('channel')">Bajarish</button>
+        </div>
+        <div class="card">
+            <div class="card-info">
+                <h4>👥 3 ta Do'st Taklif Qilish</h4>
+                <p>Qo'shimcha +1000 Coin bonus</p>
+            </div>
+            <button class="cyber-btn" onclick="completeTask('invite_3')">Tekshirish</button>
         </div>
     </div>
 
-    <!-- Modul Tarkib Oynasi -->
-    <div class="module-content" id="module-content"></div>
+    <!-- TAB 3: O'yinlar -->
+    <div id="games" class="tab-content">
+        <div class="card" style="flex-direction: column; text-align: center; gap: 14px;">
+            <div class="card-info">
+                <h4>🎰 Ombor G'ildiragi</h4>
+                <p>Aylantiring va 100 dan 500 gacha coin yuting!</p>
+            </div>
+            <button class="cyber-btn" style="width: 100%; padding: 16px; font-size: 16px;" onclick="playGame()">Aylantirish (Tekin)</button>
+        </div>
+    </div>
+
+    <!-- TAB 4: Reyting -->
+    <div id="leaderboard" class="tab-content">
+        <div class="card" style="flex-direction: column; align-items: stretch; gap: 10px;">
+            <h4 style="text-align: center; margin-bottom: 12px; font-size: 18px;">🏆 TOP-5 Foydalanuvchilar</h4>
+            <div id="rankList">
+                <div class="rank-item"><span>🥇 CyberKing</span><strong>15,400 Coin</strong></div>
+                <div class="rank-item"><span>🥈 Neo_Uz</span><strong>12,100 Coin</strong></div>
+                <div class="rank-item"><span>🥉 ProGamer</span><strong>9,800 Coin</strong></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 5: Referal -->
+    <div id="ref" class="tab-content">
+        <div class="card" style="flex-direction: column; text-align: left; gap: 14px;">
+            <div class="card-info">
+                <h4>🚀 Do'stlarni taklif qiling</h4>
+                <p>Har bir taklif qilingan do'st uchun +300 Coin va uning daromadidan 10% bonus oling.</p>
+            </div>
+            <button class="cyber-btn" style="width: 100%; padding: 16px; font-size: 16px;" onclick="shareRef()">Taklif havolasini yuborish</button>
+        </div>
+    </div>
+
+    <!-- TAB 6: Yechib Olish -->
+    <div id="withdraw" class="tab-content">
+        <div class="card" style="flex-direction: column; gap: 14px;">
+            <div class="card-info" style="text-align: center;">
+                <h4>💳 Telegram Stars ga Almashtirish</h4>
+                <p>1000 Coin = 10 Telegram Stars</p>
+            </div>
+            <button class="cyber-btn" style="width: 100%; padding: 16px; font-size: 16px;" onclick="requestWithdraw(1000, 'Telegram Stars')">10 Stars Yechib Olish</button>
+        </div>
+    </div>
 
     <script>
         const tg = window.Telegram.WebApp;
-        
-        // Ekranni to'liq yoyish
-        tg.ready();
         tg.expand();
 
-        const user = tg.initDataUnsafe?.user;
-        if (user) {
-            document.getElementById('user-name').innerText = user.first_name;
+        const BACKEND_URL = "https://your-backend-service.onrender.com";
+        const user = tg.initDataUnsafe?.user || { id: 777777, username: "User" };
+
+        function triggerHaptic() {
+            if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
         }
 
-        const AdController = window.Adsgram?.init({ blockId: "YOUR_ADSGRAM_BLOCK_ID" });
-
-        function switchTab(moduleNum) {
-            const btns = document.querySelectorAll('.tab-btn');
-            btns.forEach((btn, idx) => btn.classList.toggle('active', idx === moduleNum - 1));
-
-            const content = document.getElementById('module-content');
-
-            switch(moduleNum) {
-                case 1:
-                    content.innerHTML = `
-                        <div class="module-header"><span>⚡</span><h2>Task Manager</h2></div>
-                        <p class="module-desc">Kunlik bajarilishi kerak bo'lgan vazifalar ro'yxatini shakllantiring.</p>
-                        <input type="text" id="task-input" placeholder="Yangi vazifani kiriting...">
-                        <button class="primary-btn" onclick="addTask()">+ Qo'shish</button>
-                        <div id="task-list" style="display:flex; flex-direction:column; gap:8px;"></div>
-                    `;
-                    break;
-                case 2:
-                    content.innerHTML = `
-                        <div class="module-header"><span>⏱️</span><h2>Focus Pomodoro</h2></div>
-                        <p class="module-desc">Ish va o'qish jarayonida samaradorlikni oshirish uchun 25 daqiqalik taymer.</p>
-                        <div style="font-size: 42px; font-weight: 800; text-align: center; color: var(--accent-cyan); margin: 15px 0;">25:00</div>
-                        <button class="primary-btn">▶️ Taymerni Boshlash</button>
-                    `;
-                    break;
-                case 3:
-                    content.innerHTML = `
-                        <div class="module-header"><span>💸</span><h2>Expense Tracker</h2></div>
-                        <p class="module-desc">Bugungi xarajatlaringiz va moliyaviy hisobingizni kiriting.</p>
-                        <input type="text" id="exp-name" placeholder="Xarajat nomi (Masalan: Tushlik)">
-                        <input type="number" id="exp-amount" placeholder="Summasi ($ yoki so'm)">
-                        <button class="primary-btn" onclick="addExpense()">+ Xarajatni Saqlash</button>
-                        <div id="exp-list" style="display:flex; flex-direction:column; gap:8px;"></div>
-                    `;
-                    break;
-                case 4:
-                    content.innerHTML = `
-                        <div class="module-header"><span>📅</span><h2>Daily Streak</h2></div>
-                        <p class="module-desc">Har kuni uzluksiz ilovaga kirib bonus tangalaringizni oling.</p>
-                        <button class="primary-btn" onclick="tg.showAlert('🎉 Kunlik bonus balansingizga qo\\'shildi!')">🎁 Bonusni Olish</button>
-                    `;
-                    break;
-                case 5:
-                    content.innerHTML = `
-                        <div class="module-header"><span>🎯</span><h2>Habit Tracker</h2></div>
-                        <p class="module-desc">Foydali odatlarni shakllantiring va kuzating.</p>
-                        <input type="text" id="habit-input" placeholder="Odat nomi (Masalan: Kitob o'qish)">
-                        <button class="primary-btn" onclick="addHabit()">+ Odat Qo'shish</button>
-                        <div id="habit-list" style="display:flex; flex-direction:column; gap:8px;"></div>
-                    `;
-                    break;
-                case 6:
-                    content.innerHTML = `
-                        <div class="module-header"><span>📝</span><h2>Smart Notes</h2></div>
-                        <p class="module-desc">Muhim g'oyalar va qaydlaringizni saqlab qo'ying.</p>
-                        <textarea id="note-input" rows="3" placeholder="Qaydlaringizni yozing..."></textarea>
-                        <button class="primary-btn" onclick="addNote()">💾 Qaydni Saqlash</button>
-                        <div id="note-list" style="display:flex; flex-direction:column; gap:8px;"></div>
-                    `;
-                    break;
-                case 7:
-                    content.innerHTML = `
-                        <div class="module-header"><span>💰</span><h2>Adsgram Monemizatsiya</h2></div>
-                        <p class="module-desc">Video reklama ko'rish orqali hisobingizga +30 Coins qo'shing.</p>
-                        <button class="primary-btn" onclick="showAd()">📺 Reklama Ko'rish (+30 Coins)</button>
-                    `;
-                    break;
-                case 8:
-                    content.innerHTML = `
-                        <div class="module-header"><span>⭐</span><h2>VIP Store</h2></div>
-                        <p class="module-desc">Telegram Stars orqali VIP maqom va barcha modullarga to'liq kirish huquqini oling.</p>
-                        <button class="primary-btn stars-btn" onclick="buyStars()">⭐ VIP Xarid Qilish (50 Stars)</button>
-                    `;
-                    break;
-                case 9:
-                    content.innerHTML = `
-                        <div class="module-header"><span>🔗</span><h2>Referral Network</h2></div>
-                        <p class="module-desc">Do'stlaringizni taklif qiling va har bir faol taklif uchun +100 Coins oling!</p>
-                        <button class="primary-btn" onclick="copyRef()">📋 Taklif Havolasini Nusxalash</button>
-                    `;
-                    break;
-                case 10:
-                    content.innerHTML = `
-                        <div class="module-header"><span>📊</span><h2>Analytics Hub</h2></div>
-                        <p class="module-desc">Shaxsiy unumdorlik va jamg'arilgan resurslar ko'rsatkichi.</p>
-                        <div class="data-item"><span>Jamg'arilgan Coins:</span> <strong style="color:var(--accent-gold)">150</strong></div>
-                        <div class="data-item"><span>Bajarilgan Vazifalar:</span> <strong style="color:var(--accent-green)">12 ta</strong></div>
-                        <div class="data-item"><span>VIP Maqom:</span> <strong style="color:var(--accent-cyan)">Faol ✅</strong></div>
-                    `;
-                    break;
-            }
+        function switchTab(tabId, btn) {
+            triggerHaptic();
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            btn.classList.add('active');
         }
 
-        switchTab(1);
-
-        function addTask() {
-            const input = document.getElementById('task-input');
-            const list = document.getElementById('task-list');
-            if (input.value.trim() !== '') {
-                list.innerHTML += `<div class="data-item"><span>• ${input.value}</span> <span style="color:var(--accent-cyan)">✅</span></div>`;
-                input.value = '';
-            }
+        async function loadUserData() {
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/get_user?user_id=${user.id}`);
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('userCoins').innerText = data.coins;
+                    let lvl = Math.floor(data.coins / 1000) + 1;
+                    document.getElementById('userLevel').innerText = `LVL ${lvl} — Pro Cyber`;
+                }
+            } catch(e) { console.error(e); }
         }
 
-        function addExpense() {
-            const name = document.getElementById('exp-name');
-            const amount = document.getElementById('exp-amount');
-            const list = document.getElementById('exp-list');
-            if (name.value.trim() !== '' && amount.value.trim() !== '') {
-                list.innerHTML += `<div class="data-item"><span>• ${name.value}</span> <strong style="color:#ef4444">-${amount.value}</strong></div>`;
-                name.value = '';
-                amount.value = '';
-            }
-        }
-
-        function addHabit() {
-            const input = document.getElementById('habit-input');
-            const list = document.getElementById('habit-list');
-            if (input.value.trim() !== '') {
-                list.innerHTML += `<div class="data-item"><span>📌 ${input.value}</span> <span style="color:var(--accent-green)">0/30 kun</span></div>`;
-                input.value = '';
-            }
-        }
-
-        function addNote() {
-            const input = document.getElementById('note-input');
-            const list = document.getElementById('note-list');
-            if (input.value.trim() !== '') {
-                list.innerHTML += `<div class="data-item"><span>📝 ${input.value}</span></div>`;
-                input.value = '';
-            }
-        }
-
-        function showAd() {
-            if (AdController) {
-                AdController.show().then(() => {
-                    tg.showAlert("🎉 Reklama ko'rib bo'lindi! +30 Coins qo'shildi.");
-                }).catch(() => {
-                    tg.showAlert("⚠️ Reklama mavjud emas.");
+        async function claimBonus(type) {
+            triggerHaptic();
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/claim_bonus`, {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({ user_id: user.id, type: type })
                 });
-            } else {
-                tg.showAlert("🎉 Demo reklama ko'rildi! +30 Coins qo'shildi.");
+                const data = await res.json();
+                if (data.success) {
+                    tg.showAlert(`🎉 +${data.added} Coin olindi!`);
+                    loadUserData();
+                } else {
+                    tg.showAlert(`⚠️ ${data.message}`);
+                }
+            } catch(e) { tg.showAlert("⚠️ Ulanishda xatolik."); }
+        }
+
+        async function playGame() {
+            triggerHaptic();
+            const reward = Math.floor(Math.random() * 400) + 100;
+            const res = await fetch(`${BACKEND_URL}/api/game_reward`, {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({ user_id: user.id, amount: reward })
+            });
+            const data = await res.json();
+            if (data.success) {
+                tg.showAlert(`🎲 Omadingiz keldi! +${reward} Coin!`);
+                loadUserData();
             }
         }
 
-        function buyStars() {
-            tg.showAlert("⭐ Telegram Stars to'lovi so'rovi yuborildi.");
+        function completeTask(taskName) {
+            triggerHaptic();
+            tg.showAlert("✅ Vazifa tekshirilmoqda...");
         }
 
-        function copyRef() {
-            const refLink = `https://t.me/${tg.initDataUnsafe?.bot?.username || 'bot'}?start=${user?.id || ''}`;
-            navigator.clipboard.writeText(refLink);
-            tg.showAlert("📋 Taklif havolangiz nusxalandi!");
+        function shareRef() {
+            triggerHaptic();
+            const link = `https://t.me/your_bot_username?start=${user.id}`;
+            tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent("Platformaga qo'shiling va bepul coinlar yutib oling!")}`);
         }
+
+        async function requestWithdraw(amount, method) {
+            triggerHaptic();
+            const res = await fetch(`${BACKEND_URL}/api/withdraw`, {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({ user_id: user.id, amount: amount, method: method })
+            });
+            const data = await res.json();
+            if (data.success) {
+                tg.showAlert(`✅ ${data.message}`);
+                loadUserData();
+            } else {
+                tg.showAlert(`⚠️ ${data.message}`);
+            }
+        }
+
+        loadUserData();
     </script>
 </body>
 </html>
