@@ -11,9 +11,12 @@ import uvicorn
 # ==========================================
 # SOZLAMALAR
 # ==========================================
-BOT_TOKEN = os.getenv("BOT_TOKEN", "YOUR_TELEGRAM_BOT_TOKEN")
-ADMIN_ID = int(os.getenv("ADMIN_ID", "123456789"))
-WEBAPP_URL = "https://your-mini-app-url.onrender.com"  # Mini App havolasi
+
+# Render Environment Variables'dan o'qib olish
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+# str holatda kelgani uchun int() ga o'giramiz
+ADMIN_ID = int(os.getenv("ADMIN_ID", "0")) 
+WEBAPP_URL = os.getenv("WEBAPP_URL", "https://telegram-bot-7n6t.onrender.com")
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
