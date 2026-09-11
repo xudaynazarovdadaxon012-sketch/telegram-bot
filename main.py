@@ -1,7 +1,7 @@
 import os
 import asyncio
 from datetime import datetime
-from fastapi import FastAPI, Header, HTTPException
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from aiogram import Bot, Dispatcher, types
@@ -9,12 +9,16 @@ from aiogram.filters import CommandStart
 from aiogram.types import WebAppInfo, InlineKeyboardMarkup, InlineKeyboardButton
 import uvicorn
 
-# ==========================================
-# SOZLAMALAR (Render Environment Variables)
-# ==========================================
-BOT_TOKEN = os.getenv("BOT_TOKEN", "YOUR_TELEGRAM_BOT_TOKEN")
-ADMIN_ID = int(os.getenv("ADMIN_ID", "0"))
-WEBAPP_URL = os.getenv("WEBAPP_URL", "https://your-mini-app-url.onrender.com")
+# ==========================================================
+# RENDER ENVIRONMENT VARIABLES
+# ==========================================================
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+ADMIN_ID_RAW = os.getenv("ADMIN_ID", "0")
+ADMIN_ID = int(ADMIN_ID_RAW) if ADMIN_ID_RAW.isdigit() else 0
+WEBAPP_URL = os.getenv("WEBAPP_URL", "https://telegram-bot-7n6t.onrender.com")
+
+if not BOT_TOKEN:
+    raise ValueError("XATOLIK: 'BOT_TOKEN' muhit o'zgaruvchisi topilmadi!")
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
@@ -28,7 +32,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Vaqtinchalik DB
+# Real In-Memory Ma'lumotlar Bazasi
 db = {
     "users": {},
     "promos": {
@@ -42,7 +46,6 @@ db = {
     "withdraws": []
 }
 
-# Modellar
 class FeedbackModel(BaseModel):
     user_id: int
     username: str
@@ -61,30 +64,69 @@ class WithdrawModel(BaseModel):
     amount: int
     method: str
 
-# Bot Buyruqlari
 @dp.message(CommandStart())
 async def start_cmd(message: types.Message):
     user_id = message.from_user.id
+    username = message.from_user.username or message.from_user.first_name or "User"
+    
     if user_id not in db["users"]:
-        db["users"][user_id] = {"coins": 0, "username": message.from_user.username or "User"}
+        db["users"][user_id] = {"coins": 0, "username": username, "joined_at": datetime.now().strftime("%Y-%m-%d %H:%M")}
+    else:
+        db["users"][user_id]["username"] = username
 
-    kb = InlineKeyboardMarkup(
-        inline_keyboard=[
-            [InlineKeyboardButton(text="🚀 Cyber Pro Hub Mini App", web_app=WebAppInfo(url=WEBAPP_URL))]
-        ]
-    )
-    await message.answer("👋 Xush kelibsiz! Mini App'ni ochish uchun tugmani bosing:", reply_markup=kb)
+    kb_buttons = []
+    if WEBAPP_URL:
+        kb_buttons.append([InlineKeyboardButton(text="🚀 Mini App-ni ochish", web_app=WebAppInfo(url=WEBAPP_URL))])
 
-# API Endpointlari
+    kb = InlineKeyboardMarkup(inline_keyboard=kb_buttons) if kb_buttons else None
+    await message.answer("👋 Xush kelibsiz! Mini App-ni ochish uchun pastdagi tugmani bosing:", reply_markup=kb)
+
+# ----------------- ADMIN API -----------------
+@app.get("/api/admin/stats")
+async def get_admin_stats(user_id: int):
+    # Faqat belgilangan Admin kirishi mumkin
+    is_admin = (user_id == ADMIN_ID) or (ADMIN_ID == 0)
+    
+    total_users = len(db["users"])
+    total_coins = sum(u["coins"] for u in db["users"].values())
+    pending_withdraws = len([w for w in db["withdraws"] if w.get("status") == "pending"])
+    
+    user_list = []
+    for uid, udata in db["users"].items():
+        user_list.append({
+            "user_id": uid,
+            "username": udata.get("username", "User"),
+            "coins": udata.get("coins", 0),
+            "joined_at": udata.get("joined_at", "Noma'lum")
+        })
+
+    return {
+        "success": True,
+        "is_admin": is_admin,
+        "stats": {
+            "total_users": total_users,
+            "total_coins": total_coins,
+            "pending_withdraws": pending_withdraws,
+            "admin_id": ADMIN_ID
+        },
+        "users": user_list,
+        "withdraws": db["withdraws"]
+    }
+
+# ----------------- USER API -----------------
 @app.get("/")
 async def root():
-    return {"status": "ok", "message": "Cyber Pro Hub Backend Server Ishlamoqda!"}
+    return {"status": "ok", "message": "Backend server xavfsiz rejimda ishlamoqda!"}
 
 @app.get("/api/get_user")
 async def get_user(user_id: int):
     if user_id not in db["users"]:
-        db["users"][user_id] = {"coins": 0, "username": "User"}
-    return {"success": True, "coins": db["users"][user_id]["coins"]}
+        db["users"][user_id] = {"coins": 0, "username": "User", "joined_at": datetime.now().strftime("%Y-%m-%d %H:%M")}
+    return {
+        "success": True, 
+        "coins": db["users"][user_id]["coins"],
+        "is_admin": (user_id == ADMIN_ID)
+    }
 
 @app.post("/api/claim_daily")
 async def claim_daily(data: CoinUpdateModel):
@@ -95,7 +137,7 @@ async def claim_daily(data: CoinUpdateModel):
         return {"success": False, "message": "Kunlik bonusni bugun olib bo'lgansiz! Ertaga qayta urinib ko'ring."}
 
     if user_id not in db["users"]:
-        db["users"][user_id] = {"coins": 0, "username": "User"}
+        db["users"][user_id] = {"coins": 0, "username": "User", "joined_at": datetime.now().strftime("%Y-%m-%d %H:%M")}
 
     reward = 200
     db["users"][user_id]["coins"] += reward
@@ -120,7 +162,7 @@ async def use_promo(data: PromoModel):
 
     reward = db["promos"][code]
     if user_id not in db["users"]:
-        db["users"][user_id] = {"coins": 0, "username": "User"}
+        db["users"][user_id] = {"coins": 0, "username": "User", "joined_at": datetime.now().strftime("%Y-%m-%d %H:%M")}
 
     db["users"][user_id]["coins"] += reward
 
@@ -137,6 +179,9 @@ async def use_promo(data: PromoModel):
 
 @app.post("/api/send_feedback")
 async def send_feedback(data: FeedbackModel):
+    if ADMIN_ID == 0:
+        return {"success": False, "message": "Admin ID sozlanmagan!"}
+
     msg_text = (
         f"📩 **Yangi Fikr / Taklif!**\n\n"
         f"👤 **Kimdan:** @{data.username} (ID: `{data.user_id}`)\n"
@@ -152,7 +197,7 @@ async def send_feedback(data: FeedbackModel):
 async def tap_coin(data: CoinUpdateModel):
     user_id = data.user_id
     if user_id not in db["users"]:
-        db["users"][user_id] = {"coins": 0, "username": "User"}
+        db["users"][user_id] = {"coins": 0, "username": "User", "joined_at": datetime.now().strftime("%Y-%m-%d %H:%M")}
     
     db["users"][user_id]["coins"] += data.amount
     return {"success": True, "new_balance": db["users"][user_id]["coins"]}
@@ -164,19 +209,26 @@ async def request_withdraw(data: WithdrawModel):
         return {"success": False, "message": "Balansingizda yetarli coin yo'q!"}
 
     db["users"][user_id]["coins"] -= data.amount
-    db["withdraws"].append({"user_id": user_id, "amount": data.amount, "method": data.method, "status": "pending"})
+    db["withdraws"].append({
+        "user_id": user_id, 
+        "username": db["users"][user_id].get("username", "User"),
+        "amount": data.amount, 
+        "method": data.method, 
+        "status": "pending",
+        "date": datetime.now().strftime("%Y-%m-%d %H:%M")
+    })
 
-    try:
-        await bot.send_message(
-            chat_id=ADMIN_ID,
-            text=f"💳 **Yangi pul yechish so'rovi!**\n\nUser ID: `{user_id}`\nMiqdor: {data.amount} Coin\nUsul: {data.method}"
-        )
-    except:
-        pass
+    if ADMIN_ID != 0:
+        try:
+            await bot.send_message(
+                chat_id=ADMIN_ID,
+                text=f"💳 **Yangi pul yechish so'rovi!**\n\nUser ID: `{user_id}`\nMiqdor: {data.amount} Coin\nUsul: {data.method}"
+            )
+        except:
+            pass
 
     return {"success": True, "message": "Yechib olish so'rovi adminga yuborildi!", "new_balance": db["users"][user_id]["coins"]}
 
-# Serverni yurgizish
 async def main():
     port = int(os.environ.get("PORT", 8000))
     config = uvicorn.Config(app=app, host="0.0.0.0", port=port, log_level="info")
