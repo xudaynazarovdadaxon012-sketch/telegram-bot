@@ -11,35 +11,33 @@
 
         .card { background: #121212; border-radius: 16px; padding: 20px; margin-bottom: 15px; border: 1px solid #262626; text-align: center; }
         .balance { font-size: 38px; font-weight: 800; margin: 10px 0; color: #fff; }
-        
+
         .energy-bar-bg { width: 100%; background: #262626; height: 12px; border-radius: 10px; overflow: hidden; margin-top: 10px; }
         .energy-bar-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #00f5d4, #00bbf9); transition: width 0.2s; }
 
         .nav-grid { display: flex; gap: 4px; justify-content: center; margin-bottom: 15px; flex-wrap: wrap; }
-        .nav-btn { background: #121212; color: #fff; border: 1px solid #262626; padding: 8px; border-radius: 10px; cursor: pointer; font-size: 11px; flex: 1; min-width: 50px; }
+        .nav-btn { background: #121212; color: #fff; border: 1px solid #262626; padding: 8px; border-radius: 10px; cursor: pointer; font-size: 11px; flex: 1; min-width: 50px; transition: transform 0.15s, box-shadow 0.15s; }
         .nav-btn.active { background: #fff; color: #000; font-weight: bold; }
+        .btn-action:active, .nav-btn:active { transform: scale(0.94); box-shadow: 0 0 10px rgba(0, 245, 212, 0.5); }
+
+        .tab-content { animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
         input, textarea { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #262626; background: #000; color: #fff; margin-bottom: 10px; font-size: 14px; text-align: center; }
-        .btn-action { width: 100%; padding: 12px; background: linear-gradient(45deg, #f09433, #dc2743, #bc1888); border: none; color: white; border-radius: 12px; font-size: 14px; font-weight: bold; cursor: pointer; }
+        .btn-action { width: 100%; padding: 12px; background: linear-gradient(45deg, #f09433, #dc2743, #bc1888); border: none; color: white; border-radius: 12px; font-size: 14px; font-weight: bold; cursor: pointer; transition: transform 0.15s; }
 
         .tap-area { width: 170px; height: 170px; margin: 20px auto; background: radial-gradient(circle, #dc2743 0%, #121212 70%); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 60px; cursor: pointer; box-shadow: 0 0 25px rgba(220,39,67,0.4); user-select: none; }
         .tap-area:active { transform: scale(0.92); }
 
         .list-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #262626; font-size: 13px; text-align: left; }
-        
-        .insta-profile-header { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
-        .insta-avatar-ring { width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(45deg, #f09433, #dc2743, #bc1888); padding: 3px; }
-        .insta-avatar { width: 100%; height: 100%; border-radius: 50%; background: #000; display: flex; align-items: center; justify-content: center; font-size: 24px; }
-        .insta-stats-container { display: flex; flex: 1; justify-content: space-around; }
+        .timer-badge { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; padding: 8px 12px; font-size: 13px; color: #ffbe0b; display: inline-flex; margin-top: 10px; }
     </style>
 </head>
 <body>
 
-    <!-- Header / Balans & Energiya -->
     <div class="card">
         <p style="color: #a8a8a8; font-size: 12px;">BALANS</p>
         <div class="balance" id="ui-balance">0</div>
-        
         <div style="display: flex; justify-content: space-between; font-size: 12px; color: #00f5d4; margin-top: 10px;">
             <span>⚡️ Energiya:</span>
             <span id="ui-energy-text">1000 / 1000</span>
@@ -47,51 +45,40 @@
         <div class="energy-bar-bg"><div class="energy-bar-fill" id="ui-energy-fill"></div></div>
     </div>
 
-    <!-- Navigatsiya -->
     <div class="nav-grid">
-        <button class="nav-btn active" onclick="switchTab('tap')">👆 Tap</button>
-        <button class="nav-btn" onclick="switchTab('boost')">🚀 Boost</button>
-        <button class="nav-btn" onclick="switchTab('wallet')">💎 Wallet</button>
-        <button class="nav-btn" onclick="switchTab('tasks')">📋 Tasks</button>
-        <button class="nav-btn" onclick="switchTab('top')">🏆 Top</button>
-        <button class="nav-btn" onclick="switchTab('ref')">👥 Ref</button>
-        <button class="nav-btn" onclick="switchTab('daily')">📅 Bonus</button>
-        <button class="nav-btn" id="admin-tab-btn" style="display:none;" onclick="switchTab('admin')">👑 Admin</button>
+        <button class="nav-btn active" onclick="switchTab('tap', this)">👆 Tap</button>
+        <button class="nav-btn" onclick="switchTab('boost', this)">🚀 Boost</button>
+        <button class="nav-btn" onclick="switchTab('wallet', this)">💎 Wallet</button>
+        <button class="nav-btn" onclick="switchTab('tasks', this)">📋 Tasks</button>
+        <button class="nav-btn" onclick="switchTab('top', this)">🏆 Top</button>
+        <button class="nav-btn" onclick="switchTab('ref', this)">👥 Ref</button>
+        <button class="nav-btn" onclick="switchTab('daily', this)">📅 Bonus</button>
+        <button class="nav-btn" id="admin-tab-btn" style="display:none;" onclick="switchTab('admin', this)">👑 Admin</button>
     </div>
 
-    <!-- 1. Tap Area -->
+    <!-- 1. Tap -->
     <div id="tab-tap" class="tab-content card">
         <h3>Coin yig'ish uchun bosing!</h3>
         <div class="tap-area" onclick="handleTap()">⚡️</div>
     </div>
 
-    <!-- 2. Boosters Shop (NEW) -->
+    <!-- 2. Boost -->
     <div id="tab-boost" class="tab-content card" style="display:none;">
         <h3>🚀 Kuchaytirishlar Do'koni</h3>
-        <p style="color: #a8a8a8; font-size: 12px; margin-bottom: 15px;">Tangalaringiz evaziga imkoniyatlarni oshiring:</p>
-        
         <div class="list-item">
-            <div>
-                <b>⚡️ Multitap (LVL <span id="boost-tap-lvl">1</span>)</b>
-                <div style="color: #00f5d4; font-size: 11px;">Bitta tapda ko'proq coin olish</div>
-            </div>
-            <button class="btn-action" style="width: auto; padding: 6px 12px;" onclick="buyBoost('multitap')">Sotib olish</button>
+            <div><b>⚡️ Multitap (LVL <span id="boost-tap-lvl">1</span>)</b></div>
+            <button class="btn-action" style="width:auto; padding:6px 12px;" onclick="buyBoost('multitap')">Sotib olish</button>
         </div>
-
         <div class="list-item">
-            <div>
-                <b>🔋 Max Energy (+500)</b>
-                <div style="color: #00f5d4; font-size: 11px;">Maksimal energiya sig'imini oshirish</div>
-            </div>
-            <button class="btn-action" style="width: auto; padding: 6px 12px;" onclick="buyBoost('max_energy')">Sotib olish</button>
+            <div><b>🔋 Max Energy (+500)</b></div>
+            <button class="btn-action" style="width:auto; padding:6px 12px;" onclick="buyBoost('max_energy')">Sotib olish</button>
         </div>
     </div>
 
-    <!-- 3. TON Wallet Connect (NEW) -->
+    <!-- 3. Wallet -->
     <div id="tab-wallet" class="tab-content card" style="display:none;">
         <h3>💎 TON Hamyon</h3>
-        <p style="color: #a8a8a8; font-size: 12px; margin: 10px 0;">Airdrop va mukofotlarni olish uchun TON hamyoningizni ulang:</p>
-        <input type="text" id="wallet-input" placeholder="EQB... hamyon manzili">
+        <input type="text" id="wallet-input" placeholder="EQB... hamyon manzili" style="margin-top:10px;">
         <button class="btn-action" onclick="saveWallet()">Hamyonni Saqlash 🔗</button>
     </div>
 
@@ -101,46 +88,36 @@
         <div id="tasks-list-container"></div>
     </div>
 
-    <!-- 5. Top Leaderboard -->
+    <!-- 5. Top -->
     <div id="tab-top" class="tab-content card" style="display:none;">
         <h3>🏆 TOP 10 Reyting</h3>
         <div id="leaderboard-container"></div>
     </div>
 
-    <!-- 6. Referal -->
+    <!-- 6. Ref -->
     <div id="tab-ref" class="tab-content card" style="display:none;">
         <h3>👥 Takliflar</h3>
         <p style="margin: 10px 0; color: #a8a8a8;">Har bir do'st uchun <b>+500 Coin</b>!</p>
-        <button class="btn-action" onclick="copyRefLink()">Nusxalash 📋</button>
+        <div style="display: flex; gap: 10px;">
+            <button class="btn-action" onclick="copyRefLink(this)">Nusxalash 📋</button>
+            <button class="btn-action" style="background:#229ED9;" onclick="shareRefLink()">Ulashish 🚀</button>
+        </div>
     </div>
 
-    <!-- 7. Daily Bonus -->
+    <!-- 7. Daily -->
     <div id="tab-daily" class="tab-content card" style="display:none;">
         <h3>📅 Kunlik Bonus</h3>
-        <button class="btn-action" style="margin-top: 15px;" onclick="claimDaily()">Bonusni olish 🎁</button>
+        <div id="bonus-status-container" style="margin-top: 15px;"></div>
     </div>
 
-    <!-- 8. INSTAGRAM STYLE ADMIN DASHBOARD (BROADCAST & DIRECT MSG INCLUDED) -->
+    <!-- 8. Admin -->
     <div id="tab-admin" class="tab-content card" style="display:none;">
-        <div class="insta-profile-header">
-            <div class="insta-avatar-ring"><div class="insta-avatar">👑</div></div>
-            <div class="insta-stats-container">
-                <div><div id="adm-total-users" style="font-weight:bold;">0</div><div style="font-size:10px; color:#a8a8a8;">Users</div></div>
-                <div><div id="adm-total-coins" style="font-weight:bold;">0</div><div style="font-size:10px; color:#a8a8a8;">Coins</div></div>
-            </div>
-        </div>
-
-        <hr style="border-color:#262626; margin: 10px 0;">
-        
-        <h4>📢 Ommaviy Xabar (Broadcast)</h4>
-        <textarea id="adm-broadcast-text" placeholder="Barcha foydalanuvchilarga xabar..."></textarea>
-        <button class="btn-action" onclick="sendBroadcast()">Hammaga yuborish 🚀</button>
-
+        <h3>👑 Admin Panel</h3>
+        <textarea id="adm-broadcast-text" placeholder="Ommaviy e'lon..."></textarea>
+        <button class="btn-action" onclick="sendBroadcast()">Ommaviy Yuborish 🚀</button>
         <hr style="border-color:#262626; margin: 15px 0;">
-
-        <h4>💬 Shaxsiy Xabar Yuborish</h4>
         <input type="number" id="adm-target-id" placeholder="User Telegram ID">
-        <textarea id="adm-direct-text" placeholder="Xabar matni..."></textarea>
+        <textarea id="adm-direct-text" placeholder="Shaxsiy xabar..."></textarea>
         <button class="btn-action" onclick="sendDirect()">Userga Yuborish ✉️</button>
     </div>
 
@@ -148,17 +125,20 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        const BACKEND_URL = window.location.origin;
-        const user = tg.initDataUnsafe.user || { id: 123456, username: "DemoUser" };
-        let userCoins = 0, currentEnergy = 1000, maxEnergy = 1000, tapLevel = 1, globalRefLink = "";
+        // ⚠️ Render platformasidagi haqiqiy backend manzilingizni kiriting:
+        const BACKEND_URL = "https://backend-serveringiz-nomi.onrender.com";
 
-        function switchTab(tabName) {
+        const user = tg.initDataUnsafe.user || { id: 123456, username: "DemoUser" };
+        let userCoins = 0, currentEnergy = 1000, maxEnergy = 1000, tapLevel = 1, globalRefLink = "", nextBonusTime = 0;
+
+        function switchTab(tabName, btnElement) {
             document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
             document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
-            document.getElementById(`tab-${tabName}`).style.display = 'block';
-            event.target.classList.add('active');
+            
+            const targetTab = document.getElementById(`tab-${tabName}`);
+            if(targetTab) targetTab.style.display = 'block';
+            if(btnElement) btnElement.classList.add('active');
 
-            if(tabName === 'admin') loadAdminData();
             if(tabName === 'top') loadLeaderboard();
         }
 
@@ -185,13 +165,14 @@
 
                     updateUI();
                     renderTasks(data.tasks, data.completed_tasks);
+                    checkBonusAvailability(data.last_daily_claim);
                 }
             } catch(e) { console.error(e); }
         }
 
         async function handleTap() {
             if(currentEnergy < tapLevel) {
-                tg.showAlert("⚠️ Energingiz tugadi! Biroz kuting.");
+                tg.showAlert("⚠️ Energingiz tugadi!");
                 return;
             }
             userCoins += tapLevel;
@@ -205,11 +186,95 @@
             });
         }
 
-        async function buyBoost(boostType) {
+        function checkBonusAvailability(lastClaimTs) {
+            const container = document.getElementById('bonus-status-container');
+            const now = Math.floor(Date.now() / 1000);
+            const cooldown = 86400;
+
+            if (now - lastClaimTs >= cooldown) {
+                container.innerHTML = `<button class="btn-action" onclick="claimDaily()">Bonusni olish 🎁</button>`;
+            } else {
+                nextBonusTime = lastClaimTs + cooldown;
+                container.innerHTML = `
+                    <button class="btn-action" disabled style="opacity: 0.5;">Olingan ✅</button>
+                    <div class="timer-badge">⏳ Keyingi bonus: <span id="bonus-timer">--:--:--</span></div>
+                `;
+                startBonusCountdown();
+            }
+        }
+
+        function startBonusCountdown() {
+            const timerElem = document.getElementById('bonus-timer');
+            const interval = setInterval(() => {
+                const diff = nextBonusTime - Math.floor(Date.now() / 1000);
+                if (diff <= 0) {
+                    clearInterval(interval);
+                    loadUserData();
+                    return;
+                }
+                const h = Math.floor(diff / 3600).toString().padStart(2, '0');
+                const m = Math.floor((diff % 3600) / 60).toString().padStart(2, '0');
+                const s = (diff % 60).toString().padStart(2, '0');
+                if(timerElem) timerElem.innerText = `${h}:${m}:${s}`;
+            }, 1000);
+        }
+
+        async function claimDaily() {
+            const res = await fetch(`${BACKEND_URL}/api/claim_daily`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ user_id: user.id, amount: 1 })
+            });
+            const data = await res.json();
+            tg.showAlert(data.message);
+            if(data.success) loadUserData();
+        }
+
+        function renderTasks(tasks, completedIds) {
+            const container = document.getElementById('tasks-list-container');
+            if(!container) return;
+            let html = "";
+            tasks.forEach(t => {
+                const isDone = completedIds && completedIds.includes(t.id);
+                html += `
+                    <div class="list-item">
+                        <div><b>${t.title}</b><div style="color:#00f5d4; font-size:11px;">+${t.reward} Coin</div></div>
+                        ${isDone ? `<span style="color:#00f5d4;">✅ Bajarilgan</span>` : `<button class="btn-action" style="width:auto; padding:6px 12px;" onclick="doTask('${t.id}')">Bajarish</button>`}
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        async function doTask(taskId) {
+            const res = await fetch(`${BACKEND_URL}/api/complete_task`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ user_id: user.id, task_id: taskId })
+            });
+            const data = await res.json();
+            tg.showAlert(data.message);
+            if(data.success) loadUserData();
+        }
+
+        async function loadLeaderboard() {
+            const container = document.getElementById('leaderboard-container');
+            const res = await fetch(`${BACKEND_URL}/api/leaderboard`);
+            const data = await res.json();
+            if(data.success) {
+                let html = "";
+                data.leaderboard.forEach(item => {
+                    html += `<div class="list-item"><div><b>#${item.rank} @${item.username}</b></div><div style="color:#00f5d4;">${item.coins} Coin</div></div>`;
+                });
+                container.innerHTML = html;
+            }
+        }
+
+        async function buyBoost(type) {
             const res = await fetch(`${BACKEND_URL}/api/buy_boost`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ user_id: user.id, boost_type: boostType })
+                body: JSON.stringify({ user_id: user.id, boost_type: type })
             });
             const data = await res.json();
             tg.showAlert(data.message);
@@ -225,6 +290,24 @@
             });
             const data = await res.json();
             tg.showAlert(data.message);
+        }
+
+        function copyRefLink(btn) {
+            if(!globalRefLink) return tg.showAlert("⚠️ Havola topilmadi!");
+            const area = document.createElement("textarea");
+            area.value = globalRefLink;
+            document.body.appendChild(area);
+            area.select();
+            document.execCommand("copy");
+            document.body.removeChild(area);
+            if(btn) {
+                btn.innerText = "Nusxalandi! ✅";
+                setTimeout(() => btn.innerText = "Nusxalash 📋", 2000);
+            }
+        }
+
+        function shareRefLink() {
+            if(globalRefLink) tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(globalRefLink)}&text=${encodeURIComponent("O'yinga qo'shil!")}`);
         }
 
         async function sendBroadcast() {
@@ -250,7 +333,6 @@
             tg.showAlert(data.message);
         }
 
-        // Avto energiya tiklanishi (Front-end animasiya)
         setInterval(() => {
             if(currentEnergy < maxEnergy) {
                 currentEnergy = Math.min(maxEnergy, currentEnergy + 2);
