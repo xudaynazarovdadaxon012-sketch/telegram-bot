@@ -1,83 +1,161 @@
-import json
-import os
-from datetime import datetime
+import sqlite3
 
-DB_FILE = "database.json"
+DB_NAME = "cyber_pro.db"
 
-def get_default_db():
+def init_db():
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            user_id INTEGER PRIMARY KEY,
+            username TEXT,
+            coins INTEGER DEFAULT 0,
+            energy INTEGER DEFAULT 1000,
+            max_energy INTEGER DEFAULT 1000,
+            tap_level INTEGER DEFAULT 1,
+            wallet TEXT DEFAULT '',
+            last_daily_claim TEXT DEFAULT '',
+            completed_tasks TEXT DEFAULT ''
+        )
+    ''')
+    conn.commit()
+    conn.close()
+
+# Baza jadvalini yaratish
+init_db()
+
+def get_or_create_user(user_id, username="User"):
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM users WHERE user_id = ?", (user_id,))
+    user = cursor.fetchone()
+
+    if not user:
+        cursor.execute('''
+            INSERT INTO users (user_id, username, coins, energy, max_energy, tap_level, wallet, last_daily_claim, completed_tasks)
+            VALUES (?, ?, 0, 1000, 1000, 1, '', '', '')
+        ''', (user_id, username))
+        conn.commit()
+        cursor.execute("SELECT * FROM users WHERE user_id = ?", (user_id,))
+        user = cursor.fetchone()
+
+    conn.close()
     return {
-        "users": {},
-        "promos": {
-            "CY83R-9X2Q": 500,
-            "W3LC-77KP-99": 1000,
-            "B300-X7M2": 300,
-            "M3GA-88ZZ-2026": 5000
-        },
-        "used_promos": {},
-        "daily_claims": {},
-        "completed_tasks": {},
-        "referrals": {}
+        "user_id": user[0],
+        "username": user[1],
+        "coins": user[2],
+        "energy": user[3],
+        "max_energy": user[4],
+        "tap_level": user[5],
+        "wallet": user[6],
+        "last_daily_claim": user[7],
+        "completed_tasks": user[8].split(",") if user[8] else []
     }
 
-def load_db():
-    if not os.path.exists(DB_FILE):
-        db = get_default_db()
-        save_db(db)
-        return db
-    try:
-        with open(DB_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except Exception as e:
-        print(f"Baza o'qishda xatolik: {e}")
-        return get_default_db()
+def update_user_tap(user_id, coins_added, energy_used):
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    cursor.execute("SELECT coins, energy FROM users WHERE user_id = ?", (user_id,))
+    row = cursor.fetchone()
+    if not row or row[1] < energy_used:
+        conn.close()
+        return False
 
-def save_db(db):
-    try:
-        with open(DB_FILE, "w", encoding="utf-8") as f:
-            json.dump(db, f, ensure_ascii=False, indent=4)
-    except Exception as e:
-        print(f"Bazaga saqlashda xatolik: {e}")
+    new_coins = row[0] + coins_added
+    new_energy = row[1] - energy_used
+    cursor.execute("UPDATE users SET coins = ?, energy = ? WHERE user_id = ?", (new_coins, new_energy, user_id))
+    conn.commit()
+    conn.close()
+    return True
 
-def init_user(user_id: int, username: str = "User"):
-    db = load_db()
-    str_id = str(user_id)
+def update_user_wallet(user_id, wallet_address):
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    cursor.execute("UPDATE users SET wallet = ? WHERE user_id = ?", (wallet_address, user_id))
+    conn.commit()
+    conn.close()
+
+def buy_boost_upgrade(user_id, boost_type, cost):
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    cursor.execute("SELECT coins, tap_level, max_energy FROM users WHERE user_id = ?", (user_id,))
+    row = cursor.fetchone()
+
+    if not row or row[0] < cost:
+        conn.close()
+        return False, "Tangalar yetarli emas!"
+
+    new_coins = row[0] - cost
+    if boost_type == 'multitap':
+        cursor.execute("UPDATE users SET coins = ?, tap_level = tap_level + 1 WHERE user_id = ?", (new_coins, user_id))
+    elif boost_type == 'max_energy':
+        cursor.execute("UPDATE users SET coins = ?, max_energy = max_energy + 500, energy = energy + 500 WHERE user_id = ?", (new_coins, user_id))
+
+    conn.commit()
+    conn.close()
+    return True, "Muvaffaqiyatli oshirildi!"
+
+def claim_daily_bonus(user_id, reward=1000):
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    cursor.execute("UPDATE users SET coins = coins + ? WHERE user_id = ?", (reward, user_id))
+    conn.commit()
+    conn.close()
+    return True, "Kunlik bonus olindi!"
+
+def complete_user_task(user_id, task_id, reward):
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    cursor.execute("SELECT completed_tasks, coins FROM users WHERE user_id = ?", (user_id,))
+    row = cursor.fetchone()
+
+    completed = row[0].split(",") if row[0] else []
+    if task_id in completed:
+        conn.close()
+        return False, "Vazifa allaqachon bajarilgan!"
+
+    completed.append(task_id)
+    new_completed_str = ",".join(completed)
+    new_coins = row[1] + reward
+
+    cursor.execute("UPDATE users SET completed_tasks = ?, coins = ? WHERE user_id = ?", (new_completed_str, new_coins, user_id))
+    conn.commit()
+    conn.close()
+    return True, "Vazifa bajarildi va mukofot berildi!"
+
+def get_top_leaderboard(limit=10):
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    cursor.execute("SELECT username, coins FROM users ORDER BY coins DESC LIMIT ?", (limit,))
+    rows = cursor.fetchall()
+    conn.close()
+    return [{"username": r[0], "coins": r[1]} for r in rows]
+
+def get_admin_stats():
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*), SUM(coins) FROM users")
+    row = cursor.fetchone()
     
-    if str_id not in db["users"]:
-        db["users"][str_id] = {
-            "coins": 0,
-            "username": username,
-            "joined_at": datetime.now().strftime("%Y-%m-%d %H:%M"),
-            "taps_count": 0,
-            "energy": 1000,
-            "max_energy": 1000,
-            "last_energy_update": datetime.now().timestamp(),
-            "tap_level": 1,
-            "wallet": ""
-        }
-    else:
-        u = db["users"][str_id]
-        if "energy" not in u: u["energy"] = 1000
-        if "max_energy" not in u: u["max_energy"] = 1000
-        if "last_energy_update" not in u: u["last_energy_update"] = datetime.now().timestamp()
-        if "tap_level" not in u: u["tap_level"] = 1
-        if "wallet" not in u: u["wallet"] = ""
-        
-    save_db(db)
-    return db
+    cursor.execute("SELECT user_id, username, coins, wallet FROM users ORDER BY coins DESC LIMIT 20")
+    users = cursor.fetchall()
+    conn.close()
 
-def update_user_energy(user_id: int):
-    db = load_db()
-    str_id = str(user_id)
-    
-    if str_id in db["users"]:
-        u = db["users"][str_id]
-        now = datetime.now().timestamp()
-        passed_sec = int(now - u.get("last_energy_update", now))
-        
-        if passed_sec > 0:
-            added_energy = passed_sec * 2
-            u["energy"] = min(u.get("max_energy", 1000), u.get("energy", 1000) + added_energy)
-            u["last_energy_update"] = now
-            save_db(db)
-            
-    return db
+    total_users = row[0] if row else 0
+    total_coins = row[1] if row and row[1] else 0
+
+    return {
+        "posts": total_users,
+        "followers": total_coins,
+        "following": 1,
+        "bio": "Cyber Pro Hub Official Backend Status: ONLINE 🟢",
+        "users": [{"user_id": u[0], "username": u[1], "coins": u[2], "wallet": u[3]} for u[u in users]] if users else []
+    }
+
+def get_all_user_ids():
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    cursor.execute("SELECT user_id FROM users")
+    rows = cursor.fetchall()
+    conn.close()
+    return [r[0] for r in rows]
