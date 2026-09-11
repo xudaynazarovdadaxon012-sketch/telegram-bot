@@ -1,119 +1,145 @@
 import os
 import asyncio
-import logging
-from aiohttp import web
-from aiogram import Bot, Dispatcher, types, F
+from fastapi import FastAPI, Header, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from aiogram import Bot, Dispatcher, types
 from aiogram.filters import CommandStart
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo, LabeledPrice, PreCheckoutQuery
-from database import init_db, get_or_create_user, claim_daily_streak, set_vip
+from aiogram.types import WebAppInfo, InlineKeyboardMarkup, InlineKeyboardButton
+import uvicorn
 
-logging.basicConfig(level=logging.INFO)
-
-BOT_TOKEN = os.getenv("BOT_TOKEN")
-SPONSOR_CHANNEL = os.getenv("SPONSOR_CHANNEL", "")
-WEB_APP_URL = os.getenv("WEB_APP_URL", "https://xudaynazarovdadaxon012-sketch.github.io/telegram-bot/")
+# ==========================================
+# SOZLAMALAR
+# ==========================================
+BOT_TOKEN = os.getenv("BOT_TOKEN", "YOUR_TELEGRAM_BOT_TOKEN")
+ADMIN_ID = int(os.getenv("ADMIN_ID", "123456789"))
+WEBAPP_URL = "https://your-mini-app-url.onrender.com"  # Mini App havolasi
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
+app = FastAPI()
 
-# Render uchun dummy HTTP handler
-async def handle_ping(request):
-    return web.Response(text="Bot is running!")
+# WebApp so'rovlariga ruxsat berish
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-async def check_subscription(user_id: int) -> bool:
-    if not SPONSOR_CHANNEL:
-        return True
-    try:
-        member = await bot.get_chat_member(chat_id=SPONSOR_CHANNEL, user_id=user_id)
-        return member.status in ["creator", "administrator", "member"]
-    except Exception:
-        return True
+# Vaqtinchalik baza
+db = {
+    "users": {},
+    "promos": {"CYBER2026": 500, "WELCOME": 1000},
+    "used_promos": {}
+}
 
+# ==========================================
+# SCHEMAS
+# ==========================================
+class FeedbackModel(BaseModel):
+    user_id: int
+    username: str
+    text: str
+
+class PromoModel(BaseModel):
+    user_id: int
+    code: str
+
+class CoinUpdateModel(BaseModel):
+    user_id: int
+    amount: int
+
+# ==========================================
+# TELEGRAM BOT BUYRUQLARI
+# ==========================================
 @dp.message(CommandStart())
-async def start_handler(message: types.Message):
-    user_id = message.from_user.id
-    args = message.text.split()
-    referrer_id = int(args[1]) if len(args) > 1 and args[1].isdigit() else None
-
-    user = get_or_create_user(user_id, referrer_id)
-    
-    is_subscribed = await check_subscription(user_id)
-    if not is_subscribed:
-        channel_clean = SPONSOR_CHANNEL.replace('@', '')
-        kb = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="📢 Kanalga a'zo bo'lish", url=f"https://t.me/{channel_clean}")],
-            [InlineKeyboardButton(text="✅ Tekshirish", callback_data="check_sub")]
-        ])
-        await message.answer("⚠️ Botdan foydalanish uchun majburiy homiy kanalga a'zo bo'ling:", reply_markup=kb)
-        return
-
-    kb = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="🚀 Ultra Cyber Hub (10 Modul)", web_app=WebAppInfo(url=WEB_APP_URL))],
-        [InlineKeyboardButton(text="🎁 Kunlik Bonus", callback_data="daily_bonus")],
-        [InlineKeyboardButton(text="⭐ VIP Status (Telegram Stars)", callback_data="buy_stars")]
-    ])
-    
-    await message.answer(
-        f"👋 Salom, **{message.from_user.first_name}**!\n\n"
-        f"💰 Balansingiz: **{user[1]} Coins**\n"
-        f"👥 Taklif qilgan do'stlaringiz: **{user[2]} ta**\n\n"
-        f"Pastdagi tugma orqali Mini App-ni oching:",
-        reply_markup=kb,
-        parse_mode="Markdown"
+async def start_cmd(message: types.Message):
+    kb = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="🚀 Mini App-ni ochish", web_app=WebAppInfo(url=WEBAPP_URL))]
+        ]
     )
+    await message.answer("Xush kelibsiz! O'yinni boshlash uchun quyidagi tugmani bosing:", reply_markup=kb)
 
-@dp.callback_query(F.data == "check_sub")
-async def check_sub_handler(callback: types.CallbackQuery):
-    if await check_subscription(callback.from_user.id):
-        await callback.message.delete()
-        await start_handler(callback.message)
-    else:
-        await callback.answer("❌ Hali kanalga a'zo bo'lmadingiz!", show_alert=True)
+# ==========================================
+# API ENDPOINTLARI (MINI APP UCHUN)
+# ==========================================
+@app.get("/")
+async def root():
+    return {"status": "ok", "message": "Server ishlamoqda!"}
 
-@dp.callback_query(F.data == "daily_bonus")
-async def daily_bonus_handler(callback: types.CallbackQuery):
-    status, streak, reward = claim_daily_streak(callback.from_user.id)
-    if status:
-        await callback.answer(f"🎉 Tabriklaymiz! {streak}-kunlik bonus: +{reward} Coins!", show_alert=True)
-    else:
-        await callback.answer("⚠️ Siz bugungi bonusni olib bo'lgansiz. Ertaga qayta kiring!", show_alert=True)
+@app.get("/api/get_user")
+async def get_user(user_id: int):
+    if user_id not in db["users"]:
+        db["users"][user_id] = {"coins": 0, "username": "User"}
+    return {"success": True, "coins": db["users"][user_id]["coins"]}
 
-@dp.callback_query(F.data == "buy_stars")
-async def send_invoice(callback: types.CallbackQuery):
-    prices = [LabeledPrice(label="VIP Maqom", amount=50)]
-    await bot.send_invoice(
-        chat_id=callback.from_user.id,
-        title="VIP Maqom xaridi",
-        description="Botda reklamasiz rejim va eksklyuziv imkoniyatlarni yoqish.",
-        payload="vip_status_pack",
-        currency="XTR",
-        prices=prices
+@app.post("/api/send_feedback")
+async def send_feedback(data: FeedbackModel):
+    msg_text = (
+        f"📩 **Yangi Fikr / Taklif!**\n\n"
+        f"👤 **Kimdan:** @{data.username} (ID: `{data.user_id}`)\n"
+        f"💬 **Xabar:**\n{data.text}"
     )
+    try:
+        await bot.send_message(chat_id=ADMIN_ID, text=msg_text, parse_mode="Markdown")
+        return {"success": True, "message": "Xabar adminga yuborildi"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
-@dp.pre_checkout_query()
-async def pre_checkout_handler(query: PreCheckoutQuery):
-    await bot.answer_pre_checkout_query(query.id, ok=True)
+@app.post("/api/use_promo")
+async def use_promo(data: PromoModel):
+    code = data.code.upper().strip()
+    user_id = data.user_id
 
-@dp.message(F.successful_payment)
-async def successful_payment_handler(message: types.Message):
-    set_vip(message.from_user.id)
-    await message.answer("🎉 To'lov muvaffaqiyatli amalga oshirildi! VIP maqomingiz faollashtirildi.")
+    if code not in db["promos"]:
+        return {"success": False, "message": "Bunday promo-kod mavjud emas!"}
 
+    used_list = db["used_promos"].get(user_id, [])
+    if code in used_list:
+        return {"success": False, "message": "Siz bu promo-kodni ishlatgansiz!"}
+
+    reward = db["promos"][code]
+    if user_id not in db["users"]:
+        db["users"][user_id] = {"coins": 0, "username": "User"}
+
+    db["users"][user_id]["coins"] += reward
+
+    if user_id not in db["used_promos"]:
+        db["used_promos"][user_id] = []
+    db["used_promos"][user_id].append(code)
+
+    return {"success": True, "reward": reward, "new_balance": db["users"][user_id]["coins"]}
+
+@app.post("/api/admin/update_coins")
+async def admin_update_coins(data: CoinUpdateModel, x_user_id: int = Header(...)):
+    if x_user_id != ADMIN_ID:
+        raise HTTPException(status_code=403, detail="Ruxsat berilmagan!")
+
+    if data.user_id not in db["users"]:
+        db["users"][data.user_id] = {"coins": 0, "username": "User"}
+
+    db["users"][data.user_id]["coins"] += data.amount
+    return {"success": True, "new_balance": db["users"][data.user_id]["coins"]}
+
+# ==========================================
+# ASOSIY ISHGA TUSHIRISH (MAIN FUNKSIYASI)
+# ==========================================
 async def main():
-    init_db()
-    await bot.delete_webhook(drop_pending_updates=True)
+    # Render beradigan PORT-ni olish
+    port = int(os.environ.get("PORT", 8000))
     
-    # Render port xatosini bartaraf etish
-    app = web.Application()
-    app.router.add_get('/', handle_ping)
-    runner = web.AppRunner(app)
-    await runner.setup()
-    port = int(os.environ.get("PORT", 10000))
-    site = web.TCPSite(runner, '0.0.0.0', port)
-    await site.start()
-
-    # Bot Polling
-    await dp.start_polling(bot)
+    # Uvicorn serverini fonda yurgizish
+    config = uvicorn.Config(app=app, host="0.0.0.0", port=port, log_level="info")
+    server = uvicorn.Server(config)
+    
+    # Bot va FastAPI-ni bir vaqtda parallel ishga tushirish
+    await asyncio.gather(
+        server.serve(),
+        dp.start_polling(bot)
+    )
 
 if __name__ == "__main__":
     asyncio.run(main())
