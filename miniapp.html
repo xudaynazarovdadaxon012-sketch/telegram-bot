@@ -2,438 +2,181 @@
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Ultra Cyber Hub</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mega Cyber Hub + Monetization</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://adsgram.ai/js/adsgram-ad-controller.js"></script>
     <style>
         :root {
-            --bg-color: #030308;
-            --card-bg: rgba(15, 22, 36, 0.75);
-            --neon-cyan: #00f3ff;
-            --neon-pink: #ff007f;
-            --neon-purple: #b000ff;
-            --neon-green: #00ff66;
-            --neon-yellow: #ffcc00;
-            --neon-blue: #0066ff;
-            --neon-emerald: #00ffaa;
-            --neon-orange: #ff6600;
-            --neon-red: #ff3344;
-            --text-color: #f8fafc;
-            --subtext-color: #8a99ad;
+            --bg-color: #080b10;
+            --card-bg: #0f172a;
+            --border-color: #1e293b;
+            --accent-cyan: #00f2ff;
+            --accent-gold: #ffd700;
+            --text-main: #f8fafc;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Segoe UI', Roboto, sans-serif;
             background-color: var(--bg-color);
-            background-image: 
-                radial-gradient(circle at 10% 10%, rgba(176, 0, 255, 0.12) 0%, transparent 40%),
-                radial-gradient(circle at 90% 90%, rgba(0, 243, 255, 0.12) 0%, transparent 40%);
-            color: var(--text-color);
+            color: var(--text-main);
             margin: 0;
-            padding: 14px;
-            padding-bottom: 40px;
-            min-height: 100vh;
-            box-sizing: border-box;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
         }
 
-        /* HEADER */
-        .header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            background: var(--card-bg);
-            backdrop-filter: blur(12px);
-            padding: 12px 16px;
+        .user-card {
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            border: 1px solid var(--accent-cyan);
             border-radius: 16px;
-            border: 1px solid rgba(0, 243, 255, 0.3);
-            box-shadow: 0 0 15px rgba(0, 243, 255, 0.15);
-            margin-bottom: 16px;
-        }
-
-        .avatar {
-            width: 42px;
-            height: 42px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--neon-purple), var(--neon-pink));
+            padding: 16px;
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            box-shadow: 0 0 10px var(--neon-pink);
         }
 
-        /* NAV TABS GRID (10 TA MODUL UCHUN) */
-        .nav-grid {
+        .modules-grid {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
-            gap: 6px;
+            gap: 8px;
             background: var(--card-bg);
-            backdrop-filter: blur(10px);
-            padding: 8px;
+            padding: 12px;
             border-radius: 16px;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            margin-bottom: 16px;
+            border: 1px solid var(--border-color);
         }
 
-        .tab-btn {
-            padding: 10px 4px;
+        .module-btn {
+            background: #1e293b;
             border: 1px solid transparent;
-            background: rgba(255, 255, 255, 0.02);
-            color: var(--subtext-color);
             border-radius: 10px;
+            padding: 10px;
+            color: #fff;
             font-size: 16px;
             cursor: pointer;
-            text-align: center;
-            transition: all 0.3s ease;
         }
 
-        .tab-btn.active { background: rgba(255, 255, 255, 0.08); }
+        .module-btn.active {
+            border-color: var(--accent-cyan);
+            background: rgba(0, 242, 255, 0.1);
+        }
 
-        /* UNIKAL NEON BORDER VA GLOW EFFEKTLARI */
-        .tab-btn[data-tab="tasks"].active { border-color: var(--neon-cyan); box-shadow: 0 0 10px var(--neon-cyan); }
-        .tab-btn[data-tab="pomo"].active { border-color: var(--neon-pink); box-shadow: 0 0 10px var(--neon-pink); }
-        .tab-btn[data-tab="notes"].active { border-color: var(--neon-purple); box-shadow: 0 0 10px var(--neon-purple); }
-        .tab-btn[data-tab="habits"].active { border-color: var(--neon-green); box-shadow: 0 0 10px var(--neon-green); }
-        .tab-btn[data-tab="targets"].active { border-color: var(--neon-yellow); box-shadow: 0 0 10px var(--neon-yellow); }
-        .tab-btn[data-tab="water"].active { border-color: var(--neon-blue); box-shadow: 0 0 10px var(--neon-blue); }
-        .tab-btn[data-tab="expense"].active { border-color: var(--neon-emerald); box-shadow: 0 0 10px var(--neon-emerald); }
-        .tab-btn[data-tab="breath"].active { border-color: var(--neon-cyan); box-shadow: 0 0 10px var(--neon-cyan); }
-        .tab-btn[data-tab="decision"].active { border-color: var(--neon-orange); box-shadow: 0 0 10px var(--neon-orange); }
-        .tab-btn[data-tab="stats"].active { border-color: var(--neon-red); box-shadow: 0 0 10px var(--neon-red); }
-
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-
-        .card {
+        .content-card {
             background: var(--card-bg);
-            backdrop-filter: blur(12px);
-            border-radius: 20px;
-            padding: 18px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            margin-bottom: 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 20px;
         }
 
-        .input-box {
-            width: 100%;
-            padding: 12px;
-            border-radius: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            background: rgba(3, 3, 8, 0.8);
-            color: white;
-            margin-bottom: 10px;
-            box-sizing: border-box;
-            outline: none;
-        }
-
-        .btn-action {
-            width: 100%;
-            border: none;
-            padding: 12px;
-            border-radius: 10px;
-            font-weight: bold;
+        .action-btn {
+            background: var(--accent-cyan);
             color: #000;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-
-        /* ANIMATSIYALAR & KARTALARI */
-        @keyframes slideIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-        .item-card {
-            background: rgba(255, 255, 255, 0.03);
+            border: none;
             border-radius: 10px;
             padding: 12px;
-            margin-bottom: 8px;
-            font-size: 13px;
-            animation: slideIn 0.3s ease;
+            font-weight: bold;
+            width: 100%;
+            cursor: pointer;
+            margin-top: 10px;
         }
 
-        /* 2. Pomodoro Glow */
-        @keyframes pulseGlow {
-            0% { text-shadow: 0 0 10px var(--neon-pink); }
-            100% { text-shadow: 0 0 25px var(--neon-pink), 0 0 35px var(--neon-purple); }
+        .stars-btn {
+            background: linear-gradient(45deg, #ffaa00, #ff5500);
+            color: #fff;
         }
-        .timer-val { font-size: 48px; font-weight: 800; text-align: center; margin: 15px 0; animation: pulseGlow 1.5s infinite alternate; }
-
-        /* 8. Breath Circle */
-        @keyframes breathe {
-            0%, 100% { transform: scale(1); box-shadow: 0 0 15px var(--neon-cyan); }
-            50% { transform: scale(1.35); box-shadow: 0 0 35px var(--neon-pink); }
-        }
-        .breath-circle {
-            width: 90px; height: 90px; border-radius: 50%; border: 2px solid var(--neon-cyan);
-            margin: 20px auto; animation: breathe 8s infinite ease-in-out;
-        }
-
-        /* Progress Bar */
-        .progress-bar { height: 8px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; margin-top: 6px; }
-        .progress-fill { height: 100%; width: 50%; background: var(--neon-yellow); box-shadow: 0 0 10px var(--neon-yellow); }
     </style>
 </head>
 <body>
 
-    <!-- HEADER -->
-    <div class="header">
-        <div class="avatar" id="uAvatar">U</div>
+    <div class="user-card">
         <div>
-            <h4 style="margin:0;" id="uName">Foydalanuvchi</h4>
-            <span style="font-size:11px; color:var(--subtext-color);">Ultra Cyber Hub (10 Modul)</span>
+            <h2 id="username" style="margin:0; font-size:16px;">𓆩D a d a x o n𓆪</h2>
+            <small style="color:var(--accent-cyan)">Ultra Cyber Hub</small>
+        </div>
+        <div style="text-align: right;">
+            <span id="user-coins" style="font-size: 20px; font-weight: bold; color: var(--accent-gold);">0</span> 🪙
         </div>
     </div>
 
-    <!-- 10 TA NEON MODUL TABS GRID -->
-    <div class="nav-grid">
-        <button class="tab-btn active" data-tab="tasks" onclick="openTab(event, 'tasks')">⚡</button>
-        <button class="tab-btn" data-tab="pomo" onclick="openTab(event, 'pomo')">⏱️</button>
-        <button class="tab-btn" data-tab="notes" onclick="openTab(event, 'notes')">🔮</button>
-        <button class="tab-btn" data-tab="habits" onclick="openTab(event, 'habits')">🔋</button>
-        <button class="tab-btn" data-tab="targets" onclick="openTab(event, 'targets')">🎯</button>
-        <button class="tab-btn" data-tab="water" onclick="openTab(event, 'water')">💧</button>
-        <button class="tab-btn" data-tab="expense" onclick="openTab(event, 'expense')">💰</button>
-        <button class="tab-btn" data-tab="breath" onclick="openTab(event, 'breath')">🧘</button>
-        <button class="tab-btn" data-tab="decision" onclick="openTab(event, 'decision')">🎲</button>
-        <button class="tab-btn" data-tab="stats" onclick="openTab(event, 'stats')">📊</button>
+    <!-- 10 modul iconlari -->
+    <div class="modules-grid">
+        <button class="module-btn active" onclick="switchTab(1)">⚡</button>
+        <button class="module-btn" onclick="switchTab(2)">⏱️</button>
+        <button class="module-btn" onclick="switchTab(3)">🔮</button>
+        <button class="module-btn" onclick="switchTab(4)">📅</button> <!-- Daily Bonus -->
+        <button class="module-btn" onclick="switchTab(5)">🎯</button>
+        <button class="module-btn" onclick="switchTab(6)">🎰</button> <!-- Wheel Spin -->
+        <button class="module-btn" onclick="switchTab(7)">💰</button> <!-- Adsgram -->
+        <button class="module-btn" onclick="switchTab(8)">⭐</button> <!-- Stars Payment -->
+        <button class="module-btn" onclick="switchTab(9)">🎲</button>
+        <button class="module-btn" onclick="switchTab(10)">📊</button>
     </div>
 
-    <!-- MODUL 1: VAZIFALAR -->
-    <div id="tab-tasks" class="tab-content active">
-        <div class="card" style="border-color: rgba(0, 243, 255, 0.3);">
-            <h3 style="margin-top:0; color:var(--neon-cyan);">⚡ Cyber Tasks</h3>
-            <input type="text" id="taskInput" class="input-box" placeholder="Yangi vazifa...">
-            <button class="btn-action" style="background:var(--neon-cyan); box-shadow:0 0 12px var(--neon-cyan);" onclick="addTask()">Qo'shish</button>
-            <div id="taskList" style="margin-top:12px;"></div>
-        </div>
-    </div>
-
-    <!-- MODUL 2: POMODORO -->
-<div id="tab-pomo" class="tab-content">
-    <div class="card" style="border-color: rgba(255, 0, 127, 0.3); text-align:center;">
-        <h3 style="margin-top:0; color:var(--neon-pink);">⏱️ Cyber Fokus Taymer</h3>
-        
-        <div style="display: flex; gap: 8px; justify-content: center; margin-bottom: 12px;">
-            <input type="number" id="pomoMinutesInput" class="input-box" style="width: 100%; margin-bottom: 0; text-align: center;" placeholder="Vaqt (daqiqa)" value="25" min="1" max="180">
-            <button class="btn-action" style="background:var(--neon-purple); color:#fff; width: auto; padding: 0 16px; white-space: nowrap;" onclick="setCustomTimer()">Sozlash</button>
-        </div>
-
-        <div class="timer-val" id="timer">25:00</div>
-        <div style="display:flex; gap:8px;">
-            <button class="btn-action" style="background:var(--neon-pink); color:#fff;" onclick="startTimer()">Boshlash</button>
-            <button class="btn-action" style="background:rgba(255,255,255,0.1); color:#fff;" onclick="resetTimer()">Reset</button>
-        </div>
-    </div>
-</div>
-
-    <!-- MODUL 3: ESLATMALAR -->
-    <div id="tab-notes" class="tab-content">
-        <div class="card" style="border-color: rgba(176, 0, 255, 0.3);">
-            <h3 style="margin-top:0; color:var(--neon-purple);">🔮 Hologram Notes</h3>
-            <textarea id="noteInput" class="input-box" rows="3" placeholder="Fikrni saqlash..."></textarea>
-            <button class="btn-action" style="background:var(--neon-purple); color:#fff; box-shadow:0 0 12px var(--neon-purple);" onclick="saveNote()">Saqlash</button>
-            <div id="notesList" style="margin-top:12px;"></div>
-        </div>
-    </div>
-
-    <!-- MODUL 4: ODATLAR -->
-    <div id="tab-habits" class="tab-content">
-        <div class="card" style="border-color: rgba(0, 255, 102, 0.3);">
-            <h3 style="margin-top:0; color:var(--neon-green);">🔋 Energy Habits</h3>
-            <div class="item-card"><input type="checkbox"> 💧 2 L Suv ichish</div>
-            <div class="item-card"><input type="checkbox"> 📖 15 Bet Mutolaa</div>
-            <div class="item-card"><input type="checkbox"> 🏃 20 Min Mashq</div>
-        </div>
-    </div>
-
-    <!-- MODUL 5: MAQSADLAR & KPI -->
-    <div id="tab-targets" class="tab-content">
-        <div class="card" style="border-color: rgba(255, 204, 0, 0.3);">
-            <h3 style="margin-top:0; color:var(--neon-yellow);">🎯 Target Radar</h3>
-            <div style="font-size:13px; margin-bottom:10px;">
-                <b>Loyiha taqdimoti:</b> 75%
-                <div class="progress-bar"><div class="progress-fill" style="width:75%;"></div></div>
-            </div>
-            <div style="font-size:13px;">
-                <b>Oylik kitob maqsadi:</b> 40%
-                <div class="progress-bar"><div class="progress-fill" style="width:40%;"></div></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODUL 6: SUV BALANSI -->
-    <div id="tab-water" class="tab-content">
-        <div class="card" style="border-color: rgba(0, 102, 255, 0.3); text-align:center;">
-            <h3 style="margin-top:0; color:var(--neon-blue);">💧 Aqua Tracker</h3>
-            <div style="font-size:36px; font-weight:bold; color:var(--neon-blue);" id="waterVal">1200 / 2000 ml</div>
-            <button class="btn-action" style="background:var(--neon-blue); color:#fff; margin-top:12px; box-shadow:0 0 12px var(--neon-blue);" onclick="addWater()">+ 250 ml Suv Ichdim</button>
-        </div>
-    </div>
-
-    <!-- MODUL 7: XARAJATLAR -->
-    <div id="tab-expense" class="tab-content">
-        <div class="card" style="border-color: rgba(0, 255, 170, 0.3);">
-            <h3 style="margin-top:0; color:var(--neon-emerald);">💰 Cyber Expense</h3>
-            <input type="number" id="expAmount" class="input-box" placeholder="Mablağ (so'm)...">
-            <input type="text" id="expCategory" class="input-box" placeholder="Kategoriya (Masalan: Tushlik)...">
-            <button class="btn-action" style="background:var(--neon-emerald); box-shadow:0 0 12px var(--neon-emerald);" onclick="addExpense()">Yozish</button>
-            <div id="expenseList" style="margin-top:12px;"></div>
-        </div>
-    </div>
-
-    <!-- MODUL 8: NAFAS MASHQI -->
-    <div id="tab-breath" class="tab-content">
-        <div class="card" style="border-color: rgba(0, 243, 255, 0.3); text-align:center;">
-            <h3 style="margin-top:0; color:var(--neon-cyan);">🧘 Breath Pulse</h3>
-            <p style="font-size:12px; color:var(--subtext-color);">Nafas oling va chiqaring...</p>
-            <div class="breath-circle"></div>
-        </div>
-    </div>
-
-    <!-- MODUL 9: QAROR WHEEL -->
-    <div id="tab-decision" class="tab-content">
-        <div class="card" style="border-color: rgba(255, 102, 0, 0.3); text-align:center;">
-            <h3 style="margin-top:0; color:var(--neon-orange);">🎲 Decision Generator</h3>
-            <div id="decisionResult" style="font-size:20px; font-weight:bold; margin:20px 0; color:var(--neon-orange);">?</div>
-            <button class="btn-action" style="background:var(--neon-orange); color:#fff; box-shadow:0 0 12px var(--neon-orange);" onclick="makeDecision()">Tanlab ber!</button>
-        </div>
-    </div>
-
-    <!-- MODUL 10: STATISTIKA -->
-    <div id="tab-stats" class="tab-content">
-        <div class="card" style="border-color: rgba(ff, 51, 68, 0.3);">
-            <h3 style="margin-top:0; color:var(--neon-red);">📊 Activity Dashboard</h3>
-            <div class="item-card">🔥 Bajarilgan vazifalar: <b id="statTasks">0</b> ta</div>
-            <div class="item-card">💧 Suv balansi: <b id="statWater">1200</b> ml</div>
-            <div class="item-card">⚡ Umumiy unumdorlik: <b>88%</b></div>
-        </div>
+    <div class="content-card" id="tab-content">
+        <!-- Tab kontentlari dinamik ravishda o'zgaradi -->
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        let currentUserId = 12345;
-        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-            currentUserId = tg.initDataUnsafe.user.id;
-            document.getElementById('uName').innerText = tg.initDataUnsafe.user.first_name;
-            document.getElementById('uAvatar').innerText = tg.initDataUnsafe.user.first_name.charAt(0);
+        function switchTab(moduleNum) {
+            const btns = document.querySelectorAll('.module-btn');
+            btns.forEach((btn, idx) => btn.classList.toggle('active', idx === moduleNum - 1));
+
+            const content = document.getElementById('tab-content');
+
+            if (moduleNum === 4) {
+                // Kunlik bonus (Daily Streak)
+                content.innerHTML = `
+                    <h3>📅 Kunlik Bonus (Streak)</h3>
+                    <p>Har kuni kirib bonus oling va tangalaringizni ko'paytiring!</p>
+                    <button class="action-btn" onclick="claimStreak()">🎁 Bugungi bonusni olish</button>`;
+            } else if (moduleNum === 6) {
+                // Omad g'ildiragi
+                content.innerHTML = `
+                    <h3>🎰 Omad G'ildiragi</h3>
+                    <p>Aylantiring va tasodifiy mukofot yutib oling!</p>
+                    <button class="action-btn" onclick="spinWheel()">🎡 G'ildirakni aylantirish (10 Coins)</button>`;
+            } else if (moduleNum === 8) {
+                // Telegram Stars orqali VIP olish
+                content.innerHTML = `
+                    <h3>⭐ Premium / Donat (Stars)</h3>
+                    <p>Telegram Stars orqali VIP maqom va reklamasiz rejimni yoqing.</p>
+                    <button class="action-btn stars-btn" onclick="buyStarsVIP()">⭐ 50 Stars - VIP Maqom</button>`;
+            } else if (moduleNum === 7) {
+                // Adsgram reklama
+                content.innerHTML = `
+                    <h3>💰 Reklama Ko'rish</h3>
+                    <p>Har bir ko'rilgan reklama uchun +30 coins beriladi.</p>
+                    <button class="action-btn" onclick="showAd()">📺 Reklama ko'rish</button>`;
+            } else {
+                content.innerHTML = `<h3>Modul #${moduleNum}</h3><p>Modul faol holatda.</p>`;
+            }
         }
 
-        function openTab(evt, tabName) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-            document.getElementById('tab-' + tabName).classList.add('active');
-            evt.currentTarget.classList.add('active');
+        // Boshlang'ich tab
+        switchTab(1);
+
+        function claimStreak() {
+            tg.showAlert("🎉 Kunlik bonus olindi!");
         }
 
-        /* 1. VAZIFALAR */
-        async function loadTasks() {
-            try {
-                const res = await fetch(`/api/tasks?user_id=${currentUserId}`);
-                const data = await res.json();
-                const list = document.getElementById('taskList');
-                if (data.ok && data.tasks.length > 0) {
-                    list.innerHTML = data.tasks.map(t => `<div class="item-card">⚡ ${t.text}</div>`).join('');
-                    document.getElementById('statTasks').innerText = data.tasks.length;
-                } else {
-                    list.innerHTML = '<p style="font-size:12px; color:var(--subtext-color);">Hali vazifalar yo\'q</p>';
-                }
-            } catch (e) { console.error(e); }
+        function spinWheel() {
+            const prizes = [10, 20, 50, 100, 0];
+            const win = prizes[Math.floor(Math.random() * prizes.length)];
+            tg.showAlert(`🎉 Siz ${win} coins yutib oldingiz!`);
         }
 
-        async function addTask() {
-            const input = document.getElementById('taskInput');
-            if (!input.value.trim()) return;
-            await fetch('/api/tasks/add', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ user_id: currentUserId, text: input.value })
-            });
-            input.value = '';
-            loadTasks();
+        function buyStarsVIP() {
+            // Telegram Stars to'lovini chaqirish
+            tg.openInvoice("https://t.me/invoice_link_here");
         }
 
-        /* 2. POMODORO */
-       /* 2. POMODORO */
-let defaultMinutes = 25;
-let timeLeft = defaultMinutes * 60;
-let timerInterval = null;
-
-function renderTimer() {
-    let m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
-    let s = (timeLeft % 60).toString().padStart(2, '0');
-    document.getElementById('timer').innerText = `${m}:${s}`;
-}
-
-function setCustomTimer() {
-    const inputVal = parseInt(document.getElementById('pomoMinutesInput').value);
-    if (!inputVal || inputVal < 1) {
-        alert("Iltimos, kamida 1 daqiqa kiriting!");
-        return;
-    }
-    
-    clearInterval(timerInterval);
-    timerInterval = null;
-    defaultMinutes = inputVal;
-    timeLeft = defaultMinutes * 60;
-    renderTimer();
-}
-
-function startTimer() {
-    if (timerInterval) return;
-    timerInterval = setInterval(() => {
-        if (timeLeft > 0) {
-            timeLeft--;
-            renderTimer();
-        } else { 
-            clearInterval(timerInterval); 
-            timerInterval = null;
-            alert("Fokus vaqti tugadi!"); 
+        function showAd() {
+            tg.showAlert("📺 Reklama ko'rildi! +30 Coins berildi.");
         }
-    }, 1000);
-}
-
-function resetTimer() { 
-    clearInterval(timerInterval); 
-    timerInterval = null; 
-    timeLeft = defaultMinutes * 60; 
-    renderTimer(); 
-}
-
-        /* 3. ESLATMALAR */
-        function saveNote() {
-            const input = document.getElementById('noteInput');
-            if (!input.value.trim()) return;
-            const el = document.createElement('div');
-            el.className = 'item-card'; el.innerText = '🔮 ' + input.value;
-            document.getElementById('notesList').prepend(el);
-            input.value = '';
-        }
-
-        /* 6. SUV BALANSI */
-        let waterTotal = 1200;
-        function addWater() {
-            waterTotal += 250;
-            document.getElementById('waterVal').innerText = `${waterTotal} / 2000 ml`;
-            document.getElementById('statWater').innerText = waterTotal;
-        }
-
-        /* 7. XARAJATLAR */
-        function addExpense() {
-            const amt = document.getElementById('expAmount').value;
-            const cat = document.getElementById('expCategory').value;
-            if(!amt || !cat) return;
-            const el = document.createElement('div');
-            el.className = 'item-card'; el.innerText = `💸 ${amt} so'm - ${cat}`;
-            document.getElementById('expenseList').prepend(el);
-            document.getElementById('expAmount').value = ''; document.getElementById('expCategory').value = '';
-        }
-
-        /* 9. QAROR GENERATORI */
-        function makeDecision() {
-            const choices = ["Ha, albatta!", "Yo'q, shoshilmang", "Keyinroq bajaring", "Bugun dars qiling", "Dam oling"];
-            const res = choices[Math.floor(Math.random() * choices.length)];
-            document.getElementById('decisionResult').innerText = res;
-        }
-
-        loadTasks();
     </script>
 </body>
 </html>
