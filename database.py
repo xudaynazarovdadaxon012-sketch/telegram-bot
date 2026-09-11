@@ -2,6 +2,7 @@ import sqlite3
 from datetime import datetime, timedelta
 
 def init_db():
+    """Ma'lumotlar bazasini yaratish va tayyorlash"""
     conn = sqlite3.connect("bot_data.db")
     cursor = conn.cursor()
     cursor.execute('''
@@ -17,8 +18,45 @@ def init_db():
     conn.commit()
     conn.close()
 
+def get_or_create_user(user_id: int, referrer_id: int = None):
+    """Foydalanuvchini bazadan olish yoki yangi qo'shish"""
+    conn = sqlite3.connect("bot_data.db")
+    cursor = conn.cursor()
+    
+    cursor.execute("SELECT user_id, coins, invited_count FROM users WHERE user_id = ?", (user_id,))
+    user = cursor.fetchone()
+    
+    if not user:
+        # Yangi foydalanuvchini qo'shish
+        cursor.execute(
+            "INSERT INTO users (user_id, referrer_id, coins, invited_count) VALUES (?, ?, ?, ?)",
+            (user_id, referrer_id, 0, 0)
+        )
+        
+        # Agar taklif qilgan do'sti bo'lsa, taklif qilganga 100 coins berish
+        if referrer_id and referrer_id != user_id:
+            cursor.execute(
+                "UPDATE users SET coins = coins + 100, invited_count = invited_count + 1 WHERE user_id = ?",
+                (referrer_id,)
+            )
+            
+        conn.commit()
+        cursor.execute("SELECT user_id, coins, invited_count FROM users WHERE user_id = ?", (user_id,))
+        user = cursor.fetchone()
+        
+    conn.close()
+    return user
+
+def add_coins(user_id: int, amount: int):
+    """Foydalanuvchiga coin qo'shish"""
+    conn = sqlite3.connect("bot_data.db")
+    cursor = conn.cursor()
+    cursor.execute("UPDATE users SET coins = coins + ? WHERE user_id = ?", (amount, user_id))
+    conn.commit()
+    conn.close()
+
 def claim_daily_streak(user_id: int):
-    """Kunlik bonus olish tizimi (Kam error beruvchi mantiq)"""
+    """Kunlik bonus olish mantiqi"""
     conn = sqlite3.connect("bot_data.db")
     cursor = conn.cursor()
     cursor.execute("SELECT last_streak, streak_days FROM users WHERE user_id = ?", (user_id,))
@@ -27,7 +65,6 @@ def claim_daily_streak(user_id: int):
     today = datetime.now().date()
     
     if not row or not row[0]:
-        # Birinchi marta kirishi
         cursor.execute("UPDATE users SET coins = coins + 50, streak_days = 1, last_streak = ? WHERE user_id = ?", (str(today), user_id))
         conn.commit()
         conn.close()
@@ -38,14 +75,14 @@ def claim_daily_streak(user_id: int):
     
     if last_date == today:
         conn.close()
-        return False, streak, 0 # Bugun olib bo'lgan
+        return False, streak, 0
         
     if last_date == today - timedelta(days=1):
-        streak += 1 # Ketma-ket kun
+        streak += 1
     else:
-        streak = 1 # Kun o'tib ketgan bo'lsa qayta 1-kundan boshlanadi
+        streak = 1
         
-    reward = streak * 50 # Har bir kun uchun oshib boradi (50, 100, 150...)
+    reward = streak * 50
     cursor.execute("UPDATE users SET coins = coins + ?, streak_days = ?, last_streak = ? WHERE user_id = ?", (reward, streak, str(today), user_id))
     conn.commit()
     conn.close()
