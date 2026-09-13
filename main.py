@@ -11,7 +11,7 @@ CORS(app)
 
 # Environment variable'lardan token va admin ID'larni olish
 BOT_TOKEN = os.environ.get("BOT_TOKEN", "")
-ADMIN_IDS = [int(i) for i in os.environ.get("ADMIN_IDS", "").split(",") if i.isdigit()]
+ADMIN_IDS = [8898979946]  # 123456789 o'rniga o'zingizning haqiqiy ID'ingizni yozing
 
 # ==================== TELEGRAM BOT POLLING ====================
 def run_bot_polling():
