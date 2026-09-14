@@ -3,237 +3,305 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Cyber Pro Hub</title>
+    <title>Cyber Pro Hub Mini App</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; user-select: none; }
-        body { background: #0b0e14; color: #ffffff; text-align: center; padding-bottom: 80px; overflow-x: hidden; }
-        
-        /* Header & Balance */
-        .header { padding: 20px 15px; background: linear-gradient(180deg, #161b26 0%, #0b0e14 100%); border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .user-card { font-size: 13px; color: #8b949e; letter-spacing: 0.5px; }
-        .coins-container { font-size: 40px; font-weight: 800; color: #f1e05a; margin: 10px 0; text-shadow: 0 0 20px rgba(241, 224, 90, 0.4); display: flex; align-items: center; justify-content: center; gap: 10px; }
-        
-        /* Energy Bar */
-        .energy-box { width: 85%; margin: 10px auto; background: #161b22; padding: 8px 12px; border-radius: 12px; border: 1px solid #30363d; }
-        .energy-text { font-size: 12px; color: #8b949e; margin-bottom: 5px; display: flex; justify-content: space-between; }
-        .energy-bar { width: 100%; background: #21262d; border-radius: 10px; height: 10px; overflow: hidden; }
-        .energy-fill { background: linear-gradient(90deg, #388bfd, #58a6ff); height: 100%; width: 100%; transition: width 0.2s ease; }
-        
-        /* Tab Manager */
-        .tab-content { display: none; padding: 20px 15px; animation: fadeIn 0.3s ease-in-out; }
+        :root {
+            --bg-color: #05070f;
+            --card-bg: rgba(22, 27, 38, 0.65);
+            --neon-blue: #00f0ff;
+            --neon-purple: #7000ff;
+            --neon-gold: #ffd700;
+            --text-main: #f0f6fc;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; user-select: none; }
+        body { background: var(--bg-color); color: var(--text-main); overflow-x: hidden; padding-bottom: 90px; }
+
+        /* Neon Background Glows */
+        .glow-1 { position: fixed; top: -100px; left: -100px; width: 300px; height: 300px; background: var(--neon-purple); filter: blur(140px); opacity: 0.4; z-index: -1; }
+        .glow-2 { position: fixed; bottom: 50px; right: -100px; width: 300px; height: 300px; background: var(--neon-blue); filter: blur(140px); opacity: 0.3; z-index: -1; }
+
+        /* Glassmorphism Header */
+        .header {
+            background: var(--card-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding: 20px 15px; border-radius: 0 0 24px 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+        .username-badge { font-size: 13px; color: #8b949e; letter-spacing: 0.5px; }
+        .coins-display {
+            font-size: 46px; font-weight: 900; margin: 10px 0;
+            background: linear-gradient(135deg, #fff 0%, var(--neon-gold) 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 25px rgba(255, 215, 0, 0.2);
+        }
+
+        /* Energy Progress Bar */
+        .energy-box { width: 90%; margin: 0 auto; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 10px 14px; border-radius: 14px; }
+        .energy-text { display: flex; justify-content: space-between; font-size: 12px; color: #8b949e; margin-bottom: 6px; }
+        .energy-bar-bg { width: 100%; height: 10px; background: rgba(255,255,255,0.08); border-radius: 10px; overflow: hidden; }
+        .energy-bar-fill { height: 100%; background: linear-gradient(90deg, var(--neon-blue), var(--neon-purple)); width: 100%; transition: width 0.2s ease; border-radius: 10px; }
+
+        /* Content Tabs */
+        .tab-content { display: none; padding: 20px 15px; }
         .active-tab { display: block; }
 
-        /* Ideal Tap Button & Floating Text Animation */
-        .tap-area { margin: 30px 0; position: relative; display: flex; justify-content: center; align-items: center; }
+        /* Tap Button UI */
+        .tap-area { margin: 40px 0; position: relative; }
         .tap-btn {
             width: 230px; height: 230px; border-radius: 50%;
-            background: radial-gradient(circle, #1f6feb 0%, #0d419d 100%);
-            border: 6px solid rgba(56, 139, 253, 0.4); color: white; font-size: 32px; font-weight: 900;
-            cursor: pointer; box-shadow: 0 0 40px rgba(31, 111, 235, 0.5), inset 0 0 15px rgba(255,255,255,0.3);
-            transition: transform 0.08s ease, box-shadow 0.08s ease; outline: none; touch-action: manipulation;
+            background: radial-gradient(circle at 30% 30%, #1f6feb, #061539);
+            border: 4px solid rgba(0, 240, 255, 0.4);
+            box-shadow: 0 0 50px rgba(0, 240, 255, 0.3), inset 0 0 20px rgba(255, 255, 255, 0.2);
+            color: #fff; font-size: 36px; font-weight: 900; outline: none; cursor: pointer;
+            touch-action: manipulation; position: relative;
         }
-        .tap-btn:active { transform: scale(0.92); box-shadow: 0 0 15px rgba(31, 111, 235, 0.8); }
+        .tap-btn:active { transform: scale(0.95); }
 
-        /* Floating Number (+1 Effect) */
-        .floating-number {
-            position: absolute; color: #f1e05a; font-size: 28px; font-weight: bold;
-            pointer-events: none; animation: floatUp 0.8s ease-out forwards;
-            text-shadow: 0 0 10px rgba(0,0,0,0.8);
+        .floating-num {
+            position: absolute; color: var(--neon-gold); font-size: 32px; font-weight: 900;
+            pointer-events: none; text-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
         }
 
-        /* Card Elements (Boost, Task, Ref) */
-        .card-list { display: flex; flex-direction: column; gap: 12px; }
+        /* Cards List */
+        .card-list { display: flex; flex-direction: column; gap: 12px; margin-top: 15px; }
         .card-item {
-            background: #161b22; border: 1px solid #30363d; border-radius: 14px;
-            padding: 16px; display: flex; justify-content: space-between; align-items: center; text-align: left;
-            transition: transform 0.2s;
+            background: var(--card-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; padding: 16px;
+            display: flex; justify-content: space-between; align-items: center; text-align: left;
         }
-        .card-item:active { transform: scale(0.98); }
-        .card-info h4 { font-size: 15px; color: #ffffff; margin-bottom: 4px; }
-        .card-info p { font-size: 12px; color: #8b949e; }
-        .btn-action {
-            background: linear-gradient(135deg, #238636 0%, #2ea043 100%);
-            border: none; color: white; padding: 10px 18px; border-radius: 8px;
-            cursor: pointer; font-weight: 700; font-size: 13px; box-shadow: 0 4px 12px rgba(46, 160, 67, 0.3);
+        .btn-neon {
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
+            border: none; color: #fff; font-weight: 700; padding: 10px 16px; border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 240, 255, 0.3); cursor: pointer; transition: 0.2s;
         }
+        .btn-neon:active { transform: scale(0.92); }
 
-        /* Bottom Navigation Bar */
+        /* Admin Dashboard UI */
+        .admin-panel { background: rgba(15, 20, 32, 0.85); border: 1px solid var(--neon-gold); border-radius: 20px; padding: 18px; }
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 15px 0; }
+        .stat-box { background: rgba(255,255,255,0.04); border-radius: 12px; padding: 12px; text-align: center; border: 1px solid rgba(255,255,255,0.05); }
+        .stat-box h4 { font-size: 22px; color: var(--neon-gold); }
+
+        /* Bottom Nav Bar */
         .nav-bar {
-            position: fixed; bottom: 0; left: 0; width: 100%; background: #161b22;
-            display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #30363d;
-            backdrop-filter: blur(10px);
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            background: rgba(13, 17, 26, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255, 255, 255, 0.08); display: flex; justify-content: space-around; padding: 12px 0;
+            z-index: 100;
         }
         .nav-item { color: #8b949e; background: none; border: none; font-size: 11px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; }
-        .nav-item.active { color: #58a6ff; font-weight: bold; }
-        .nav-item span { font-size: 18px; }
-
-        /* Keyframe Animations */
-        @keyframes floatUp {
-            0% { opacity: 1; transform: translateY(0) scale(1); }
-            100% { opacity: 0; transform: translateY(-70px) scale(1.3); }
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(8px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        .nav-item.active { color: var(--neon-blue); font-weight: bold; }
     </style>
 </head>
 <body>
 
+    <div class="glow-1"></div>
+    <div class="glow-2"></div>
+
     <div class="header">
-        <div class="user-card">Foydalanuvchi: <span id="username">@User</span></div>
-        <div class="coins-container">🪙 <span id="coin-count">0</span></div>
+        <div class="username-badge" id="username">@User</div>
+        <div class="coins-display">🪙 <span id="coin-count">0</span></div>
         <div class="energy-box">
             <div class="energy-text">
                 <span>⚡ Energiya</span>
                 <span><b id="energy-val">1000</b> / <span id="max-energy">1000</span></span>
             </div>
-            <div class="energy-bar"><div class="energy-fill" id="energy-bar-fill"></div></div>
+            <div class="energy-bar-bg"><div class="energy-bar-fill" id="energy-fill"></div></div>
         </div>
     </div>
 
-    <!-- 1. MAIN TAP TAB -->
+    <!-- 1. TAP TAB -->
     <div id="tab-tap" class="tab-content active-tab">
         <div class="tap-area">
-            <button class="tap-btn" id="tap-btn">TAP!</button>
+            <button class="tap-btn" id="tap-btn">TAP</button>
         </div>
     </div>
 
-    <!-- 2. BOOSTS TAB -->
+    <!-- 2. BOOST TAB -->
     <div id="tab-boost" class="tab-content">
-        <h2 style="margin-bottom: 15px;">Boosterlar</h2>
+        <h3 style="text-align: left; font-size: 20px;">🚀 Boosters</h3>
         <div class="card-list">
             <div class="card-item">
-                <div class="card-info">
-                    <h4>Multitap</h4>
-                    <p>Har bir tap uchun +1 bonus tanga</p>
-                </div>
-                <button class="btn-action" onclick="buyBoost('multitap')">1,000 🪙</button>
+                <div><h4>Multitap</h4><p style="font-size: 12px; color: #8b949e;">Har bir tapga +1 tanga</p></div>
+                <button class="btn-neon" onclick="buyBoost('multitap')">1,000 🪙</button>
             </div>
             <div class="card-item">
-                <div class="card-info">
-                    <h4>Auto-Tap Bot</h4>
-                    <p>Siz o'yinda yo'qingizda ham tanga yig'adi</p>
-                </div>
-                <button class="btn-action" onclick="buyBoost('autotap')">0.5 TON</button>
+                <div><h4>Energy Limit</h4><p style="font-size: 12px; color: #8b949e;">+500 Maksimal Energiya</p></div>
+                <button class="btn-neon" onclick="buyBoost('energy')">1,500 🪙</button>
             </div>
         </div>
     </div>
 
-    <!-- 3. TASKS TAB -->
-    <div id="tab-tasks" class="tab-content">
-        <h2 style="margin-bottom: 15px;">Vazifalar</h2>
-        <div class="card-list">
-            <div class="card-item">
-                <div class="card-info">
-                    <h4>Telegram Kanalga a'zo bo'lish</h4>
-                    <p>+5,000 tanga mukofot</p>
-                </div>
-                <button class="btn-action" onclick="claimTask(1, 5000)">Bajarish</button>
+    <!-- 3. SPIN TAB -->
+    <div id="tab-spin" class="tab-content">
+        <h3 style="font-size: 20px;">🎰 Omad G'ildiragi</h3>
+        <p style="color: #8b949e; font-size: 13px; margin: 10px 0 20px 0;">Har kuni 1 marotaba bepul omadingizni sinab ko'ring!</p>
+        <button class="btn-neon" style="width: 100%; padding: 14px;" onclick="spinWheel()">Spin Aylantirish (Bonus)</button>
+    </div>
+
+    <!-- 4. ADMIN TAB -->
+    <div id="tab-admin" class="tab-content">
+        <div class="admin-panel">
+            <h3 style="color: var(--neon-gold); display: flex; align-items: center; justify-content: center; gap: 8px;">👑 Admin Control Center</h3>
+            <div class="stat-grid">
+                <div class="stat-box"><h4 id="adm-users">0</h4><p style="font-size: 11px; color: #8b949e;">Foydalanuvchilar</p></div>
+                <div class="stat-box"><h4 id="adm-coins">0</h4><p style="font-size: 11px; color: #8b949e;">Jami Tangalar</p></div>
             </div>
+            <h4 style="text-align: left; margin: 15px 0 10px 0; font-size: 14px;">Foydalanuvchilarni Boshqarish:</h4>
+            <div class="card-list" id="admin-user-list"></div>
         </div>
     </div>
 
-    <!-- 4. REFERRAL TAB -->
-    <div id="tab-ref" class="tab-content">
-        <h2 style="margin-bottom: 10px;">Referal Tizimi</h2>
-        <p style="color:#8b949e; font-size:13px; margin-bottom:20px;">Har bir taklif qilgan do'stingiz uchun <b>5,000 🪙</b> oling!</p>
-        <button class="btn-action" style="width: 100%; padding: 14px;" onclick="shareRef()">👥 Do'stlarni Taklif Qilish</button>
-    </div>
-
-    <!-- BOTTOM NAVIGATION -->
+    <!-- NAV BAR -->
     <div class="nav-bar">
-        <button class="nav-item active" onclick="switchTab('tap', this)"><span>🎮</span>O'yin</button>
-        <button class="nav-item" onclick="switchTab('boost', this)"><span>🚀</span>Boost</button>
-        <button class="nav-item" onclick="switchTab('tasks', this)"><span>📋</span>Vazifalar</button>
-        <button class="nav-item" onclick="switchTab('ref', this)"><span>👥</span>Do'stlar</button>
+        <button class="nav-item active" onclick="switchTab('tap', this)">🎮 Tap</button>
+        <button class="nav-item" onclick="switchTab('boost', this)">🚀 Boost</button>
+        <button class="nav-item" onclick="switchTab('spin', this)">🎰 Spin</button>
+        <button class="nav-item" id="nav-admin" style="display:none;" onclick="switchTab('admin', this)">👑 Admin</button>
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        const user = tg.initDataUnsafe?.user;
-        const userId = user ? user.id : 123456789;
-        const username = user ? user.username : "User";
+        const tgUser = tg.initDataUnsafe?.user;
+        const userId = tgUser?.id || 8898979946;
+        const username = tgUser?.username ? `@${tgUser.username}` : "User";
 
-        document.getElementById("username").innerText = "@" + username;
+        document.getElementById("username").innerText = username;
 
-        let coins = 0;
-        let energy = 1000;
-        let maxEnergy = 1000;
+        let coins = 0, energy = 1000, maxEnergy = 1000;
 
-        async function loadUserData() {
+        async function initApp() {
             try {
-                const res = await fetch(`/api/user/${userId}`);
+                const res = await fetch('/api/user/sync', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ user_id: userId, username: username })
+                });
                 const data = await res.json();
-                if (data.status === 'success') {
+                if(data.status === 'success') {
                     coins = data.data.coins;
                     energy = data.data.energy;
+                    maxEnergy = data.data.max_energy;
+
+                    if(data.is_admin) {
+                        document.getElementById('nav-admin').style.display = 'flex';
+                    }
                     updateUI();
                 }
-            } catch (e) { console.error("API xatosi:", e); }
+            } catch(e) { console.error(e); }
         }
 
         function updateUI() {
             document.getElementById('coin-count').innerText = coins.toLocaleString();
             document.getElementById('energy-val').innerText = energy;
-            const percentage = (energy / maxEnergy) * 100;
-            document.getElementById('energy-bar-fill').style.width = percentage + "%";
+            document.getElementById('max-energy').innerText = maxEnergy;
+            document.getElementById('energy-fill').style.width = (energy / maxEnergy * 100) + "%";
         }
 
-        // Tap va Animatsiya funksiyasi
         const tapBtn = document.getElementById('tap-btn');
         tapBtn.addEventListener('click', (e) => {
             if (energy < 1) return;
-
-            coins += 1;
-            energy -= 1;
+            coins += 1; energy -= 1;
             updateUI();
 
-            // Telegram Haptic Feedback (Vibratsiya)
-            if (tg.HapticFeedback) {
-                tg.HapticFeedback.impactOccurred('light');
-            }
+            if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
 
-            // Uchib chiquvchi +1 animatsiyasini yaratish
+            // GSAP Animatsiyasi (Tugma bosilishi)
+            gsap.to(tapBtn, { scale: 0.93, duration: 0.05, yoyo: true, repeat: 1 });
+
+            // Floating Number Animatsiyasi
             const rect = tapBtn.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-
             const floatingNum = document.createElement('div');
-            floatingNum.className = 'floating-number';
+            floatingNum.className = 'floating-num';
             floatingNum.innerText = '+1';
-            floatingNum.style.left = `${x}px`;
-            floatingNum.style.top = `${y}px`;
-
+            floatingNum.style.left = `${e.clientX - rect.left}px`;
+            floatingNum.style.top = `${e.clientY - rect.top}px`;
             tapBtn.parentElement.appendChild(floatingNum);
 
-            setTimeout(() => floatingNum.remove(), 800);
+            gsap.to(floatingNum, {
+                y: -70, opacity: 0, duration: 0.7, ease: "power1.out",
+                onComplete: () => floatingNum.remove()
+            });
 
-            // Backend'ga yuborish
             fetch('/api/tap', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ user_id: userId, coins_added: 1, energy_used: 1 })
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ user_id: userId, count: 1 })
             });
         });
 
-        function switchTab(tabName, element) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active-tab'));
-            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+        async function buyBoost(type) {
+            const res = await fetch('/api/boost/buy', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ user_id: userId, type: type })
+            });
+            const data = await res.json();
+            if(data.status === 'success') { alert('Boost xarid qilindi!'); initApp(); }
+            else { alert(data.error); }
+        }
+
+        function spinWheel() {
+            const win = Math.floor(Math.random() * 5000) + 1000;
+            coins += win;
+            updateUI();
+            alert(`Tabriklaymiz! Spin'dan ${win} tanga yutib oldingiz!`);
+        }
+
+        function switchTab(tabName, el) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active-tab'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             document.getElementById(`tab-${tabName}`).classList.add('active-tab');
-            element.classList.add('active');
+            el.classList.add('active');
+
+            if(tabName === 'admin') fetchAdmin();
         }
 
-        function shareRef() {
-            const botUsername = "CyberProHubBot";
-            const refUrl = `https://t.me/share/url?url=https://t.me/${botUsername}?start=ref_${userId}&text=Cyber%20Pro%20Hub%27da%20men%20bilan%20birga%20tanga%20yig%27!`;
-            tg.openTelegramLink(refUrl);
+        async function fetchAdmin() {
+            const res = await fetch('/api/admin/stats', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ admin_id: userId })
+            });
+            const data = await res.json();
+            if(data.status === 'success') {
+                document.getElementById('adm-users').innerText = data.stats.total_users;
+                document.getElementById('adm-coins').innerText = data.stats.total_coins.toLocaleString();
+                const list = document.getElementById('admin-user-list');
+                list.innerHTML = '';
+                data.users.forEach(u => {
+                    list.innerHTML += `
+                        <div class="card-item">
+                            <div>
+                                <h5 style="color:#fff;">${u.username}</h5>
+                                <p style="font-size:11px; color:#8b949e;">ID: ${u.telegram_id} | 🪙 ${u.coins.toLocaleString()}</p>
+                            </div>
+                            <div style="display:flex; gap:6px;">
+                                <button class="btn-neon" style="padding:6px 10px; font-size:11px;" onclick="adminAct('add_coins', ${u.telegram_id})">+50K</button>
+                                <button class="btn-neon" style="padding:6px 10px; font-size:11px; background:${u.is_banned ? '#238636' : '#da3633'};" onclick="adminAct('${u.is_banned ? 'unban' : 'ban'}', ${u.telegram_id})">
+                                    ${u.is_banned ? 'Unban' : 'Ban'}
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
         }
 
-        loadUserData();
+        async function adminAct(act, target) {
+            await fetch('/api/admin/action', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ admin_id: userId, action: act, target_id: target })
+            });
+            fetchAdmin();
+        }
+
+        initApp();
     </script>
 </body>
 </html>
