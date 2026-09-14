@@ -1,126 +1,148 @@
 import os
 import time
+import sqlite3
 import threading
 import requests
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, render_template, send_from_directory
 from flask_cors import CORS
-import database as db
 
-app = Flask(__name__, static_folder='.', static_url_path='')
+app = Flask(__name__, template_folder='.', static_folder='.', static_url_path='')
 CORS(app)
 
 BOT_TOKEN = os.environ.get("BOT_TOKEN", "")
-ADMIN_IDS = [8898979946]
-BASE_URL = "https://telegram-bot-7n6t.onrender.com"
+ADMIN_IDS = [8898979946] # O'zingizning Telegram ID'ingiz
 
-# ==================== TELEGRAM BOT POLLING ====================
-def run_bot_polling():
-    if not BOT_TOKEN:
-        print("❌ BOT_TOKEN topilmadi!")
-        return
+def get_db():
+    conn = sqlite3.connect('database.db')
+    conn.row_factory = sqlite3.Row
+    return conn
 
-    try:
-        requests.get(f"https://api.telegram.org/bot{BOT_TOKEN}/deleteWebhook?drop_pending_updates=true", timeout=10)
-    except Exception as e:
-        print(f"Webhook reset: {e}")
+def init_db():
+    with get_db() as conn:
+        conn.execute('''
+            CREATE TABLE IF NOT EXISTS users (
+                telegram_id INTEGER PRIMARY KEY,
+                username TEXT,
+                coins INTEGER DEFAULT 0,
+                energy INTEGER DEFAULT 1000,
+                max_energy INTEGER DEFAULT 1000,
+                tap_level INTEGER DEFAULT 1,
+                is_banned INTEGER DEFAULT 0,
+                referred_by INTEGER DEFAULT 0
+            )
+        ''')
+        conn.execute('''
+            CREATE TABLE IF NOT EXISTS tasks (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                title TEXT,
+                reward INTEGER,
+                link TEXT
+            )
+        ''')
+        conn.commit()
 
-    offset = 0
-    while True:
-        try:
-            url = f"https://api.telegram.org/bot{BOT_TOKEN}/getUpdates?offset={offset}&timeout=30"
-            res = requests.get(url, timeout=35).json()
+init_db()
 
-            if res.get("ok"):
-                for result in res.get("result", []):
-                    offset = result["update_id"] + 1
-                    message = result.get("message", {})
-                    chat_id = message.get("chat", {}).get("id")
-                    text = message.get("text", "")
-                    username = message.get("from", {}).get("username", "User")
+@app.route('/')
+def index():
+    return render_template('miniapp.html')
 
-                    if not chat_id:
-                        continue
-
-                    if text.startswith("/start"):
-                        referrer_id = None
-                        parts = text.split()
-                        if len(parts) > 1 and parts[1].startswith("ref_"):
-                            try:
-                                referrer_id = int(parts[1].replace("ref_", ""))
-                            except ValueError:
-                                pass
-
-                        db.get_or_create_user(chat_id, username, referrer_id)
-                        
-                        send_url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-                        payload = {
-                            "chat_id": chat_id,
-                            "text": f"👋 Xush kelibsiz, @{username}!\n\nCyber Pro Hub Mini App orqali tangalaringizni yig'ing.",
-                            "reply_markup": {
-                                "inline_keyboard": [
-                                    [{"text": "🚀 Mini App'ni ochish", "web_app": {"url": f"{BASE_URL}/miniapp.html"}}],
-                                    [{"text": "👥 Do'stlarni taklif qilish", "url": f"https://t.me/share/url?url=https://t.me/CyberProHubBot?start=ref_{chat_id}"}]
-                                ]
-                            }
-                        }
-                        requests.post(send_url, json=payload)
-        except Exception as e:
-            time.sleep(3)
-
-threading.Thread(target=run_bot_polling, daemon=True).start()
-
-# ==================== ROUTING ====================
-@app.route("/")
-def home():
-    return send_from_directory('.', 'miniapp.html')
-
-@app.route("/<path:filename>")
-def serve_static(filename):
-    return send_from_directory('.', filename)
-
-# ==================== API ENDPOINTLARI ====================
-@app.route("/api/user/<int:user_id>", methods=["GET"])
-def get_user(user_id):
-    user = db.get_or_create_user(user_id)
-    return jsonify({"status": "success", "data": user})
-
-@app.route("/api/tap", methods=["POST"])
-def tap():
+# --- USER APIs ---
+@app.route('/api/user/sync', methods=['POST'])
+def sync_user():
     data = request.json or {}
-    user_id = data.get("user_id")
-    coins_added = data.get("coins_added", 1)
-    energy_used = data.get("energy_used", 1)
+    user_id = data.get('user_id')
+    username = data.get('username', 'User')
 
-    if not user_id or coins_added > 50:
-        return jsonify({"error": "Noto'g'ri so'rov"}), 400
+    if not user_id:
+        return jsonify({'status': 'error', 'message': 'No user_id'}), 400
 
-    if db.update_user_tap(user_id, coins_added, energy_used):
-        return jsonify({"status": "success"})
-    return jsonify({"error": "Energiya yetarli emas"}), 400
+    with get_db() as conn:
+        user = conn.execute('SELECT * FROM users WHERE telegram_id = ?', (user_id,)).fetchone()
+        if not user:
+            conn.execute(
+                'INSERT INTO users (telegram_id, username, coins, energy) VALUES (?, ?, ?, ?)',
+                (user_id, username, 0, 1000)
+            )
+            conn.commit()
+            user = conn.execute('SELECT * FROM users WHERE telegram_id = ?', (user_id,)).fetchone()
+        
+        return jsonify({
+            'status': 'success',
+            'data': dict(user),
+            'is_admin': user_id in ADMIN_IDS
+        })
 
-@app.route("/api/pay/ton", methods=["POST"])
-def pay_ton():
+@app.route('/api/tap', methods=['POST'])
+def handle_tap():
     data = request.json or {}
-    user_id = data.get("user_id")
-    tx_hash = data.get("tx_hash")
-    amount = data.get("amount", 0.0)
-    item_type = data.get("item_type", "BUY_COINS")
+    user_id = data.get('user_id')
+    count = data.get('count', 1)
 
-    if not user_id or not tx_hash or amount <= 0:
-        return jsonify({"error": "Ma'lumot kam"}), 400
+    if count > 20: # Anti-cheat
+        return jsonify({'status': 'error', 'message': 'Cheat detected'}), 400
 
-    success, msg = db.process_ton_purchase(user_id, tx_hash, float(amount), item_type)
-    if success:
-        return jsonify({"status": "success", "message": msg})
-    return jsonify({"error": msg}), 400
+    with get_db() as conn:
+        user = conn.execute('SELECT * FROM users WHERE telegram_id = ?', (user_id,)).fetchone()
+        if not user or user['is_banned']:
+            return jsonify({'status': 'error', 'message': 'Banned or invalid'}), 403
 
-@app.route("/api/admin/stats", methods=["GET"])
+        earned = count * user['tap_level']
+        new_coins = user['coins'] + earned
+        new_energy = max(0, user['energy'] - count)
+
+        conn.execute(
+            'UPDATE users SET coins = ?, energy = ? WHERE telegram_id = ?',
+            (new_coins, new_energy, user_id)
+        )
+        conn.commit()
+        return jsonify({'status': 'success', 'coins': new_coins, 'energy': new_energy})
+
+# --- ADMIN PANEL APIs ---
+@app.route('/api/admin/stats', methods=['POST'])
 def admin_stats():
-    user_id = request.args.get("user_id", type=int)
-    if user_id not in ADMIN_IDS:
-        return jsonify({"error": "Ruxsat yo'q"}), 403
-    return jsonify({"status": "success", "stats": db.get_admin_stats()})
+    data = request.json or {}
+    admin_id = data.get('admin_id')
+    if admin_id not in ADMIN_IDS:
+        return jsonify({'status': 'error', 'message': 'Unauthorized'}), 403
 
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port)
+    with get_db() as conn:
+        total_users = conn.execute('SELECT COUNT(*) as c FROM users').fetchone()['c']
+        total_coins = conn.execute('SELECT SUM(coins) as s FROM users').fetchone()['s'] or 0
+        banned_users = conn.execute('SELECT COUNT(*) as c FROM users WHERE is_banned = 1').fetchone()['c']
+        users_list = [dict(row) for row in conn.execute('SELECT * FROM users ORDER BY coins DESC LIMIT 20').fetchall()]
+
+    return jsonify({
+        'status': 'success',
+        'stats': {
+            'total_users': total_users,
+            'total_coins': total_coins,
+            'banned_users': banned_users
+        },
+        'users': users_list
+    })
+
+@app.route('/api/admin/action', methods=['POST'])
+def admin_action():
+    data = request.json or {}
+    admin_id = data.get('admin_id')
+    action = data.get('action') # 'ban', 'add_coins'
+    target_id = data.get('target_id')
+
+    if admin_id not in ADMIN_IDS:
+        return jsonify({'status': 'error', 'message': 'Unauthorized'}), 403
+
+    with get_db() as conn:
+        if action == 'ban':
+            conn.execute('UPDATE users SET is_banned = 1 WHERE telegram_id = ?', (target_id,))
+        elif action == 'unban':
+            conn.execute('UPDATE users SET is_banned = 0 WHERE telegram_id = ?', (target_id,))
+        elif action == 'add_coins':
+            amount = data.get('amount', 10000)
+            conn.execute('UPDATE users SET coins = coins + ? WHERE telegram_id = ?', (amount, target_id))
+        conn.commit()
+
+    return jsonify({'status': 'success'})
+
+if __name__ == '__main__':
+    app.run(debug=True, port=5000)
