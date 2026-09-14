@@ -2,490 +2,236 @@
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cyber Pro Hub Mini App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Cyber Pro Hub</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        body { background-color: #000; color: #fff; padding: 15px; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; user-select: none; }
+        body { background: #0b0e14; color: #ffffff; text-align: center; padding-bottom: 80px; overflow-x: hidden; }
+        
+        /* Header & Balance */
+        .header { padding: 20px 15px; background: linear-gradient(180deg, #161b26 0%, #0b0e14 100%); border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .user-card { font-size: 13px; color: #8b949e; letter-spacing: 0.5px; }
+        .coins-container { font-size: 40px; font-weight: 800; color: #f1e05a; margin: 10px 0; text-shadow: 0 0 20px rgba(241, 224, 90, 0.4); display: flex; align-items: center; justify-content: center; gap: 10px; }
+        
+        /* Energy Bar */
+        .energy-box { width: 85%; margin: 10px auto; background: #161b22; padding: 8px 12px; border-radius: 12px; border: 1px solid #30363d; }
+        .energy-text { font-size: 12px; color: #8b949e; margin-bottom: 5px; display: flex; justify-content: space-between; }
+        .energy-bar { width: 100%; background: #21262d; border-radius: 10px; height: 10px; overflow: hidden; }
+        .energy-fill { background: linear-gradient(90deg, #388bfd, #58a6ff); height: 100%; width: 100%; transition: width 0.2s ease; }
+        
+        /* Tab Manager */
+        .tab-content { display: none; padding: 20px 15px; animation: fadeIn 0.3s ease-in-out; }
+        .active-tab { display: block; }
 
-        .card { background: #121212; border-radius: 16px; padding: 20px; margin-bottom: 15px; border: 1px solid #262626; text-align: center; }
-        .balance { font-size: 38px; font-weight: 800; margin: 10px 0; color: #fff; }
+        /* Ideal Tap Button & Floating Text Animation */
+        .tap-area { margin: 30px 0; position: relative; display: flex; justify-content: center; align-items: center; }
+        .tap-btn {
+            width: 230px; height: 230px; border-radius: 50%;
+            background: radial-gradient(circle, #1f6feb 0%, #0d419d 100%);
+            border: 6px solid rgba(56, 139, 253, 0.4); color: white; font-size: 32px; font-weight: 900;
+            cursor: pointer; box-shadow: 0 0 40px rgba(31, 111, 235, 0.5), inset 0 0 15px rgba(255,255,255,0.3);
+            transition: transform 0.08s ease, box-shadow 0.08s ease; outline: none; touch-action: manipulation;
+        }
+        .tap-btn:active { transform: scale(0.92); box-shadow: 0 0 15px rgba(31, 111, 235, 0.8); }
 
-        .energy-bar-bg { width: 100%; background: #262626; height: 12px; border-radius: 10px; overflow: hidden; margin-top: 10px; }
-        .energy-bar-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #00f5d4, #00bbf9); transition: width 0.2s; }
+        /* Floating Number (+1 Effect) */
+        .floating-number {
+            position: absolute; color: #f1e05a; font-size: 28px; font-weight: bold;
+            pointer-events: none; animation: floatUp 0.8s ease-out forwards;
+            text-shadow: 0 0 10px rgba(0,0,0,0.8);
+        }
 
-        .nav-grid { display: flex; gap: 4px; justify-content: center; margin-bottom: 15px; flex-wrap: wrap; }
-        .nav-btn { background: #121212; color: #fff; border: 1px solid #262626; padding: 8px; border-radius: 10px; cursor: pointer; font-size: 11px; flex: 1; min-width: 50px; transition: transform 0.15s, box-shadow 0.15s; }
-        .nav-btn.active { background: #fff; color: #000; font-weight: bold; }
-        .btn-action:active, .nav-btn:active { transform: scale(0.94); box-shadow: 0 0 10px rgba(0, 245, 212, 0.5); }
+        /* Card Elements (Boost, Task, Ref) */
+        .card-list { display: flex; flex-direction: column; gap: 12px; }
+        .card-item {
+            background: #161b22; border: 1px solid #30363d; border-radius: 14px;
+            padding: 16px; display: flex; justify-content: space-between; align-items: center; text-align: left;
+            transition: transform 0.2s;
+        }
+        .card-item:active { transform: scale(0.98); }
+        .card-info h4 { font-size: 15px; color: #ffffff; margin-bottom: 4px; }
+        .card-info p { font-size: 12px; color: #8b949e; }
+        .btn-action {
+            background: linear-gradient(135deg, #238636 0%, #2ea043 100%);
+            border: none; color: white; padding: 10px 18px; border-radius: 8px;
+            cursor: pointer; font-weight: 700; font-size: 13px; box-shadow: 0 4px 12px rgba(46, 160, 67, 0.3);
+        }
 
-        .tab-content { animation: fadeIn 0.3s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        /* Bottom Navigation Bar */
+        .nav-bar {
+            position: fixed; bottom: 0; left: 0; width: 100%; background: #161b22;
+            display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #30363d;
+            backdrop-filter: blur(10px);
+        }
+        .nav-item { color: #8b949e; background: none; border: none; font-size: 11px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        .nav-item.active { color: #58a6ff; font-weight: bold; }
+        .nav-item span { font-size: 18px; }
 
-        input, textarea { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #262626; background: #000; color: #fff; margin-bottom: 10px; font-size: 14px; text-align: center; }
-        .btn-action { width: 100%; padding: 12px; background: linear-gradient(45deg, #f09433, #dc2743, #bc1888); border: none; color: white; border-radius: 12px; font-size: 14px; font-weight: bold; cursor: pointer; transition: transform 0.15s; }
-
-        .tap-area { width: 170px; height: 170px; margin: 20px auto; background: radial-gradient(circle, #dc2743 0%, #121212 70%); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 60px; cursor: pointer; box-shadow: 0 0 25px rgba(220,39,67,0.4); user-select: none; }
-        .tap-area:active { transform: scale(0.92); }
-
-        .list-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #262626; font-size: 13px; text-align: left; }
-        .timer-badge { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; padding: 8px 12px; font-size: 13px; color: #ffbe0b; display: inline-flex; margin-top: 10px; }
+        /* Keyframe Animations */
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(-70px) scale(1.3); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 <body>
 
-    <div class="card">
-        <p style="color: #a8a8a8; font-size: 12px;">BALANS</p>
-        <div class="balance" id="ui-balance">0</div>
-        <div style="display: flex; justify-content: space-between; font-size: 12px; color: #00f5d4; margin-top: 10px;">
-            <span>⚡️ Energiya:</span>
-            <span id="ui-energy-text">1000 / 1000</span>
-        </div>
-        <div class="energy-bar-bg"><div class="energy-bar-fill" id="ui-energy-fill"></div></div>
-    </div>
-
-    <div class="nav-grid">
-        <button class="nav-btn active" onclick="switchTab('tap', this)">👆 Tap</button>
-        <button class="nav-btn" onclick="switchTab('boost', this)">🚀 Boost</button>
-        <button class="nav-btn" onclick="switchTab('wallet', this)">💎 Wallet</button>
-        <button class="nav-btn" onclick="switchTab('tasks', this)">📋 Tasks</button>
-        <button class="nav-btn" onclick="switchTab('top', this)">🏆 Top</button>
-        <button class="nav-btn" onclick="switchTab('ref', this)">👥 Ref</button>
-        <button class="nav-btn" onclick="switchTab('daily', this)">📅 Bonus</button>
-        <button class="nav-btn" id="admin-tab-btn" style="display:none;" onclick="switchTab('admin', this)">👑 Admin</button>
-    </div>
-
-    <!-- 1. Tap -->
-    <div id="tab-tap" class="tab-content card">
-        <h3>Coin yig'ish uchun bosing!</h3>
-        <div class="tap-area" onclick="handleTap()">⚡️</div>
-    </div>
-
-    <!-- 2. Boost -->
-    <div id="tab-boost" class="tab-content card" style="display:none;">
-        <h3>🚀 Kuchaytirishlar Do'koni</h3>
-        <div class="list-item">
-            <div><b>⚡️ Multitap (LVL <span id="boost-tap-lvl">1</span>)</b></div>
-            <button class="btn-action" style="width:auto; padding:6px 12px;" onclick="buyBoost('multitap')">Sotib olish</button>
-        </div>
-        <div class="list-item">
-            <div><b>🔋 Max Energy (+500)</b></div>
-            <button class="btn-action" style="width:auto; padding:6px 12px;" onclick="buyBoost('max_energy')">Sotib olish</button>
+    <div class="header">
+        <div class="user-card">Foydalanuvchi: <span id="username">@User</span></div>
+        <div class="coins-container">🪙 <span id="coin-count">0</span></div>
+        <div class="energy-box">
+            <div class="energy-text">
+                <span>⚡ Energiya</span>
+                <span><b id="energy-val">1000</b> / <span id="max-energy">1000</span></span>
+            </div>
+            <div class="energy-bar"><div class="energy-fill" id="energy-bar-fill"></div></div>
         </div>
     </div>
 
-    <!-- 3. Wallet -->
-    <div id="tab-wallet" class="tab-content card" style="display:none;">
-        <h3>💎 TON Hamyon</h3>
-        <input type="text" id="wallet-input" placeholder="EQB... hamyon manzili" style="margin-top:10px;">
-        <button class="btn-action" onclick="saveWallet()">Hamyonni Saqlash 🔗</button>
-    </div>
-
-    <!-- 4. Tasks -->
-    <div id="tab-tasks" class="tab-content card" style="display:none;">
-        <h3>📋 Vazifalar</h3>
-        <div id="tasks-list-container"></div>
-    </div>
-
-    <!-- 5. Top -->
-    <div id="tab-top" class="tab-content card" style="display:none;">
-        <h3>🏆 TOP 10 Reyting</h3>
-        <div id="leaderboard-container"></div>
-    </div>
-
-    <!-- 6. Ref -->
-    <div id="tab-ref" class="tab-content card" style="display:none;">
-        <h3>👥 Takliflar</h3>
-        <p style="margin: 10px 0; color: #a8a8a8;">Har bir do'st uchun <b>+500 Coin</b>!</p>
-        <div style="display: flex; gap: 10px;">
-            <button class="btn-action" onclick="copyRefLink(this)">Nusxalash 📋</button>
-            <button class="btn-action" style="background:#229ED9;" onclick="shareRefLink()">Ulashish 🚀</button>
+    <!-- 1. MAIN TAP TAB -->
+    <div id="tab-tap" class="tab-content active-tab">
+        <div class="tap-area">
+            <button class="tap-btn" id="tap-btn">TAP!</button>
         </div>
     </div>
 
-    <!-- 7. Daily -->
-    <div id="tab-daily" class="tab-content card" style="display:none;">
-        <h3>📅 Kunlik Bonus</h3>
-        <div id="bonus-status-container" style="margin-top: 15px;"></div>
-    </div>
-
-    <!-- 8. Admin Panel (Instagram Style Profile) -->
-    <div id="tab-admin" class="tab-content card" style="display:none; text-align: left; background: #000; border: 1px solid #262626; border-radius: 20px; padding: 15px;">
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
-            <div style="display: flex; align-items: center; gap: 15px;">
-                <div style="width: 70px; height: 70px; border-radius: 50%; background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); padding: 3px;">
-                    <div style="width: 100%; height: 100%; background: #000; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px;">
-                        👑
-                    </div>
+    <!-- 2. BOOSTS TAB -->
+    <div id="tab-boost" class="tab-content">
+        <h2 style="margin-bottom: 15px;">Boosterlar</h2>
+        <div class="card-list">
+            <div class="card-item">
+                <div class="card-info">
+                    <h4>Multitap</h4>
+                    <p>Har bir tap uchun +1 bonus tanga</p>
                 </div>
-                <div>
-                    <h3 style="font-size: 18px; margin: 0;">Admin Console <span style="color:#00f5d4; font-size:12px;">✔</span></h3>
-                    <p style="color: #8e8e8e; font-size: 13px;">@super_admin</p>
+                <button class="btn-action" onclick="buyBoost('multitap')">1,000 🪙</button>
+            </div>
+            <div class="card-item">
+                <div class="card-info">
+                    <h4>Auto-Tap Bot</h4>
+                    <p>Siz o'yinda yo'qingizda ham tanga yig'adi</p>
                 </div>
+                <button class="btn-action" onclick="buyBoost('autotap')">0.5 TON</button>
             </div>
-        </div>
-
-        <div style="display: flex; justify-content: space-around; text-align: center; border-top: 1px solid #262626; border-bottom: 1px solid #262626; padding: 12px 0; margin-bottom: 15px;">
-            <div>
-                <b id="adm-stat-posts" style="font-size: 18px;">0</b>
-                <div style="color: #8e8e8e; font-size: 11px;">Jami User</div>
-            </div>
-            <div onclick="openActiveUsersModal()" style="cursor: pointer; background: rgba(0,245,212,0.1); padding: 4px 10px; border-radius: 10px; border: 1px solid #00f5d4;">
-                <b id="adm-stat-followers" style="font-size: 18px; color: #00f5d4;">0 🟢</b>
-                <div style="color: #00f5d4; font-size: 11px; font-weight: bold;">Hozir Aktiv 👆</div>
-            </div>
-            <div>
-                <b id="adm-stat-following" style="font-size: 18px;">0</b>
-                <div style="color: #8e8e8e; font-size: 11px;">24h Aktiv</div>
-            </div>
-        </div>
-
-        <p id="adm-bio" style="font-size: 12px; color: #e1e1e1; margin-bottom: 15px; white-space: pre-line;"></p>
-
-        <button class="btn-action" style="margin-bottom: 8px; background: #262626;" onclick="toggleAdminTool('broadcast')">📢 Ommaviy Xabar Yuborish</button>
-        <button class="btn-action" style="background: #262626;" onclick="toggleAdminTool('direct')">✉️ Bir kishiga Direct Yuborish</button>
-
-        <div id="adm-tool-broadcast" style="display:none; margin-top: 15px;">
-            <textarea id="adm-broadcast-text" placeholder="Barcha foydalanuvchilarga yuboriladigan xabar..."></textarea>
-            <button class="btn-action" onclick="sendBroadcast()">Hamma foydalanuvchilarga yuborish 🚀</button>
-        </div>
-
-        <div id="adm-tool-direct" style="display:none; margin-top: 15px;">
-            <input type="number" id="adm-target-id" placeholder="Telegram ID kiritish">
-            <textarea id="adm-direct-text" placeholder="Shaxsiy xabar matni..."></textarea>
-            <button class="btn-action" onclick="sendDirect()">Direct Yuborish ✉️</button>
         </div>
     </div>
 
-    <!-- Aktiv Foydalanuvchilar Modal Oynasi -->
-    <div id="active-users-modal" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.92); z-index: 9999; padding: 20px; box-sizing: border-box; overflow-y: auto;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #262626; padding-bottom: 10px;">
-            <h3 style="margin: 0;">🟢 Hozirgi Aktiv Foydalanuvchilar</h3>
-            <button onclick="closeActiveUsersModal()" style="background: none; border: none; color: #fff; font-size: 24px; cursor: pointer;">✕</button>
+    <!-- 3. TASKS TAB -->
+    <div id="tab-tasks" class="tab-content">
+        <h2 style="margin-bottom: 15px;">Vazifalar</h2>
+        <div class="card-list">
+            <div class="card-item">
+                <div class="card-info">
+                    <h4>Telegram Kanalga a'zo bo'lish</h4>
+                    <p>+5,000 tanga mukofot</p>
+                </div>
+                <button class="btn-action" onclick="claimTask(1, 5000)">Bajarish</button>
+            </div>
         </div>
-        <div id="active-users-list-container"></div>
+    </div>
+
+    <!-- 4. REFERRAL TAB -->
+    <div id="tab-ref" class="tab-content">
+        <h2 style="margin-bottom: 10px;">Referal Tizimi</h2>
+        <p style="color:#8b949e; font-size:13px; margin-bottom:20px;">Har bir taklif qilgan do'stingiz uchun <b>5,000 🪙</b> oling!</p>
+        <button class="btn-action" style="width: 100%; padding: 14px;" onclick="shareRef()">👥 Do'stlarni Taklif Qilish</button>
+    </div>
+
+    <!-- BOTTOM NAVIGATION -->
+    <div class="nav-bar">
+        <button class="nav-item active" onclick="switchTab('tap', this)"><span>🎮</span>O'yin</button>
+        <button class="nav-item" onclick="switchTab('boost', this)"><span>🚀</span>Boost</button>
+        <button class="nav-item" onclick="switchTab('tasks', this)"><span>📋</span>Vazifalar</button>
+        <button class="nav-item" onclick="switchTab('ref', this)"><span>👥</span>Do'stlar</button>
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        const BACKEND_URL = "https://telegram-bot-7n6t.onrender.com";
+        const user = tg.initDataUnsafe?.user;
+        const userId = user ? user.id : 123456789;
+        const username = user ? user.username : "User";
 
-        const user = tg.initDataUnsafe.user || { id: 123456, username: "DemoUser" };
-        let userCoins = 0, currentEnergy = 1000, maxEnergy = 1000, tapLevel = 1, globalRefLink = "", nextBonusTime = 0, currentAdminUsers = [];
+        document.getElementById("username").innerText = "@" + username;
 
-        function switchTab(tabName, btnElement) {
-            document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
-            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
-            
-            const targetTab = document.getElementById(`tab-${tabName}`);
-            if(targetTab) targetTab.style.display = 'block';
-            if(btnElement) btnElement.classList.add('active');
-
-            if(tabName === 'top') loadLeaderboard();
-            if(tabName === 'admin') loadAdminData();
-        }
-
-        function updateUI() {
-            const elBal = document.getElementById('ui-balance');
-            const elEngTxt = document.getElementById('ui-energy-text');
-            const elEngFill = document.getElementById('ui-energy-fill');
-            const elTapLvl = document.getElementById('boost-tap-lvl');
-
-            if(elBal) elBal.innerText = userCoins;
-            if(elEngTxt) elEngTxt.innerText = `${currentEnergy} / ${maxEnergy}`;
-            if(elEngFill) elEngFill.style.width = `${(currentEnergy / maxEnergy) * 100}%`;
-            if(elTapLvl) elTapLvl.innerText = tapLevel;
-        }
+        let coins = 0;
+        let energy = 1000;
+        let maxEnergy = 1000;
 
         async function loadUserData() {
             try {
-                const res = await fetch(`${BACKEND_URL}/api/get_user?user_id=${user.id}`);
+                const res = await fetch(`/api/user/${userId}`);
                 const data = await res.json();
-                if(data.success) {
-                    userCoins = data.coins;
-                    currentEnergy = data.energy;
-                    maxEnergy = data.max_energy;
-                    tapLevel = data.tap_level;
-                    globalRefLink = data.ref_link;
-
-                    const walletEl = document.getElementById('wallet-input');
-                    const adminTabEl = document.getElementById('admin-tab-btn');
-
-                    if(walletEl && data.wallet) walletEl.value = data.wallet;
-                    if(adminTabEl && data.is_admin) adminTabEl.style.display = 'block';
-
+                if (data.status === 'success') {
+                    coins = data.data.coins;
+                    energy = data.data.energy;
                     updateUI();
-                    renderTasks(data.tasks, data.completed_tasks);
-                    checkBonusAvailability(data.last_daily_claim);
                 }
-            } catch(e) { console.error("Data load error:", e); }
+            } catch (e) { console.error("API xatosi:", e); }
         }
 
-        async function handleTap() {
-            if(currentEnergy < tapLevel) {
-                tg.showAlert("⚠️ Energingiz tugadi!");
-                return;
-            }
-            userCoins += tapLevel;
-            currentEnergy -= tapLevel;
+        function updateUI() {
+            document.getElementById('coin-count').innerText = coins.toLocaleString();
+            document.getElementById('energy-val').innerText = energy;
+            const percentage = (energy / maxEnergy) * 100;
+            document.getElementById('energy-bar-fill').style.width = percentage + "%";
+        }
+
+        // Tap va Animatsiya funksiyasi
+        const tapBtn = document.getElementById('tap-btn');
+        tapBtn.addEventListener('click', (e) => {
+            if (energy < 1) return;
+
+            coins += 1;
+            energy -= 1;
             updateUI();
 
-            fetch(`${BACKEND_URL}/api/tap`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ user_id: user.id, amount: 1 })
-            }).catch(e => console.error("Tap sync error:", e));
-        }
-
-        function checkBonusAvailability(lastClaimTs) {
-            const container = document.getElementById('bonus-status-container');
-            if(!container) return;
-            const now = Math.floor(Date.now() / 1000);
-            const cooldown = 86400;
-
-            if (now - lastClaimTs >= cooldown) {
-                container.innerHTML = `<button class="btn-action" onclick="claimDaily()">Bonusni olish 🎁</button>`;
-            } else {
-                nextBonusTime = lastClaimTs + cooldown;
-                container.innerHTML = `
-                    <button class="btn-action" disabled style="opacity: 0.5;">Olingan ✅</button>
-                    <div class="timer-badge">⏳ Keyingi bonus: <span id="bonus-timer">--:--:--</span></div>
-                `;
-                startBonusCountdown();
+            // Telegram Haptic Feedback (Vibratsiya)
+            if (tg.HapticFeedback) {
+                tg.HapticFeedback.impactOccurred('light');
             }
-        }
 
-        function startBonusCountdown() {
-            const timerElem = document.getElementById('bonus-timer');
-            const interval = setInterval(() => {
-                const diff = nextBonusTime - Math.floor(Date.now() / 1000);
-                if (diff <= 0) {
-                    clearInterval(interval);
-                    loadUserData();
-                    return;
-                }
-                const h = Math.floor(diff / 3600).toString().padStart(2, '0');
-                const m = Math.floor((diff % 3600) / 60).toString().padStart(2, '0');
-                const s = (diff % 60).toString().padStart(2, '0');
-                if(timerElem) timerElem.innerText = `${h}:${m}:${s}`;
-            }, 1000);
-        }
+            // Uchib chiquvchi +1 animatsiyasini yaratish
+            const rect = tapBtn.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
 
-        async function claimDaily() {
-            try {
-                const res = await fetch(`${BACKEND_URL}/api/claim_daily`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ user_id: user.id, amount: 1 })
-                });
-                const data = await res.json();
-                tg.showAlert(data.message);
-                if(data.success) loadUserData();
-            } catch(e) { tg.showAlert("Xatolik yuz berdi!"); }
-        }
+            const floatingNum = document.createElement('div');
+            floatingNum.className = 'floating-number';
+            floatingNum.innerText = '+1';
+            floatingNum.style.left = `${x}px`;
+            floatingNum.style.top = `${y}px`;
 
-        function renderTasks(tasks, completedIds) {
-            const container = document.getElementById('tasks-list-container');
-            if(!container || !tasks) return;
-            let html = "";
-            tasks.forEach(t => {
-                const isDone = completedIds && completedIds.includes(t.id);
-                html += `
-                    <div class="list-item">
-                        <div><b>${t.title}</b><div style="color:#00f5d4; font-size:11px;">+${t.reward} Coin</div></div>
-                        ${isDone ? `<span style="color:#00f5d4;">✅ Bajarilgan</span>` : `<button class="btn-action" style="width:auto; padding:6px 12px;" onclick="doTask('${t.id}')">Bajarish</button>`}
-                    </div>
-                `;
+            tapBtn.parentElement.appendChild(floatingNum);
+
+            setTimeout(() => floatingNum.remove(), 800);
+
+            // Backend'ga yuborish
+            fetch('/api/tap', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: userId, coins_added: 1, energy_used: 1 })
             });
-            container.innerHTML = html;
+        });
+
+        function switchTab(tabName, element) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active-tab'));
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.getElementById(`tab-${tabName}`).classList.add('active-tab');
+            element.classList.add('active');
         }
 
-        async function doTask(taskId) {
-            try {
-                const res = await fetch(`${BACKEND_URL}/api/complete_task`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ user_id: user.id, task_id: taskId })
-                });
-                const data = await res.json();
-                tg.showAlert(data.message);
-                if(data.success) loadUserData();
-            } catch(e) { tg.showAlert("Vazifani tekshirishda xatolik!"); }
+        function shareRef() {
+            const botUsername = "CyberProHubBot";
+            const refUrl = `https://t.me/share/url?url=https://t.me/${botUsername}?start=ref_${userId}&text=Cyber%20Pro%20Hub%27da%20men%20bilan%20birga%20tanga%20yig%27!`;
+            tg.openTelegramLink(refUrl);
         }
-
-        async function loadLeaderboard() {
-            const container = document.getElementById('leaderboard-container');
-            if(!container) return;
-            try {
-                const res = await fetch(`${BACKEND_URL}/api/leaderboard`);
-                const data = await res.json();
-                if(data.success) {
-                    let html = "";
-                    data.leaderboard.forEach(item => {
-                        html += `<div class="list-item"><div><b>#${item.rank} @${item.username}</b></div><div style="color:#00f5d4;">${item.coins} Coin</div></div>`;
-                    });
-                    container.innerHTML = html;
-                }
-            } catch(e) { console.error("Leaderboard error:", e); }
-        }
-
-        async function buyBoost(type) {
-            try {
-                const res = await fetch(`${BACKEND_URL}/api/buy_boost`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ user_id: user.id, boost_type: type })
-                });
-                const data = await res.json();
-                tg.showAlert(data.message);
-                if(data.success) loadUserData();
-            } catch(e) { tg.showAlert("Boost xaridida xatolik!"); }
-        }
-
-        async function saveWallet() {
-            const addr = document.getElementById('wallet-input').value;
-            if(!addr) return tg.showAlert("⚠️ Hamyon manzilini kiriting!");
-            try {
-                const res = await fetch(`${BACKEND_URL}/api/connect_wallet`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ user_id: user.id, wallet_address: addr })
-                });
-                const data = await res.json();
-                tg.showAlert(data.message);
-            } catch(e) { tg.showAlert("Hamyon saqlashda xatolik!"); }
-        }
-
-        function copyRefLink(btn) {
-            const linkToCopy = globalRefLink || `https://t.me/share/url?url=${user.id}`;
-            const area = document.createElement("textarea");
-            area.value = linkToCopy;
-            document.body.appendChild(area);
-            area.select();
-            document.execCommand("copy");
-            document.body.removeChild(area);
-            if(btn) {
-                btn.innerText = "Nusxalandi! ✅";
-                setTimeout(() => btn.innerText = "Nusxalash 📋", 2000);
-            }
-        }
-
-        function shareRefLink() {
-            const linkToShare = globalRefLink || `https://t.me/share/url?url=${user.id}`;
-            tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(linkToShare)}&text=${encodeURIComponent("O'yinga qo'shil va coin yig'!")}`);
-        }
-
-        // --- INSTAGRAM STYLE ADMIN FUNCTIONALITIES ---
-        async function loadAdminData() {
-            try {
-                const res = await fetch(`${BACKEND_URL}/api/admin/insta_profile?user_id=${user.id}`);
-                const data = await res.json();
-
-                if (data.success) {
-                    document.getElementById('adm-stat-posts').innerText = data.profile.posts;
-                    document.getElementById('adm-stat-followers').innerText = `${data.profile.followers} 🟢`;
-                    document.getElementById('adm-stat-following').innerText = data.profile.following;
-                    document.getElementById('adm-bio').innerText = data.profile.bio;
-
-                    currentAdminUsers = data.users;
-                } else {
-                    tg.showAlert("⚠️ Admin huquqi topilmadi!");
-                }
-            } catch(e) { console.error("Admin load error:", e); }
-        }
-
-        function openActiveUsersModal() {
-            const modal = document.getElementById('active-users-modal');
-            const container = document.getElementById('active-users-list-container');
-            if (!container || !modal) return;
-
-            let html = "";
-            if (currentAdminUsers.length === 0) {
-                html = "<p style='color:#8e8e8e; text-align:center;'>Foydalanuvchilar topilmadi.</p>";
-            } else {
-                currentAdminUsers.forEach(u => {
-                    const statusBadge = u.is_online 
-                        ? `<span style="color:#00f5d4; font-size:11px; font-weight:bold;">🟢 Online</span>` 
-                        : `<span style="color:#8e8e8e; font-size:11px;">⚪️ ${Math.floor(u.last_active_sec / 60)} daq oldin</span>`;
-
-                    html += `
-                        <div class="list-item" style="display:flex; justify-content:space-between; align-items:center; padding: 10px 0; border-bottom:1px solid #262626;">
-                            <div style="display:flex; align-items:center; gap:10px;">
-                                <div style="width:40px; height:40px; border-radius:50%; background:#262626; display:flex; align-items:center; justify-content:center; font-weight:bold;">
-                                    ${u.username ? u.username.charAt(0).toUpperCase() : 'U'}
-                                </div>
-                                <div>
-                                    <b>@${u.username || 'User'}</b> <span style="font-size:10px; color:#8e8e8e;">(ID: ${u.user_id})</span>
-                                    <div>${statusBadge} • <span style="color:#ffbe0b;">${u.coins} Coin</span></div>
-                                </div>
-                            </div>
-                            <button class="btn-action" style="width:auto; padding:5px 10px; font-size:11px; background:#229ED9;" onclick="selectUserForDirect('${u.user_id}')">Direct ✉️</button>
-                        </div>
-                    `;
-                });
-            }
-            container.innerHTML = html;
-            modal.style.display = "block";
-        }
-
-        function closeActiveUsersModal() {
-            const modal = document.getElementById('active-users-modal');
-            if(modal) modal.style.display = "none";
-        }
-
-        function selectUserForDirect(targetUserId) {
-            closeActiveUsersModal();
-            toggleAdminTool('direct');
-            const targetInput = document.getElementById('adm-target-id');
-            if(targetInput) targetInput.value = targetUserId;
-            tg.showAlert(`ID: ${targetUserId} tanlandi. Xabaringizni yozing.`);
-        }
-
-        function toggleAdminTool(tool) {
-            const bcTool = document.getElementById('adm-tool-broadcast');
-            const dirTool = document.getElementById('adm-tool-direct');
-            if(bcTool) bcTool.style.display = (tool === 'broadcast') ? 'block' : 'none';
-            if(dirTool) dirTool.style.display = (tool === 'direct') ? 'block' : 'none';
-        }
-
-        async function sendBroadcast() {
-            const msg = document.getElementById('adm-broadcast-text').value;
-            if(!msg) return tg.showAlert("Xabar matnini kiriting!");
-            try {
-                const res = await fetch(`${BACKEND_URL}/api/admin/broadcast`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ admin_id: user.id, message: msg })
-                });
-                const data = await res.json();
-                tg.showAlert(data.message);
-            } catch(e) { tg.showAlert("Yuborishda xatolik!"); }
-        }
-
-        async function sendDirect() {
-            const targetId = document.getElementById('adm-target-id').value;
-            const msg = document.getElementById('adm-direct-text').value;
-            if(!targetId || !msg) return tg.showAlert("ID va xabarni kiriting!");
-            try {
-                const res = await fetch(`${BACKEND_URL}/api/admin/send_direct`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ admin_id: user.id, target_user_id: parseInt(targetId), message: msg })
-                });
-                const data = await res.json();
-                tg.showAlert(data.message);
-            } catch(e) { tg.showAlert("Direct yuborishda xatolik!"); }
-        }
-
-        setInterval(() => {
-            if(currentEnergy < maxEnergy) {
-                currentEnergy = Math.min(maxEnergy, currentEnergy + 2);
-                updateUI();
-            }
-        }, 1000);
 
         loadUserData();
     </script>
