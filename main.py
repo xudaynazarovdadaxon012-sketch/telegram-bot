@@ -1,237 +1,115 @@
 import os
-import time
-import random
-import sqlite3
-import threading
-import requests
-from flask import Flask, request, jsonify, render_template
-from flask_cors import CORS
+import logging
+from aiogram import Bot, Dispatcher, F, types
+from aiogram.filters import Command
+from aiogram.fsm.storage.memory import MemoryStorage
+from aiogram.types import LabeledPrice, PreCheckoutQuery
 
-app = Flask(__name__, template_folder='.', static_folder='.', static_url_path='')
-CORS(app)
+# Tokenlarni o'rnating
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+PROVIDER_TOKEN = ""  # Telegram Stars uchun provider token shart emas (bo'sh qoldiriladi)
 
-BOT_TOKEN = os.environ.get("BOT_TOKEN", "")
-ADMIN_IDS = [8898979946]  # Sizning Telegram ID'ingiz
+bot = Bot(token=BOT_TOKEN)
+dp = Dispatcher(storage=MemoryStorage())
 
-def get_db():
-    conn = sqlite3.connect('database.db')
-    conn.row_factory = sqlite3.Row
-    return conn
+# Har bir foydalanuvchi uchun ma'lumotlar bazasi o'rnini bosuvchi oddiy lug'at
+user_data = {}
 
-def init_db():
-    with get_db() as conn:
-        conn.execute('''
-            CREATE TABLE IF NOT EXISTS users (
-                telegram_id INTEGER PRIMARY KEY,
-                username TEXT,
-                coins INTEGER DEFAULT 0,
-                energy INTEGER DEFAULT 1000,
-                max_energy INTEGER DEFAULT 1000,
-                tap_level INTEGER DEFAULT 1,
-                autotap_level INTEGER DEFAULT 0,
-                is_banned INTEGER DEFAULT 0
-            )
-        ''')
-        conn.commit()
+REQUIRED_CHANNELS = [
+    "@kanal_1",
+    "@kanal_2",
+    "@kanal_3",
+    "@kanal_4",
+    "@kanal_5"
+]
 
-init_db()
-
-# --- TELEGRAM BOT POLLING ---
-def run_bot_polling():
-    if not BOT_TOKEN:
-        return
-    try:
-        requests.get(f"https://api.telegram.org/bot{BOT_TOKEN}/deleteWebhook?drop_pending_updates=true", timeout=10)
-    except Exception:
-        pass
-
-    offset = 0
-    while True:
+# Obunani tekshirish funksiyasi
+async def check_subscriptions(user_id: int) -> bool:
+    for channel in REQUIRED_CHANNELS:
         try:
-            url = f"https://api.telegram.org/bot{BOT_TOKEN}/getUpdates?offset={offset}&timeout=30"
-            res = requests.get(url, timeout=35).json()
-            if res.get("ok"):
-                for result in res.get("result", []):
-                    offset = result["update_id"] + 1
-                    msg = result.get("message", {})
-                    chat_id = msg.get("chat", {}).get("id")
-                    text = msg.get("text", "")
-                    username = msg.get("from", {}).get("username", "User")
-
-                    if text and text.startswith("/start"):
-                        send_url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-                        payload = {
-                            "chat_id": chat_id,
-                            "text": f"⚡ **Cyber Pro Hub App**ga xush kelibsiz, @{username}!\n\nO'yinga kirish va tangalar yig'ish uchun tugmani bosing:",
-                            "parse_mode": "Markdown",
-                            "reply_markup": {
-                                "inline_keyboard": [
-                                    [{"text": "🚀 Mini App'ni Ochish", "web_app": {"url": "https://telegram-bot-7n6t.onrender.com"}}]
-                                ]
-                            }
-                        }
-                        requests.post(send_url, json=payload)
+            member = await bot.get_chat_member(chat_id=channel, user_id=user_id)
+            if member.status in ["left", "kicked"]:
+                return False
         except Exception:
-            time.sleep(3)
+            return False
+    return True
 
-threading.Thread(target=run_bot_polling, daemon=True).start()
+@dp.message(Command("start"))
+async def cmd_start(message: types.Message):
+    user_id = message.from_user.id
+    
+    # Foydalanuvchi bazada bormi tekshiramiz
+    if user_id not in user_data:
+        user_data[user_id] = {"balance": 0, "tap_power": 1}
 
-# --- ROUTES & APIs ---
-@app.route('/')
-def index():
-    return render_template('miniapp.html')
-
-@app.route('/api/user/sync', methods=['POST'])
-def sync_user():
-    data = request.json or {}
-    try:
-        user_id = int(data.get('user_id', 0))
-    except (ValueError, TypeError):
-        user_id = 0
-
-    username = data.get('username', 'User')
-    if not user_id:
-        return jsonify({'status': 'error', 'message': 'Noto\'g\'ri User ID'}), 400
-
-    with get_db() as conn:
-        user = conn.execute('SELECT * FROM users WHERE telegram_id = ?', (user_id,)).fetchone()
-        if not user:
-            conn.execute(
-                'INSERT INTO users (telegram_id, username, coins, energy, max_energy, tap_level, autotap_level) VALUES (?, ?, 100, 1000, 1000, 1, 0)',
-                (user_id, username)
-            )
-            conn.commit()
-            user = conn.execute('SELECT * FROM users WHERE telegram_id = ?', (user_id,)).fetchone()
-
-        is_admin = user_id in ADMIN_IDS
-
-        return jsonify({
-            'status': 'success',
-            'data': dict(user),
-            'is_admin': is_admin
-        })
-
-@app.route('/api/tap', methods=['POST'])
-def handle_tap():
-    data = request.json or {}
-    try:
-        user_id = int(data.get('user_id', 0))
-    except (ValueError, TypeError):
-        user_id = 0
-
-    count = int(data.get('count', 1))
-
-    with get_db() as conn:
-        user = conn.execute('SELECT * FROM users WHERE telegram_id = ?', (user_id,)).fetchone()
-        if not user or user['is_banned']:
-            return jsonify({'error': 'Kirish taqiqlangan'}), 403
-
-        if user['energy'] < count:
-            return jsonify({'error': 'Energiya yetarsiz'}), 400
-
-        earned = count * user['tap_level']
-        conn.execute(
-            'UPDATE users SET coins = coins + ?, energy = max(0, energy - ?) WHERE telegram_id = ?',
-            (earned, count, user_id)
+    # Kanallarga obunani tekshiramiz
+    is_subscribed = await check_subscriptions(user_id)
+    
+    if not is_subscribed:
+        channels_text = "\n".join([f"• {ch}" for ch in REQUIRED_CHANNELS])
+        await message.answer(
+            f"O'yinni boshlash uchun quyidagi 5 ta homiy kanalga a'zo bo'ling:\n\n{channels_text}\n\n"
+            f"A'zo bo'lgach, /start buyrug'ini qaytadan bosing."
         )
-        conn.commit()
-        return jsonify({'status': 'success'})
+        return
 
-@app.route('/api/spin', methods=['POST'])
-def spin_wheel():
-    data = request.json or {}
-    try:
-        user_id = int(data.get('user_id', 0))
-    except (ValueError, TypeError):
-        user_id = 0
+    # Agar obuna bo'lgan bo'lsa, o'yin menyusini ko'rsatamiz
+    kb = [
+        [types.KeyboardButton(text="🪙 Tap qilish")],
+        [types.KeyboardButton(text="⭐ Tap quvvatini oshirish (10 Stars)")]
+    ]
+    keyboard = types.ReplyKeyboardMarkup(keyboard=kb, resize_keyboard=True)
+    
+    bal = user_data[user_id]["balance"]
+    power = user_data[user_id]["tap_power"]
+    
+    await message.answer(
+        f"Xush kelibsiz!\n\nBalansingiz: {bal} tanga\nTap quvvati: {power}x\n\nPastdagi tugmani bosing:",
+        reply_markup=keyboard
+    )
 
-    reward = random.choice([50, 100, 150, 200, 300])
-    with get_db() as conn:
-        user = conn.execute('SELECT * FROM users WHERE telegram_id = ?', (user_id,)).fetchone()
-        if not user or user['is_banned']:
-            return jsonify({'error': 'Ruxsat berilmagan'}), 403
+@dp.message(F.text == "🪙 Tap qilish")
+async def tap_action(message: types.Message):
+    user_id = message.from_user.id
+    if user_id not in user_data:
+        user_data[user_id] = {"balance": 0, "tap_power": 1}
+    
+    power = user_data[user_id]["tap_power"]
+    user_data[user_id]["balance"] += power
+    
+    bal = user_data[user_id]["balance"]
+    await message.answer(f"+{power} tanga! 🪙 Jami: {bal} tanga")
 
-        conn.execute('UPDATE users SET coins = coins + ? WHERE telegram_id = ?', (reward, user_id))
-        conn.commit()
+@dp.message(F.text == "⭐ Tap quvvatini oshirish (10 Stars)")
+async def buy_boost(message: types.Message):
+    # Telegram Stars orqali to'lov yaratish
+    prices = [LabeledPrice(label="Tap quvvatini 2x qilish", amount=10)] # 10 Stars (valyuta 'XTR' da narx miqdori o'zi yulduzlarni bildiradi)
+    
+    await message.answer_invoice(
+        title="Tap Quvvatini Oshirish",
+        description="Har bir tap uchun beriladigan tangalar miqdorini 2 barobarga oshiring!",
+        prices=prices,
+        payload="boost_tap_power",
+        currency="XTR", # Telegram Stars valyuta kodi
+    )
 
-    return jsonify({'status': 'success', 'reward': reward})
+# Pre-checkout (To'lovdan oldingi tasdiq)
+@dp.pre_checkout_query()
+async def pre_checkout_handler(pre_checkout_query: PreCheckoutQuery):
+    await bot.answer_pre_checkout_query(pre_checkout_query.id, ok=True)
 
-@app.route('/api/shop/buy', methods=['POST'])
-def shop_buy():
-    data = request.json or {}
-    try:
-        user_id = int(data.get('user_id', 0))
-    except (ValueError, TypeError):
-        user_id = 0
+# To'lov muvaffaqiyatli yakunlanganda
+@dp.message(F.successful_payment)
+async def successful_payment_handler(message: types.Message):
+    user_id = message.from_user.id
+    if user_id in user_data:
+        user_data[user_id]["tap_power"] = 2  # Tap quvvatini 2 ga chiqaramiz
+        
+    await message.answer("Tabriklaymiz! To'lov muvaffaqiyatli amalga oshirildi. Endi har bir tap uchun 2 tadan tanga beriladi! 🎉")
 
-    item = data.get('item')
+async def main():
+    await dp.start_polling(bot)
 
-    with get_db() as conn:
-        user = conn.execute('SELECT * FROM users WHERE telegram_id = ?', (user_id,)).fetchone()
-        if not user or user['is_banned']:
-            return jsonify({'error': 'Foydalanuvchi topilmadi'}), 400
-
-        if item == 'refill':
-            if user['coins'] < 300:
-                return jsonify({'error': 'Tangalar yetarli emas (300 🪙 kerak)'}), 400
-            conn.execute('UPDATE users SET coins = coins - 300, energy = max_energy WHERE telegram_id = ?', (user_id,))
-        elif item == 'multitap':
-            if user['coins'] < 500:
-                return jsonify({'error': 'Tangalar yetarli emas (500 🪙 kerak)'}), 400
-            conn.execute('UPDATE users SET coins = coins - 500, tap_level = tap_level + 1 WHERE telegram_id = ?', (user_id,))
-        elif item == 'max_energy':
-            if user['coins'] < 800:
-                return jsonify({'error': 'Tangalar yetarli emas (800 🪙 kerak)'}), 400
-            conn.execute('UPDATE users SET coins = coins - 800, max_energy = max_energy + 500, energy = energy + 500 WHERE telegram_id = ?', (user_id,))
-        else:
-            return jsonify({'error': 'Noma\'lum mahsulot'}), 400
-
-        conn.commit()
-        return jsonify({'status': 'success'})
-
-@app.route('/api/admin/stats', methods=['POST'])
-def admin_stats():
-    data = request.json or {}
-    try:
-        admin_id = int(data.get('admin_id', 0))
-    except (ValueError, TypeError):
-        admin_id = 0
-
-    if admin_id not in ADMIN_IDS:
-        return jsonify({'error': 'Ruxsat yo\'q'}), 403
-
-    with get_db() as conn:
-        users = [dict(r) for r in conn.execute('SELECT * FROM users ORDER BY coins DESC LIMIT 25').fetchall()]
-        total_u = conn.execute('SELECT COUNT(*) as c FROM users').fetchone()['c']
-        total_c = conn.execute('SELECT SUM(coins) as s FROM users').fetchone()['s'] or 0
-
-    return jsonify({'status': 'success', 'stats': {'total_users': total_u, 'total_coins': total_c}, 'users': users})
-
-@app.route('/api/admin/action', methods=['POST'])
-def admin_action():
-    data = request.json or {}
-    try:
-        admin_id = int(data.get('admin_id', 0))
-    except (ValueError, TypeError):
-        admin_id = 0
-
-    if admin_id not in ADMIN_IDS:
-        return jsonify({'error': 'Ruxsat yo\'q'}), 403
-
-    action = data.get('action')
-    target_id = int(data.get('target_id', 0))
-
-    with get_db() as conn:
-        if action == 'ban':
-            conn.execute('UPDATE users SET is_banned = 1 WHERE telegram_id = ?', (target_id,))
-        elif action == 'unban':
-            conn.execute('UPDATE users SET is_banned = 0 WHERE telegram_id = ?', (target_id,))
-        elif action == 'add_coins':
-            conn.execute('UPDATE users SET coins = coins + 5000 WHERE telegram_id = ?', (target_id,))
-        conn.commit()
-
-    return jsonify({'status': 'success'})
-
-if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port)
+if __name__ == "__main__":
+    import asyncio
+    asyncio.run(main())
