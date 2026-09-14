@@ -1,5 +1,6 @@
 import os
 import time
+import random
 import sqlite3
 import threading
 import requests
@@ -10,7 +11,7 @@ app = Flask(__name__, template_folder='.', static_folder='.', static_url_path=''
 CORS(app)
 
 BOT_TOKEN = os.environ.get("BOT_TOKEN", "")
-ADMIN_IDS = [8898979946] # O'zingizning Telegram ID'ingiz
+ADMIN_IDS = [8898979946]  # Sizning Telegram ID'ingiz
 
 def get_db():
     conn = sqlite3.connect('database.db')
@@ -28,9 +29,7 @@ def init_db():
                 max_energy INTEGER DEFAULT 1000,
                 tap_level INTEGER DEFAULT 1,
                 autotap_level INTEGER DEFAULT 0,
-                last_active INTEGER DEFAULT 0,
-                is_banned INTEGER DEFAULT 0,
-                referred_by INTEGER DEFAULT 0
+                is_banned INTEGER DEFAULT 0
             )
         ''')
         conn.commit()
@@ -39,10 +38,12 @@ init_db()
 
 # --- TELEGRAM BOT POLLING ---
 def run_bot_polling():
-    if not BOT_TOKEN: return
+    if not BOT_TOKEN:
+        return
     try:
         requests.get(f"https://api.telegram.org/bot{BOT_TOKEN}/deleteWebhook?drop_pending_updates=true", timeout=10)
-    except: pass
+    except Exception:
+        pass
 
     offset = 0
     while True:
@@ -57,11 +58,11 @@ def run_bot_polling():
                     text = msg.get("text", "")
                     username = msg.get("from", {}).get("username", "User")
 
-                    if text.startswith("/start"):
+                    if text and text.startswith("/start"):
                         send_url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
                         payload = {
                             "chat_id": chat_id,
-                            "text": f"⚡ **Cyber Pro Hub Mini App**ga xush kelibsiz!\n\nPastdagi tugma orqali o'yinga kiring:",
+                            "text": f"⚡ **Cyber Pro Hub App**ga xush kelibsiz, @{username}!\n\nO'yinga kirish va tangalar yig'ish uchun tugmani bosing:",
                             "parse_mode": "Markdown",
                             "reply_markup": {
                                 "inline_keyboard": [
@@ -70,7 +71,8 @@ def run_bot_polling():
                             }
                         }
                         requests.post(send_url, json=payload)
-        except: time.sleep(3)
+        except Exception:
+            time.sleep(3)
 
 threading.Thread(target=run_bot_polling, daemon=True).start()
 
@@ -82,50 +84,50 @@ def index():
 @app.route('/api/user/sync', methods=['POST'])
 def sync_user():
     data = request.json or {}
-    user_id = data.get('user_id')
+    try:
+        user_id = int(data.get('user_id', 0))
+    except (ValueError, TypeError):
+        user_id = 0
+
     username = data.get('username', 'User')
-
     if not user_id:
-        return jsonify({'status': 'error'}), 400
+        return jsonify({'status': 'error', 'message': 'Noto\'g\'ri User ID'}), 400
 
-    now = int(time.time())
     with get_db() as conn:
         user = conn.execute('SELECT * FROM users WHERE telegram_id = ?', (user_id,)).fetchone()
         if not user:
             conn.execute(
-                'INSERT INTO users (telegram_id, username, coins, energy, last_active) VALUES (?, ?, ?, ?, ?)',
-                (user_id, username, 0, 1000, now)
+                'INSERT INTO users (telegram_id, username, coins, energy, max_energy, tap_level, autotap_level) VALUES (?, ?, 100, 1000, 1000, 1, 0)',
+                (user_id, username)
             )
             conn.commit()
             user = conn.execute('SELECT * FROM users WHERE telegram_id = ?', (user_id,)).fetchone()
 
-        offline_time = now - user['last_active']
-        passive_coins = 0
-        if user['autotap_level'] > 0 and offline_time > 60:
-            passive_coins = min(offline_time * user['autotap_level'], 50000)
-            conn.execute('UPDATE users SET coins = coins + ? WHERE telegram_id = ?', (passive_coins, user_id))
-
-        conn.execute('UPDATE users SET last_active = ? WHERE telegram_id = ?', (now, user_id))
-        conn.commit()
+        is_admin = user_id in ADMIN_IDS
 
         return jsonify({
             'status': 'success',
             'data': dict(user),
-            'passive_coins': passive_coins,
-            'is_admin': user_id in ADMIN_IDS
+            'is_admin': is_admin
         })
 
 @app.route('/api/tap', methods=['POST'])
 def handle_tap():
     data = request.json or {}
-    user_id = data.get('user_id')
-    count = data.get('count', 1)
+    try:
+        user_id = int(data.get('user_id', 0))
+    except (ValueError, TypeError):
+        user_id = 0
 
-    if count > 20: return jsonify({'error': 'Cheat detected'}), 400
+    count = int(data.get('count', 1))
 
     with get_db() as conn:
         user = conn.execute('SELECT * FROM users WHERE telegram_id = ?', (user_id,)).fetchone()
-        if not user or user['is_banned']: return jsonify({'error': 'Denied'}), 403
+        if not user or user['is_banned']:
+            return jsonify({'error': 'Kirish taqiqlangan'}), 403
+
+        if user['energy'] < count:
+            return jsonify({'error': 'Energiya yetarsiz'}), 400
 
         earned = count * user['tap_level']
         conn.execute(
@@ -135,30 +137,71 @@ def handle_tap():
         conn.commit()
         return jsonify({'status': 'success'})
 
-@app.route('/api/boost/buy', methods=['POST'])
-def buy_boost():
+@app.route('/api/spin', methods=['POST'])
+def spin_wheel():
     data = request.json or {}
-    user_id = data.get('user_id')
-    boost_type = data.get('type')
+    try:
+        user_id = int(data.get('user_id', 0))
+    except (ValueError, TypeError):
+        user_id = 0
+
+    reward = random.choice([50, 100, 150, 200, 300])
+    with get_db() as conn:
+        user = conn.execute('SELECT * FROM users WHERE telegram_id = ?', (user_id,)).fetchone()
+        if not user or user['is_banned']:
+            return jsonify({'error': 'Ruxsat berilmagan'}), 403
+
+        conn.execute('UPDATE users SET coins = coins + ? WHERE telegram_id = ?', (reward, user_id))
+        conn.commit()
+
+    return jsonify({'status': 'success', 'reward': reward})
+
+@app.route('/api/shop/buy', methods=['POST'])
+def shop_buy():
+    data = request.json or {}
+    try:
+        user_id = int(data.get('user_id', 0))
+    except (ValueError, TypeError):
+        user_id = 0
+
+    item = data.get('item')
 
     with get_db() as conn:
         user = conn.execute('SELECT * FROM users WHERE telegram_id = ?', (user_id,)).fetchone()
-        if boost_type == 'multitap' and user['coins'] >= 1000:
-            conn.execute('UPDATE users SET coins = coins - 1000, tap_level = tap_level + 1 WHERE telegram_id = ?', (user_id,))
-        elif boost_type == 'energy' and user['coins'] >= 1500:
-            conn.execute('UPDATE users SET coins = coins - 1500, max_energy = max_energy + 500, energy = energy + 500 WHERE telegram_id = ?', (user_id,))
+        if not user or user['is_banned']:
+            return jsonify({'error': 'Foydalanuvchi topilmadi'}), 400
+
+        if item == 'refill':
+            if user['coins'] < 300:
+                return jsonify({'error': 'Tangalar yetarli emas (300 🪙 kerak)'}), 400
+            conn.execute('UPDATE users SET coins = coins - 300, energy = max_energy WHERE telegram_id = ?', (user_id,))
+        elif item == 'multitap':
+            if user['coins'] < 500:
+                return jsonify({'error': 'Tangalar yetarli emas (500 🪙 kerak)'}), 400
+            conn.execute('UPDATE users SET coins = coins - 500, tap_level = tap_level + 1 WHERE telegram_id = ?', (user_id,))
+        elif item == 'max_energy':
+            if user['coins'] < 800:
+                return jsonify({'error': 'Tangalar yetarli emas (800 🪙 kerak)'}), 400
+            conn.execute('UPDATE users SET coins = coins - 800, max_energy = max_energy + 500, energy = energy + 500 WHERE telegram_id = ?', (user_id,))
         else:
-            return jsonify({'error': 'Mablag\' yetarli emas'}), 400
+            return jsonify({'error': 'Noma\'lum mahsulot'}), 400
+
         conn.commit()
         return jsonify({'status': 'success'})
 
 @app.route('/api/admin/stats', methods=['POST'])
 def admin_stats():
     data = request.json or {}
-    if data.get('admin_id') not in ADMIN_IDS: return jsonify({'error': 'Unauthorized'}), 403
+    try:
+        admin_id = int(data.get('admin_id', 0))
+    except (ValueError, TypeError):
+        admin_id = 0
+
+    if admin_id not in ADMIN_IDS:
+        return jsonify({'error': 'Ruxsat yo\'q'}), 403
 
     with get_db() as conn:
-        users = [dict(r) for r in conn.execute('SELECT * FROM users ORDER BY coins DESC LIMIT 30').fetchall()]
+        users = [dict(r) for r in conn.execute('SELECT * FROM users ORDER BY coins DESC LIMIT 25').fetchall()]
         total_u = conn.execute('SELECT COUNT(*) as c FROM users').fetchone()['c']
         total_c = conn.execute('SELECT SUM(coins) as s FROM users').fetchone()['s'] or 0
 
@@ -167,18 +210,26 @@ def admin_stats():
 @app.route('/api/admin/action', methods=['POST'])
 def admin_action():
     data = request.json or {}
-    if data.get('admin_id') not in ADMIN_IDS: return jsonify({'error': 'Unauthorized'}), 403
+    try:
+        admin_id = int(data.get('admin_id', 0))
+    except (ValueError, TypeError):
+        admin_id = 0
+
+    if admin_id not in ADMIN_IDS:
+        return jsonify({'error': 'Ruxsat yo\'q'}), 403
 
     action = data.get('action')
-    target_id = data.get('target_id')
+    target_id = int(data.get('target_id', 0))
+
     with get_db() as conn:
         if action == 'ban':
             conn.execute('UPDATE users SET is_banned = 1 WHERE telegram_id = ?', (target_id,))
         elif action == 'unban':
             conn.execute('UPDATE users SET is_banned = 0 WHERE telegram_id = ?', (target_id,))
         elif action == 'add_coins':
-            conn.execute('UPDATE users SET coins = coins + 50000 WHERE telegram_id = ?', (target_id,))
+            conn.execute('UPDATE users SET coins = coins + 5000 WHERE telegram_id = ?', (target_id,))
         conn.commit()
+
     return jsonify({'status': 'success'})
 
 if __name__ == '__main__':
