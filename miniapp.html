@@ -2,269 +2,223 @@
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Cyber Pro Hub</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mega Mini App</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root {
-            --bg-color: #0b0f19;
-            --card-bg: #161c2e;
-            --accent-blue: #38bdf8;
-            --accent-gold: #facc15;
-            --text-main: #f8fafc;
-        }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, sans-serif; user-select: none; }
-        body { background: var(--bg-color); color: var(--text-main); text-align: center; padding-bottom: 85px; }
-
-        .header {
-            padding: 20px 15px; background: var(--card-bg);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 0 0 20px 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-        }
-        .user-tag { font-size: 13px; color: #94a3b8; letter-spacing: 0.5px; }
-        .coins-val { font-size: 42px; font-weight: 900; color: var(--accent-gold); margin: 8px 0; text-shadow: 0 0 20px rgba(250, 204, 21, 0.3); }
-
-        .energy-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); padding: 10px 14px; border-radius: 12px; margin-top: 10px; }
-        .energy-info { display: flex; justify-content: space-between; font-size: 12px; color: #94a3b8; margin-bottom: 6px; }
-        .progress-bar { width: 100%; height: 8px; background: rgba(255,255,255,0.08); border-radius: 8px; overflow: hidden; }
-        .progress-fill { height: 100%; background: linear-gradient(90deg, #38bdf8, #818cf8); width: 100%; transition: width 0.2s ease; }
-
-        .tab-content { display: none; padding: 20px 15px; }
-        .active-tab { display: block; }
-
-        /* Tap Arena */
-        .tap-container { margin: 40px 0; position: relative; }
-        .tap-btn {
-            width: 220px; height: 220px; border-radius: 50%; margin: 0 auto;
-            background: radial-gradient(circle at 30% 30%, #38bdf8, #1e40af);
-            border: 4px solid #60a5fa; color: white; font-size: 32px; font-weight: 900;
-            cursor: pointer; outline: none; display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 0 40px rgba(56, 189, 248, 0.4); touch-action: manipulation;
-        }
-        .tap-btn:active { transform: scale(0.93); }
-
-        /* Card System */
-        .card-list { display: flex; flex-direction: column; gap: 12px; margin-top: 15px; }
-        .card-item {
-            background: var(--card-bg); border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 14px; padding: 14px; display: flex; justify-content: space-between; align-items: center; text-align: left;
-        }
-        .btn-action {
-            background: linear-gradient(135deg, #22c55e, #16a34a);
-            border: none; color: white; padding: 10px 16px; border-radius: 8px; font-weight: bold; cursor: pointer;
-        }
-        .btn-action:active { transform: scale(0.95); }
-
-        /* Bottom Nav */
-        .nav-bar {
-            position: fixed; bottom: 0; left: 0; width: 100%; background: #0f172a;
-            border-top: 1px solid rgba(255, 255, 255, 0.08); display: flex; justify-content: space-around; padding: 12px 0; z-index: 100;
-        }
-        .nav-item { color: #64748b; background: none; border: none; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; }
-        .nav-item.active { color: var(--accent-blue); }
-
-        /* Admin Dashboard */
-        .admin-box { background: rgba(30, 41, 59, 0.9); border: 1px solid var(--accent-gold); border-radius: 16px; padding: 16px; }
-        .admin-stats { display: flex; justify-content: space-around; margin: 12px 0; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 10px; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: radial-gradient(circle, #1e1b4b 0%, #0f172a 100%); color: #fff; margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; justify-content: space-between; height: 100vh; overflow: hidden; user-select: none; }
+        .container { width: 100%; max-width: 400px; padding: 15px; text-align: center; box-sizing: border-box; flex-grow: 1; overflow-y: auto; }
+        .balance { font-size: 48px; font-weight: 800; margin: 5px 0; color: #facc15; text-shadow: 0 0 20px rgba(250, 204, 21, 0.4); }
+        .stats-row { display: flex; justify-content: space-around; background: rgba(30, 41, 59, 0.7); border-radius: 12px; padding: 10px; margin-bottom: 15px; border: 1px solid rgba(56, 189, 248, 0.2); }
+        .stat-box { font-size: 12px; color: #94a3b8; }
+        .stat-val { font-size: 15px; font-weight: bold; color: #38bdf8; }
+        .energy-bar-container { background: rgba(15, 23, 42, 0.8); border-radius: 12px; padding: 10px; border: 1px solid #334155; margin-bottom: 20px; }
+        .energy-bar { width: 100%; background: #334155; border-radius: 10px; overflow: hidden; height: 14px; margin-bottom: 6px; }
+        .energy-fill { background: linear-gradient(90deg, #38bdf8, #818cf8); height: 100%; width: 100%; transition: width 0.1s; border-radius: 10px; }
+        .tap-btn { background: radial-gradient(circle, #22c55e 0%, #15803d 100%); border: none; border-radius: 50%; width: 180px; height: 180px; font-size: 32px; color: white; font-weight: bold; cursor: pointer; box-shadow: 0 0 35px rgba(34, 197, 94, 0.6); margin: 10px auto; display: flex; align-items: center; justify-content: center; transition: transform 0.05s, box-shadow 0.05s; outline: none; }
+        .tap-btn:active { transform: scale(0.90); box-shadow: 0 0 15px rgba(34, 197, 94, 0.4); }
+        .nav { display: flex; width: 100%; background: rgba(15, 23, 42, 0.95); justify-content: space-around; padding: 12px 0; border-top: 1px solid #334155; backdrop-filter: blur(10px); }
+        .nav-item { cursor: pointer; color: #64748b; font-weight: 600; font-size: 13px; display: flex; flex-direction: column; align-items: center; transition: color 0.2s; }
+        .nav-item.active { color: #38bdf8; text-shadow: 0 0 10px rgba(56, 189, 248, 0.4); }
+        .page { display: none; animation: fadeIn 0.3s ease; }
+        .page.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        .shop-card { background: rgba(30, 41, 59, 0.8); padding: 12px 15px; border-radius: 14px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(56, 189, 248, 0.2); }
+        .buy-btn { background: linear-gradient(135deg, #38bdf8, #0284c7); border: none; padding: 8px 14px; border-radius: 10px; color: #fff; font-weight: bold; cursor: pointer; transition: opacity 0.2s; }
+        .buy-btn:active { opacity: 0.8; }
+        #admin-badge { display: none; background: linear-gradient(135deg, #ef4444, #dc2626); padding: 4px 14px; border-radius: 20px; font-size: 11px; font-weight: bold; margin-bottom: 8px; box-shadow: 0 0 10px rgba(239, 68, 68, 0.5); }
     </style>
 </head>
 <body>
+    <div class="container">
+        <div id="admin-badge">ADMIN PANEL</div>
 
-    <div class="header">
-        <div class="user-tag" id="username">@User</div>
-        <div class="coins-val">🪙 <span id="coin-count">0</span></div>
-        <div class="energy-card">
-            <div class="energy-info">
-                <span>⚡ Energiya</span>
-                <span><b id="energy-val">1000</b> / <span id="max-energy">1000</span></span>
+        <!-- TAP PAGE -->
+        <div id="page-tap" class="page active">
+            <div style="color: #94a3b8; font-size: 13px; text-transform: uppercase; letter-spacing: 1px;">Balans</div>
+            <div class="balance" id="balance">0</div>
+            
+            <div class="stats-row">
+                <div class="stat-box">Har bosish<div class="stat-val" id="tap-power-val">1</div></div>
+                <div class="stat-box">Passiv daromad<div class="stat-val" id="passive-val">0 /soat</div></div>
             </div>
-            <div class="progress-bar"><div class="progress-fill" id="energy-fill"></div></div>
+
+            <div class="energy-bar-container">
+                <div class="energy-bar">
+                    <div class="energy-fill" id="energy-fill"></div>
+                </div>
+                <div id="energy-text" style="font-size: 12px; color: #94a3b8; font-weight: 600;">1000 / 1000</div>
+            </div>
+            
+            <button class="tap-btn" id="tap-btn">🪙</button>
+        </div>
+
+        <!-- SHOP PAGE -->
+        <div id="page-shop" class="page">
+            <h2>Do'kon & Upgrades</h2>
+            <p style="color: #94a3b8; font-size: 12px; margin-bottom: 15px;">Tangalaringizni foydali investitsiya qiling</p>
+            
+            <div class="shop-card">
+                <div style="text-align: left;">
+                    <div style="font-weight: bold; font-size: 14px;">Turbo Tap (+1 Kuch)</div>
+                    <div style="font-size: 12px; color: #facc15;" id="cost-tap">Narxi: 100 tanga</div>
+                </div>
+                <button class="buy-btn" onclick="buy('tap_power')">Olish</button>
+            </div>
+
+            <div class="shop-card">
+                <div style="text-align: left;">
+                    <div style="font-weight: bold; font-size: 14px;">Energiya Batareyasi (+500)</div>
+                    <div style="font-size: 12px; color: #facc15;" id="cost-energy">Narxi: 150 tanga</div>
+                </div>
+                <button class="buy-btn" onclick="buy('max_energy')">Olish</button>
+            </div>
+
+            <div class="shop-card">
+                <div style="text-align: left;">
+                    <div style="font-weight: bold; font-size: 14px;">Avto-Miner (+10 /soat)</div>
+                    <div style="font-size: 12px; color: #facc15;" id="cost-passive">Narxi: 200 tanga</div>
+                </div>
+                <button class="buy-btn" onclick="buy('passive_income')">Olish</button>
+            </div>
+        </div>
+
+        <!-- REWARD PAGE -->
+        <div id="page-reward" class="page">
+            <h2>Kunlik Bonus</h2>
+            <p style="color: #94a3b8; font-size: 13px;">Har kuni kirib 500 tanga bepul oling!</p>
+            <div style="background: rgba(30, 41, 59, 0.8); padding: 25px; border-radius: 16px; border: 1px solid #334155; margin-top: 20px;">
+                <div style="font-size: 36px; margin-bottom: 10px;">🎁</div>
+                <div style="font-size: 18px; font-weight: bold; color: #facc15; margin-bottom: 15px;">+500 Tanga</div>
+                <button class="buy-btn" id="daily-btn" onclick="claimDaily()" style="padding: 12px 25px; font-size: 15px;">Bonusni olish</button>
+            </div>
         </div>
     </div>
 
-    <!-- TAP -->
-    <div id="tab-tap" class="tab-content active-tab">
-        <div class="tap-container">
-            <div class="tap-btn" id="tap-btn">TAP!</div>
-        </div>
-    </div>
-
-    <!-- SHOP -->
-    <div id="tab-shop" class="tab-content">
-        <h3 style="text-align: left; margin-bottom: 10px;">🛍️ Do'kon & Boosterlar</h3>
-        <div class="card-list">
-            <div class="card-item">
-                <div><b>Full Recharge</b><br><small style="color:#94a3b8;">Energiyani 100% tiklash</small></div>
-                <button class="btn-action" onclick="buyItem('refill')">300 🪙</button>
-            </div>
-            <div class="card-item">
-                <div><b>Multitap (+1)</b><br><small style="color:#94a3b8;">Har tap uchun tanga hajmini oshirish</small></div>
-                <button class="btn-action" onclick="buyItem('multitap')">500 🪙</button>
-            </div>
-            <div class="card-item">
-                <div><b>Max Energy Limit</b><br><small style="color:#94a3b8;">+500 Energiya sig'imi</small></div>
-                <button class="btn-action" onclick="buyItem('max_energy')">800 🪙</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- SPIN -->
-    <div id="tab-spin" class="tab-content">
-        <h3>🎰 Omadingizni Sinang</h3>
-        <p style="color:#94a3b8; font-size:13px; margin: 10px 0 20px 0;">Har kuni omad g'ildiragidan 50 dan 300 gacha tanga yutib oling!</p>
-        <button class="btn-action" style="width: 100%; padding: 14px;" onclick="spin()">Spin Aylantirish</button>
-    </div>
-
-    <!-- ADMIN -->
-    <div id="tab-admin" class="tab-content">
-        <div class="admin-box">
-            <h3 style="color: var(--accent-gold);">👑 Admin Control Panel</h3>
-            <div class="admin-stats">
-                <div>Userlar: <b id="adm-users">0</b></div>
-                <div>Jami Tangalar: <b id="adm-coins">0</b></div>
-            </div>
-            <h4 style="text-align: left; margin: 12px 0 8px 0; font-size: 14px;">Foydalanuvchilar Ro'yxati:</h4>
-            <div class="card-list" id="admin-user-list"></div>
-        </div>
-    </div>
-
-    <!-- NAV BAR -->
-    <div class="nav-bar">
-        <button class="nav-item active" onclick="switchTab('tap', this)">🎮 Tap</button>
-        <button class="nav-item" onclick="switchTab('shop', this)">🛍️ Do'kon</button>
-        <button class="nav-item" onclick="switchTab('spin', this)">🎰 Spin</button>
-        <button class="nav-item" id="nav-admin" style="display:none;" onclick="switchTab('admin', this)">👑 Admin</button>
+    <div class="nav">
+        <div class="nav-item active" onclick="switchPage('tap', event)">⚡ Tap</div>
+        <div class="nav-item" onclick="switchPage('shop', event)">🛒 Do'kon</div>
+        <div class="nav-item" onclick="switchPage('reward', event)">🎁 Bonus</div>
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
+        const user = tg.initDataUnsafe?.user || { id: 123456789 }; 
+        
+        let balanceEl = document.getElementById('balance');
+        let energyFill = document.getElementById('energy-fill');
+        let energyText = document.getElementById('energy-text');
+        let tapPowerVal = document.getElementById('tap-power-val');
+        let passiveVal = document.getElementById('passive-val');
+        let adminBadge = document.getElementById('admin-badge');
+        let dailyBtn = document.getElementById('daily-btn');
+        
+        let currentEnergy = 1000;
+        let maxEnergy = 1000;
+        let tapPower = 1;
 
-        const tgUser = tg.initDataUnsafe?.user;
-        const userId = tgUser?.id ? parseInt(tgUser.id) : 8898979946;
-        const username = tgUser?.username ? `@${tgUser.username}` : "User";
-
-        document.getElementById("username").innerText = username;
-
-        let coins = 0, energy = 1000, maxEnergy = 1000;
-
-        async function init() {
-            try {
-                const res = await fetch('/api/user/sync', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ user_id: userId, username: username })
-                });
-                const data = await res.json();
-                if(data.status === 'success') {
-                    coins = data.data.coins;
-                    energy = data.data.energy;
-                    maxEnergy = data.data.max_energy;
-
-                    if(data.is_admin) {
-                        document.getElementById('nav-admin').style.display = 'flex';
-                    }
-                    updateUI();
+        function syncUser() {
+            fetch('/api/user', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ telegram_id: user.id })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) return;
+                balanceEl.innerText = data.balance;
+                currentEnergy = data.energy;
+                maxEnergy = data.max_energy;
+                tapPower = data.tap_power;
+                tapPowerVal.innerText = tapPower;
+                passiveVal.innerText = data.passive_income + ' /soat';
+                
+                if (data.daily_claimed === 1) {
+                    dailyBtn.innerText = "Olingan ✓";
+                    dailyBtn.style.opacity = "0.5";
+                    dailyBtn.disabled = true;
                 }
-            } catch(e) { console.error(e); }
+
+                updateEnergyUI();
+                if (data.isAdmin) {
+                    adminBadge.style.display = 'inline-block';
+                }
+            }).catch(err => console.error(err));
         }
 
-        function updateUI() {
-            document.getElementById('coin-count').innerText = coins.toLocaleString();
-            document.getElementById('energy-val').innerText = energy;
-            document.getElementById('max-energy').innerText = maxEnergy;
-            document.getElementById('energy-fill').style.width = Math.max(0, (energy / maxEnergy * 100)) + "%";
+        function updateEnergyUI() {
+            energyText.innerText = `${currentEnergy} / ${maxEnergy}`;
+            energyFill.style.width = `${Math.min(100, (currentEnergy / maxEnergy) * 100)}%`;
         }
 
         document.getElementById('tap-btn').addEventListener('click', () => {
-            if(energy < 1) return;
-            coins += 1; energy -= 1;
-            updateUI();
-            
-            if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
-
             fetch('/api/tap', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ user_id: userId, count: 1 })
-            });
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ telegram_id: user.id })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    balanceEl.innerText = data.balance;
+                    currentEnergy = data.energy;
+                    updateEnergyUI();
+                }
+            }).catch(err => console.error(err));
         });
 
-        async function buyItem(item) {
-            const res = await fetch('/api/shop/buy', {
+        function buy(type) {
+            fetch('/api/buy', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ user_id: userId, item: item })
-            });
-            const data = await res.json();
-            if(data.status === 'success') { alert('Muvaffaqiyatli xarid qilindi!'); init(); }
-            else { alert(data.error); }
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ telegram_id: user.id, type: type })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    balanceEl.innerText = data.balance;
+                    maxEnergy = data.max_energy;
+                    tapPower = data.tap_power;
+                    tapPowerVal.innerText = tapPower;
+                    passiveVal.innerText = data.passive_income + ' /soat';
+                    updateEnergyUI();
+                    alert("Muvaffaqiyatli xarid qilindi! 🎉");
+                } else {
+                    alert(data.error);
+                }
+            }).catch(err => console.error(err));
         }
 
-        async function spin() {
-            const res = await fetch('/api/spin', {
+        function claimDaily() {
+            fetch('/api/daily', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ user_id: userId })
-            });
-            const data = await res.json();
-            if(data.status === 'success') {
-                alert(`Siz omad g'ildiragidan ${data.reward} tanga yutib oldingiz!`);
-                init();
-            } else { alert(data.error); }
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ telegram_id: user.id })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    balanceEl.innerText = data.balance;
+                    dailyBtn.innerText = "Olingan ✓";
+                    dailyBtn.style.opacity = "0.5";
+                    dailyBtn.disabled = true;
+                    alert("Tabriklaymiz! 500 tanga qo'shildi! 🎁");
+                } else {
+                    alert(data.error);
+                }
+            }).catch(err => console.error(err));
         }
 
-        function switchTab(name, el) {
-            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active-tab'));
+        function switchPage(pageName, event) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            document.getElementById(`tab-${name}`).classList.add('active-tab');
-            el.classList.add('active');
-
-            if(name === 'admin') fetchAdmin();
+            document.getElementById('page-' + pageName).classList.add('active');
+            event.currentTarget.classList.add('active');
         }
 
-        async function fetchAdmin() {
-            const res = await fetch('/api/admin/stats', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ admin_id: userId })
-            });
-            const data = await res.json();
-            if(data.status === 'success') {
-                document.getElementById('adm-users').innerText = data.stats.total_users;
-                document.getElementById('adm-coins').innerText = data.stats.total_coins.toLocaleString();
-                const list = document.getElementById('admin-user-list');
-                list.innerHTML = '';
-                data.users.forEach(u => {
-                    list.innerHTML += `
-                        <div class="card-item">
-                            <div>
-                                <b>${u.username}</b><br>
-                                <small style="color:#94a3b8;">ID: ${u.telegram_id} | 🪙 ${u.coins.toLocaleString()}</small>
-                            </div>
-                            <div style="display:flex; gap:6px;">
-                                <button class="btn-action" style="padding:6px 10px; font-size:11px;" onclick="adminAction('add_coins', ${u.telegram_id})">+5K</button>
-                                <button class="btn-action" style="padding:6px 10px; font-size:11px; background:${u.is_banned ? '#22c55e' : '#ef4444'};" onclick="adminAction('${u.is_banned ? 'unban' : 'ban'}', ${u.telegram_id})">
-                                    ${u.is_banned ? 'Unban' : 'Ban'}
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                });
-            }
-        }
-
-        async function adminAction(act, target) {
-            await fetch('/api/admin/action', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ admin_id: userId, action: act, target_id: target })
-            });
-            fetchAdmin();
-        }
-
-        init();
+        syncUser();
+        setInterval(syncUser, 2000);
     </script>
 </body>
 </html>
