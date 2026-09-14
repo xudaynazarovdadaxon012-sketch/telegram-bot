@@ -3,153 +3,128 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Cyber Pro Hub Mini App</title>
+    <title>Cyber Pro Hub</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <style>
         :root {
-            --bg-color: #05070f;
-            --card-bg: rgba(22, 27, 38, 0.65);
-            --neon-blue: #00f0ff;
-            --neon-purple: #7000ff;
-            --neon-gold: #ffd700;
-            --text-main: #f0f6fc;
+            --bg-color: #0b0f19;
+            --card-bg: #161c2e;
+            --accent-blue: #38bdf8;
+            --accent-gold: #facc15;
+            --text-main: #f8fafc;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; user-select: none; }
-        body { background: var(--bg-color); color: var(--text-main); overflow-x: hidden; padding-bottom: 90px; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, sans-serif; user-select: none; }
+        body { background: var(--bg-color); color: var(--text-main); text-align: center; padding-bottom: 85px; }
 
-        /* Neon Background Glows */
-        .glow-1 { position: fixed; top: -100px; left: -100px; width: 300px; height: 300px; background: var(--neon-purple); filter: blur(140px); opacity: 0.4; z-index: -1; }
-        .glow-2 { position: fixed; bottom: 50px; right: -100px; width: 300px; height: 300px; background: var(--neon-blue); filter: blur(140px); opacity: 0.3; z-index: -1; }
-
-        /* Glassmorphism Header */
         .header {
-            background: var(--card-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding: 20px 15px; border-radius: 0 0 24px 24px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            padding: 20px 15px; background: var(--card-bg);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 0 0 20px 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.4);
         }
-        .username-badge { font-size: 13px; color: #8b949e; letter-spacing: 0.5px; }
-        .coins-display {
-            font-size: 46px; font-weight: 900; margin: 10px 0;
-            background: linear-gradient(135deg, #fff 0%, var(--neon-gold) 100%);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            text-shadow: 0 0 25px rgba(255, 215, 0, 0.2);
-        }
+        .user-tag { font-size: 13px; color: #94a3b8; letter-spacing: 0.5px; }
+        .coins-val { font-size: 42px; font-weight: 900; color: var(--accent-gold); margin: 8px 0; text-shadow: 0 0 20px rgba(250, 204, 21, 0.3); }
 
-        /* Energy Progress Bar */
-        .energy-box { width: 90%; margin: 0 auto; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 10px 14px; border-radius: 14px; }
-        .energy-text { display: flex; justify-content: space-between; font-size: 12px; color: #8b949e; margin-bottom: 6px; }
-        .energy-bar-bg { width: 100%; height: 10px; background: rgba(255,255,255,0.08); border-radius: 10px; overflow: hidden; }
-        .energy-bar-fill { height: 100%; background: linear-gradient(90deg, var(--neon-blue), var(--neon-purple)); width: 100%; transition: width 0.2s ease; border-radius: 10px; }
+        .energy-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); padding: 10px 14px; border-radius: 12px; margin-top: 10px; }
+        .energy-info { display: flex; justify-content: space-between; font-size: 12px; color: #94a3b8; margin-bottom: 6px; }
+        .progress-bar { width: 100%; height: 8px; background: rgba(255,255,255,0.08); border-radius: 8px; overflow: hidden; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #38bdf8, #818cf8); width: 100%; transition: width 0.2s ease; }
 
-        /* Content Tabs */
         .tab-content { display: none; padding: 20px 15px; }
         .active-tab { display: block; }
 
-        /* Tap Button UI */
-        .tap-area { margin: 40px 0; position: relative; }
+        /* Tap Arena */
+        .tap-container { margin: 40px 0; position: relative; }
         .tap-btn {
-            width: 230px; height: 230px; border-radius: 50%;
-            background: radial-gradient(circle at 30% 30%, #1f6feb, #061539);
-            border: 4px solid rgba(0, 240, 255, 0.4);
-            box-shadow: 0 0 50px rgba(0, 240, 255, 0.3), inset 0 0 20px rgba(255, 255, 255, 0.2);
-            color: #fff; font-size: 36px; font-weight: 900; outline: none; cursor: pointer;
-            touch-action: manipulation; position: relative;
+            width: 220px; height: 220px; border-radius: 50%; margin: 0 auto;
+            background: radial-gradient(circle at 30% 30%, #38bdf8, #1e40af);
+            border: 4px solid #60a5fa; color: white; font-size: 32px; font-weight: 900;
+            cursor: pointer; outline: none; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 0 40px rgba(56, 189, 248, 0.4); touch-action: manipulation;
         }
-        .tap-btn:active { transform: scale(0.95); }
+        .tap-btn:active { transform: scale(0.93); }
 
-        .floating-num {
-            position: absolute; color: var(--neon-gold); font-size: 32px; font-weight: 900;
-            pointer-events: none; text-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
-        }
-
-        /* Cards List */
+        /* Card System */
         .card-list { display: flex; flex-direction: column; gap: 12px; margin-top: 15px; }
         .card-item {
-            background: var(--card-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; padding: 16px;
-            display: flex; justify-content: space-between; align-items: center; text-align: left;
+            background: var(--card-bg); border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 14px; padding: 14px; display: flex; justify-content: space-between; align-items: center; text-align: left;
         }
-        .btn-neon {
-            background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
-            border: none; color: #fff; font-weight: 700; padding: 10px 16px; border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0, 240, 255, 0.3); cursor: pointer; transition: 0.2s;
+        .btn-action {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            border: none; color: white; padding: 10px 16px; border-radius: 8px; font-weight: bold; cursor: pointer;
         }
-        .btn-neon:active { transform: scale(0.92); }
+        .btn-action:active { transform: scale(0.95); }
 
-        /* Admin Dashboard UI */
-        .admin-panel { background: rgba(15, 20, 32, 0.85); border: 1px solid var(--neon-gold); border-radius: 20px; padding: 18px; }
-        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 15px 0; }
-        .stat-box { background: rgba(255,255,255,0.04); border-radius: 12px; padding: 12px; text-align: center; border: 1px solid rgba(255,255,255,0.05); }
-        .stat-box h4 { font-size: 22px; color: var(--neon-gold); }
-
-        /* Bottom Nav Bar */
+        /* Bottom Nav */
         .nav-bar {
-            position: fixed; bottom: 0; left: 0; width: 100%;
-            background: rgba(13, 17, 26, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border-top: 1px solid rgba(255, 255, 255, 0.08); display: flex; justify-content: space-around; padding: 12px 0;
-            z-index: 100;
+            position: fixed; bottom: 0; left: 0; width: 100%; background: #0f172a;
+            border-top: 1px solid rgba(255, 255, 255, 0.08); display: flex; justify-content: space-around; padding: 12px 0; z-index: 100;
         }
-        .nav-item { color: #8b949e; background: none; border: none; font-size: 11px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; }
-        .nav-item.active { color: var(--neon-blue); font-weight: bold; }
+        .nav-item { color: #64748b; background: none; border: none; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        .nav-item.active { color: var(--accent-blue); }
+
+        /* Admin Dashboard */
+        .admin-box { background: rgba(30, 41, 59, 0.9); border: 1px solid var(--accent-gold); border-radius: 16px; padding: 16px; }
+        .admin-stats { display: flex; justify-content: space-around; margin: 12px 0; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 10px; }
     </style>
 </head>
 <body>
 
-    <div class="glow-1"></div>
-    <div class="glow-2"></div>
-
     <div class="header">
-        <div class="username-badge" id="username">@User</div>
-        <div class="coins-display">🪙 <span id="coin-count">0</span></div>
-        <div class="energy-box">
-            <div class="energy-text">
+        <div class="user-tag" id="username">@User</div>
+        <div class="coins-val">🪙 <span id="coin-count">0</span></div>
+        <div class="energy-card">
+            <div class="energy-info">
                 <span>⚡ Energiya</span>
                 <span><b id="energy-val">1000</b> / <span id="max-energy">1000</span></span>
             </div>
-            <div class="energy-bar-bg"><div class="energy-bar-fill" id="energy-fill"></div></div>
+            <div class="progress-bar"><div class="progress-fill" id="energy-fill"></div></div>
         </div>
     </div>
 
-    <!-- 1. TAP TAB -->
+    <!-- TAP -->
     <div id="tab-tap" class="tab-content active-tab">
-        <div class="tap-area">
-            <button class="tap-btn" id="tap-btn">TAP</button>
+        <div class="tap-container">
+            <div class="tap-btn" id="tap-btn">TAP!</div>
         </div>
     </div>
 
-    <!-- 2. BOOST TAB -->
-    <div id="tab-boost" class="tab-content">
-        <h3 style="text-align: left; font-size: 20px;">🚀 Boosters</h3>
+    <!-- SHOP -->
+    <div id="tab-shop" class="tab-content">
+        <h3 style="text-align: left; margin-bottom: 10px;">🛍️ Do'kon & Boosterlar</h3>
         <div class="card-list">
             <div class="card-item">
-                <div><h4>Multitap</h4><p style="font-size: 12px; color: #8b949e;">Har bir tapga +1 tanga</p></div>
-                <button class="btn-neon" onclick="buyBoost('multitap')">1,000 🪙</button>
+                <div><b>Full Recharge</b><br><small style="color:#94a3b8;">Energiyani 100% tiklash</small></div>
+                <button class="btn-action" onclick="buyItem('refill')">300 🪙</button>
             </div>
             <div class="card-item">
-                <div><h4>Energy Limit</h4><p style="font-size: 12px; color: #8b949e;">+500 Maksimal Energiya</p></div>
-                <button class="btn-neon" onclick="buyBoost('energy')">1,500 🪙</button>
+                <div><b>Multitap (+1)</b><br><small style="color:#94a3b8;">Har tap uchun tanga hajmini oshirish</small></div>
+                <button class="btn-action" onclick="buyItem('multitap')">500 🪙</button>
+            </div>
+            <div class="card-item">
+                <div><b>Max Energy Limit</b><br><small style="color:#94a3b8;">+500 Energiya sig'imi</small></div>
+                <button class="btn-action" onclick="buyItem('max_energy')">800 🪙</button>
             </div>
         </div>
     </div>
 
-    <!-- 3. SPIN TAB -->
+    <!-- SPIN -->
     <div id="tab-spin" class="tab-content">
-        <h3 style="font-size: 20px;">🎰 Omad G'ildiragi</h3>
-        <p style="color: #8b949e; font-size: 13px; margin: 10px 0 20px 0;">Har kuni 1 marotaba bepul omadingizni sinab ko'ring!</p>
-        <button class="btn-neon" style="width: 100%; padding: 14px;" onclick="spinWheel()">Spin Aylantirish (Bonus)</button>
+        <h3>🎰 Omadingizni Sinang</h3>
+        <p style="color:#94a3b8; font-size:13px; margin: 10px 0 20px 0;">Har kuni omad g'ildiragidan 50 dan 300 gacha tanga yutib oling!</p>
+        <button class="btn-action" style="width: 100%; padding: 14px;" onclick="spin()">Spin Aylantirish</button>
     </div>
 
-    <!-- 4. ADMIN TAB -->
+    <!-- ADMIN -->
     <div id="tab-admin" class="tab-content">
-        <div class="admin-panel">
-            <h3 style="color: var(--neon-gold); display: flex; align-items: center; justify-content: center; gap: 8px;">👑 Admin Control Center</h3>
-            <div class="stat-grid">
-                <div class="stat-box"><h4 id="adm-users">0</h4><p style="font-size: 11px; color: #8b949e;">Foydalanuvchilar</p></div>
-                <div class="stat-box"><h4 id="adm-coins">0</h4><p style="font-size: 11px; color: #8b949e;">Jami Tangalar</p></div>
+        <div class="admin-box">
+            <h3 style="color: var(--accent-gold);">👑 Admin Control Panel</h3>
+            <div class="admin-stats">
+                <div>Userlar: <b id="adm-users">0</b></div>
+                <div>Jami Tangalar: <b id="adm-coins">0</b></div>
             </div>
-            <h4 style="text-align: left; margin: 15px 0 10px 0; font-size: 14px;">Foydalanuvchilarni Boshqarish:</h4>
+            <h4 style="text-align: left; margin: 12px 0 8px 0; font-size: 14px;">Foydalanuvchilar Ro'yxati:</h4>
             <div class="card-list" id="admin-user-list"></div>
         </div>
     </div>
@@ -157,7 +132,7 @@
     <!-- NAV BAR -->
     <div class="nav-bar">
         <button class="nav-item active" onclick="switchTab('tap', this)">🎮 Tap</button>
-        <button class="nav-item" onclick="switchTab('boost', this)">🚀 Boost</button>
+        <button class="nav-item" onclick="switchTab('shop', this)">🛍️ Do'kon</button>
         <button class="nav-item" onclick="switchTab('spin', this)">🎰 Spin</button>
         <button class="nav-item" id="nav-admin" style="display:none;" onclick="switchTab('admin', this)">👑 Admin</button>
     </div>
@@ -167,14 +142,14 @@
         tg.expand();
 
         const tgUser = tg.initDataUnsafe?.user;
-        const userId = tgUser?.id || 8898979946;
+        const userId = tgUser?.id ? parseInt(tgUser.id) : 8898979946;
         const username = tgUser?.username ? `@${tgUser.username}` : "User";
 
         document.getElementById("username").innerText = username;
 
         let coins = 0, energy = 1000, maxEnergy = 1000;
 
-        async function initApp() {
+        async function init() {
             try {
                 const res = await fetch('/api/user/sync', {
                     method: 'POST',
@@ -199,33 +174,15 @@
             document.getElementById('coin-count').innerText = coins.toLocaleString();
             document.getElementById('energy-val').innerText = energy;
             document.getElementById('max-energy').innerText = maxEnergy;
-            document.getElementById('energy-fill').style.width = (energy / maxEnergy * 100) + "%";
+            document.getElementById('energy-fill').style.width = Math.max(0, (energy / maxEnergy * 100)) + "%";
         }
 
-        const tapBtn = document.getElementById('tap-btn');
-        tapBtn.addEventListener('click', (e) => {
-            if (energy < 1) return;
+        document.getElementById('tap-btn').addEventListener('click', () => {
+            if(energy < 1) return;
             coins += 1; energy -= 1;
             updateUI();
-
-            if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
-
-            // GSAP Animatsiyasi (Tugma bosilishi)
-            gsap.to(tapBtn, { scale: 0.93, duration: 0.05, yoyo: true, repeat: 1 });
-
-            // Floating Number Animatsiyasi
-            const rect = tapBtn.getBoundingClientRect();
-            const floatingNum = document.createElement('div');
-            floatingNum.className = 'floating-num';
-            floatingNum.innerText = '+1';
-            floatingNum.style.left = `${e.clientX - rect.left}px`;
-            floatingNum.style.top = `${e.clientY - rect.top}px`;
-            tapBtn.parentElement.appendChild(floatingNum);
-
-            gsap.to(floatingNum, {
-                y: -70, opacity: 0, duration: 0.7, ease: "power1.out",
-                onComplete: () => floatingNum.remove()
-            });
+            
+            if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
 
             fetch('/api/tap', {
                 method: 'POST',
@@ -234,31 +191,37 @@
             });
         });
 
-        async function buyBoost(type) {
-            const res = await fetch('/api/boost/buy', {
+        async function buyItem(item) {
+            const res = await fetch('/api/shop/buy', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ user_id: userId, type: type })
+                body: JSON.stringify({ user_id: userId, item: item })
             });
             const data = await res.json();
-            if(data.status === 'success') { alert('Boost xarid qilindi!'); initApp(); }
+            if(data.status === 'success') { alert('Muvaffaqiyatli xarid qilindi!'); init(); }
             else { alert(data.error); }
         }
 
-        function spinWheel() {
-            const win = Math.floor(Math.random() * 5000) + 1000;
-            coins += win;
-            updateUI();
-            alert(`Tabriklaymiz! Spin'dan ${win} tanga yutib oldingiz!`);
+        async function spin() {
+            const res = await fetch('/api/spin', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ user_id: userId })
+            });
+            const data = await res.json();
+            if(data.status === 'success') {
+                alert(`Siz omad g'ildiragidan ${data.reward} tanga yutib oldingiz!`);
+                init();
+            } else { alert(data.error); }
         }
 
-        function switchTab(tabName, el) {
+        function switchTab(name, el) {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active-tab'));
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            document.getElementById(`tab-${tabName}`).classList.add('active-tab');
+            document.getElementById(`tab-${name}`).classList.add('active-tab');
             el.classList.add('active');
 
-            if(tabName === 'admin') fetchAdmin();
+            if(name === 'admin') fetchAdmin();
         }
 
         async function fetchAdmin() {
@@ -277,12 +240,12 @@
                     list.innerHTML += `
                         <div class="card-item">
                             <div>
-                                <h5 style="color:#fff;">${u.username}</h5>
-                                <p style="font-size:11px; color:#8b949e;">ID: ${u.telegram_id} | 🪙 ${u.coins.toLocaleString()}</p>
+                                <b>${u.username}</b><br>
+                                <small style="color:#94a3b8;">ID: ${u.telegram_id} | 🪙 ${u.coins.toLocaleString()}</small>
                             </div>
                             <div style="display:flex; gap:6px;">
-                                <button class="btn-neon" style="padding:6px 10px; font-size:11px;" onclick="adminAct('add_coins', ${u.telegram_id})">+50K</button>
-                                <button class="btn-neon" style="padding:6px 10px; font-size:11px; background:${u.is_banned ? '#238636' : '#da3633'};" onclick="adminAct('${u.is_banned ? 'unban' : 'ban'}', ${u.telegram_id})">
+                                <button class="btn-action" style="padding:6px 10px; font-size:11px;" onclick="adminAction('add_coins', ${u.telegram_id})">+5K</button>
+                                <button class="btn-action" style="padding:6px 10px; font-size:11px; background:${u.is_banned ? '#22c55e' : '#ef4444'};" onclick="adminAction('${u.is_banned ? 'unban' : 'ban'}', ${u.telegram_id})">
                                     ${u.is_banned ? 'Unban' : 'Ban'}
                                 </button>
                             </div>
@@ -292,7 +255,7 @@
             }
         }
 
-        async function adminAct(act, target) {
+        async function adminAction(act, target) {
             await fetch('/api/admin/action', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
@@ -301,7 +264,7 @@
             fetchAdmin();
         }
 
-        initApp();
+        init();
     </script>
 </body>
 </html>
