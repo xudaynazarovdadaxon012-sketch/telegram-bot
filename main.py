@@ -3,20 +3,20 @@ import random
 import sqlite3
 from flask import Flask, request, jsonify, render_template
 
+# Papka ochmaslik uchun template_folder='.' qilib sozlangan
 app = Flask(__name__, template_folder='.')
 
 # --- ADMIN ID LAR RO'YXATI ---
-ADMIN_IDS = [8898979946]  # O'zingizning Telegram ID'ingizni shu yerga yozing
+ADMIN_IDS = [8898979946]  # O'zingizning Telegram ID'ingizni yozing
 
 def is_admin(user_id):
     return user_id in ADMIN_IDS
 
-# --- BAZANI SOZLASH ---
+# --- BAZANI SOZLASH (SQLite) ---
 def init_db():
     conn = sqlite3.connect('clicker_gold.db')
     cursor = conn.cursor()
     
-    # Foydalanuvchilar jadvali
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS users (
             user_id INTEGER PRIMARY KEY,
@@ -28,7 +28,6 @@ def init_db():
         )
     ''')
     
-    # Homiy kanallar jadvali
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS channels (
             channel_id TEXT PRIMARY KEY,
@@ -44,9 +43,10 @@ init_db()
 
 @app.route('/')
 def home():
-    return render_template('index.html')
+    # Endi to'g'ridan-to'g'ri ildiz papkadagi miniapp.html faylini ochadi
+    return render_template('miniapp.html')
 
-# --- 1. USER INIT & REFERRAL ( Do'st taklif qilish: +100 tanga ) ---
+# --- 1. USER START & REFERRAL (+100 tanga) ---
 @app.route('/api/start', methods=['POST'])
 def start_game():
     data = request.json or {}
@@ -68,7 +68,6 @@ def start_game():
             cursor.execute('SELECT user_id FROM users WHERE user_id = ?', (int(ref_id),))
             if cursor.fetchone():
                 referred_by = int(ref_id)
-                # Taklif qilganga +100 tanga
                 cursor.execute('UPDATE users SET balance = balance + 100 WHERE user_id = ?', (referred_by,))
 
         cursor.execute('''
@@ -90,31 +89,12 @@ def start_game():
         "ref_link": f"https://t.me/ClickerGoldBot?start={user_id}"
     })
 
-# --- 2. MAJBURIY KANALLARNI TEKSHIRISH ---
-@app.route('/api/check_sub', methods=['POST'])
-def check_sub():
-    data = request.json or {}
-    user_id = data.get('user_id')
-
-    conn = sqlite3.connect('clicker_gold.db')
-    cursor = conn.cursor()
-    cursor.execute('SELECT channel_username FROM channels WHERE is_mandatory = 1')
-    mandatory_channels = [row[0] for row in cursor.fetchall()]
-    conn.close()
-
-    # REAL PROD: Telegram Bot API (getChatMember) yordamida har bir kanal tekshiriladi
-    return jsonify({
-        "status": "success",
-        "is_subscribed": True, # Test rejimida True
-        "mandatory_channels": mandatory_channels
-    })
-
-# --- 3. 10+ SEKTORLI OMADLI G'ILDIRAK ---
+# --- 2. OMADLI G'ILDIRAK (11 sektorli) ---
 @app.route('/api/spin_wheel', methods=['POST'])
 def spin_wheel():
     data = request.json or {}
     user_id = data.get('user_id')
-    spin_type = data.get('spin_type', 'coin') # 'coin' yoki 'stars'
+    spin_type = data.get('spin_type', 'coin')
 
     conn = sqlite3.connect('clicker_gold.db')
     cursor = conn.cursor()
@@ -125,7 +105,6 @@ def spin_wheel():
         conn.close()
         return jsonify({"status": "error", "message": "User topilmadi"}), 404
 
-    # 11 ta Sektor (Minuslar ham bor)
     sectors = [
         {"id": 0, "name": "+50 Tanga", "type": "coin", "value": 50, "weight": 25},
         {"id": 1, "name": "+100 Tanga", "type": "coin", "value": 100, "weight": 20},
@@ -156,12 +135,12 @@ def spin_wheel():
         "new_balance": new_balance
     })
 
-# --- 4. CS:GO USLUBIDAGI 4 XIL QUTILAR ---
+# --- 3. CS:GO CASES (4 xil quti) ---
 @app.route('/api/open_case', methods=['POST'])
 def open_case():
     data = request.json or {}
     user_id = data.get('user_id')
-    case_type = data.get('case_type') # bronze, silver, gold, legendary
+    case_type = data.get('case_type')
 
     cases_config = {
         "bronze": {
@@ -241,6 +220,44 @@ def open_case():
         "status": "success",
         "reward": reward,
         "new_balance": new_balance
+    })
+
+# --- 4. SHOP TIZIMI (1 Stars = 5000 Coins va hokazo) ---
+@app.route('/api/shop/buy', methods=['POST'])
+def buy_item():
+    data = request.json or {}
+    user_id = data.get('user_id')
+    item_type = data.get('item_type')
+
+    shop_items = {
+        "coins_5k": {"type": "coin", "amount": 5000, "stars": 1},
+        "coins_25k": {"type": "coin", "amount": 25000, "stars": 4},
+        "energy_full": {"type": "energy", "amount": 1000, "stars": 1}
+    }
+
+    if item_type not in shop_items:
+        return jsonify({"status": "error", "message": "Noma'lum mahsulot"}), 400
+
+    item = shop_items[item_type]
+
+    conn = sqlite3.connect('clicker_gold.db')
+    cursor = conn.cursor()
+
+    if item["type"] == "coin":
+        cursor.execute('UPDATE users SET balance = balance + ? WHERE user_id = ?', (item["amount"], user_id))
+    elif item["type"] == "energy":
+        cursor.execute('UPDATE users SET energy = 1000 WHERE user_id = ?', (user_id,))
+
+    conn.commit()
+    cursor.execute('SELECT balance, energy FROM users WHERE user_id = ?', (user_id,))
+    user_data = cursor.fetchone()
+    conn.close()
+
+    return jsonify({
+        "status": "success",
+        "message": "Xarid amalga oshirildi!",
+        "new_balance": user_data[0],
+        "new_energy": user_data[1]
     })
 
 # --- 5. ADMIN PANEL API ---
