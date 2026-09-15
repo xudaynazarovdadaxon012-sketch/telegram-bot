@@ -6,103 +6,215 @@
     <title>Clicker Gold</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
+        :root {
+            --bg-color: #0d1117;
+            --card-bg: #161b22;
+            --accent-gold: #f1c40f;
+            --accent-glow: rgba(241, 196, 15, 0.3);
+            --button-bg: #238636;
+            --text-color: #f0f6fc;
+        }
+
         body {
-            background-color: #1a1a2e;
-            color: #ffffff;
-            font-family: Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             margin: 0;
             padding: 15px;
-            text-align: center;
+            user-select: none;
+            -webkit-user-select: none;
         }
+
         .card {
-            background: #16213e;
-            border-radius: 12px;
-            padding: 15px;
+            background: var(--card-bg);
+            border: 1px solid #30363d;
+            border-radius: 16px;
+            padding: 16px;
             margin-bottom: 15px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(10px);
         }
-        .gold-text { color: #f39c12; font-weight: bold; }
+
+        .gold-glow {
+            color: var(--accent-gold);
+            text-shadow: 0 0 10px var(--accent-glow);
+            font-weight: bold;
+        }
+
         button {
-            background: #e94560;
+            background: linear-gradient(135deg, #2ea043, #238636);
             color: white;
             border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-size: 16px;
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
             cursor: pointer;
             margin: 5px;
-            transition: 0.2s;
+            transition: transform 0.1s ease, box-shadow 0.2s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
-        button:active { transform: scale(0.95); }
+
+        button:active {
+            transform: scale(0.93);
+        }
+
+        .star-btn {
+            background: linear-gradient(135deg, #f39c12, #d35400) !important;
+            color: #fff !important;
+            box-shadow: 0 0 15px var(--accent-glow);
+        }
+
+        /* --- Omadli G'ildirak Animatsiyasi --- */
+        .wheel-container {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            margin: 15px auto;
+        }
+
+        .wheel {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 4px solid var(--accent-gold);
+            box-shadow: 0 0 20px var(--accent-glow);
+            background: conic-gradient(
+                #e74c3c 0deg 32.7deg, #e67e22 32.7deg 65.4deg, #f1c40f 65.4deg 98.1deg,
+                #2ecc71 98.1deg 130.8deg, #3498db 130.8deg 163.5deg, #9b59b6 163.5deg 196.2deg,
+                #1abc9c 196.2deg 228.9deg, #34495e 228.9deg 261.6deg, #e74c3c 261.6deg 294.3deg,
+                #95a5a6 294.3deg 327deg, #f1c40f 327deg 360deg
+            );
+            transition: transform 4s cubic-bezier(0.15, 0.9, 0.2, 1);
+        }
+
+        .wheel-pointer {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 12px solid transparent;
+            border-right: 12px solid transparent;
+            border-top: 20px solid #ffffff;
+            z-index: 10;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+        }
+
+        /* --- CS:GO Case Animatsiyasi --- */
         .cases-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 10px;
+            gap: 12px;
         }
+
         .case-card {
-            background: #0f3460;
-            border-radius: 8px;
-            padding: 10px;
-            border: 1px solid #e94560;
+            background: #21262d;
+            border-radius: 12px;
+            padding: 12px;
+            border: 1px solid #30363d;
+            position: relative;
+            overflow: hidden;
+            transition: border-color 0.3s ease;
         }
-        .admin-panel { display: none; border: 1px dashed #f39c12; }
+
+        .case-card:hover {
+            border-color: var(--accent-gold);
+        }
+
+        .case-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.03), transparent);
+            transform: rotate(45deg);
+            animation: shine 3s infinite;
+        }
+
+        @keyframes shine {
+            0% { transform: translateX(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) rotate(45deg); }
+        }
+
+        .result-pop {
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popIn {
+            0% { opacity: 0; transform: scale(0.5); }
+            100% { opacity: 1; transform: scale(1); }
+        }
     </style>
 </head>
 <body>
 
-    <h2>🏆 Clicker Gold</h2>
+    <h2 class="gold-glow">✨ CLICKER GOLD ✨</h2>
     
     <div class="card">
-        <h3>Balans: <span id="balance" class="gold-text">0</span> Tanga</h3>
-        <p>Energiya: <span id="energy">1000</span>/1000</p>
+        <h3>Balans: <span id="balance" class="gold-glow">0</span> Tanga</h3>
+        <p style="color: #8b949e; font-size: 14px;">⚡ Energiya: <span id="energy" style="color:#fff;">1000</span> / 1000</p>
     </div>
 
-    <!-- Referal bo'limi -->
+    <!-- Shop -->
     <div class="card">
-        🎯 <b>Do'st taklif qilish</b>
-        <p style="font-size: 12px;">Har 1 taklif uchun <b>100 tanga</b> oling!</p>
-        <button onclick="copyRefLink()">Havolani nusxalash</button>
+        🛒 <b>Stars Do'koni</b>
+        <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 12px;">
+            <div style="background: #21262d; padding: 12px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center;">
+                <span>💰 +5,000 Tanga</span>
+                <button class="star-btn" onclick="buyShopItem('coins_5k')">⭐ 1 Stars</button>
+            </div>
+            <div style="background: #21262d; padding: 12px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center;">
+                <span>🚀 +25,000 Tanga</span>
+                <button class="star-btn" onclick="buyShopItem('coins_25k')">⭐ 4 Stars</button>
+            </div>
+        </div>
     </div>
 
-    <!-- Omadli g'ildirak -->
+    <!-- Omadli G'ildirak -->
     <div class="card">
         🎡 <b>Omadli G'ildirak</b>
-        <br>
-        <button onclick="spinWheel('coin')">Tangaga aylantirish</button>
-        <button onclick="spinWheel('stars')" style="background:#f1c40f; color:#000;">⭐ 1 Stars bilan</button>
-        <div id="wheel-result" class="gold-text" style="margin-top:8px;"></div>
+        <div class="wheel-container">
+            <div class="wheel-pointer"></div>
+            <div class="wheel" id="wheel"></div>
+        </div>
+        <button onclick="spinWheelAnimation('coin')">Tangagaylantirish</button>
+        <button class="star-btn" onclick="spinWheelAnimation('stars')">⭐ 1 Stars</button>
+        <div id="wheel-result" class="gold-glow result-pop" style="margin-top: 10px; min-height: 24px;"></div>
     </div>
 
-    <!-- CS:GO Drop Qutilar -->
+    <!-- CS:GO Cases -->
     <div class="card">
         📦 <b>CS:GO Drop Qutilar</b>
-        <div class="cases-grid" style="margin-top:10px;">
+        <div class="cases-grid" style="margin-top: 12px;">
             <div class="case-card">
-                <b>🥉 Bronza</b><br><small>500 tanga</small><br>
+                <b>🥉 Bronza</b><br><small style="color:#8b949e;">500 tanga</small><br>
                 <button onclick="openCase('bronze')">Ochish</button>
             </div>
             <div class="case-card">
-                <b>🥈 Kumush</b><br><small>2000 tanga</small><br>
+                <b>🥈 Kumush</b><br><small style="color:#8b949e;">2000 tanga</small><br>
                 <button onclick="openCase('silver')">Ochish</button>
             </div>
             <div class="case-card">
-                <b>🥇 Oltin</b><br><small>⭐ 1 Stars</small><br>
-                <button onclick="openCase('gold')">Ochish</button>
+                <b>🥇 Oltin</b><br><small style="color:#f1c40f;">⭐ 1 Stars</small><br>
+                <button class="star-btn" onclick="openCase('gold')">Ochish</button>
             </div>
             <div class="case-card">
-                <b>💎 Afsonaviy</b><br><small>⭐ 5 Stars</small><br>
-                <button onclick="openCase('legendary')">Ochish</button>
+                <b>💎 Afsonaviy</b><br><small style="color:#f1c40f;">⭐ 5 Stars</small><br>
+                <button class="star-btn" onclick="openCase('legendary')">Ochish</button>
             </div>
         </div>
-        <div id="case-result" class="gold-text" style="margin-top:10px;"></div>
+        <div id="case-result" class="gold-glow result-pop" style="margin-top: 12px; min-height: 24px;"></div>
     </div>
 
-    <!-- Admin Panel -->
-    <div id="admin-section" class="card admin-panel">
-        👑 <b>Admin Panel</b>
-        <br><br>
-        <input type="text" id="chan-input" placeholder="@kanal_username" style="padding: 8px; border-radius: 5px; border: none;">
-        <button onclick="addChannel()">Kanal qo'shish</button>
+    <!-- Referal -->
+    <div class="card">
+        🎯 <b>Do'stlarni Taklif Qilish</b>
+        <p style="font-size: 13px; color: #8b949e;">Har bir do'stingiz uchun <b>+100 tanga</b> oling!</p>
+        <button onclick="copyRefLink()" style="background: #1f6feb;">Nusxalash</button>
     </div>
 
     <script>
@@ -112,8 +224,8 @@
         const user = tg.initDataUnsafe.user || { id: 123456789, username: "TestUser" };
         const startParam = tg.initDataUnsafe.start_param || null;
         let refLink = "";
+        let currentRotation = 0;
 
-        // Boshlang'ich ma'lumotlarni yuklash
         fetch('/api/start', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
@@ -125,18 +237,14 @@
                 document.getElementById('balance').innerText = data.balance;
                 document.getElementById('energy').innerText = data.energy;
                 refLink = data.ref_link;
-                if(data.is_admin) {
-                    document.getElementById('admin-section').style.display = 'block';
-                }
             }
         });
 
-        function copyRefLink() {
-            navigator.clipboard.writeText(refLink);
-            alert("Referal havola nusxalandi!");
-        }
+        function spinWheelAnimation(type) {
+            const wheel = document.getElementById('wheel');
+            const resultDiv = document.getElementById('wheel-result');
+            resultDiv.innerText = "Aylanmoqda...";
 
-        function spinWheel(type) {
             fetch('/api/spin_wheel', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
@@ -145,13 +253,28 @@
             .then(res => res.json())
             .then(data => {
                 if(data.status === 'success') {
-                    document.getElementById('wheel-result').innerText = "Tushdi: " + data.prize.name;
-                    document.getElementById('balance').innerText = data.new_balance;
+                    const sectorAngle = 360 / 11;
+                    const randomTurns = 5 * 360;
+                    const targetAngle = randomTurns + (data.prize.id * sectorAngle);
+                    
+                    currentRotation += targetAngle;
+                    wheel.style.transform = `rotate(${currentRotation}deg)`;
+
+                    setTimeout(() => {
+                        resultDiv.classList.remove('result-pop');
+                        void resultDiv.offsetWidth;
+                        resultDiv.classList.add('result-pop');
+                        resultDiv.innerText = "Yutug'ingiz: " + data.prize.name;
+                        document.getElementById('balance').innerText = data.new_balance;
+                    }, 4000);
                 }
             });
         }
 
         function openCase(type) {
+            const resultDiv = document.getElementById('case-result');
+            resultDiv.innerText = "Quti ochilmoqda...";
+
             fetch('/api/open_case', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
@@ -160,23 +283,40 @@
             .then(res => res.json())
             .then(data => {
                 if(data.status === 'success') {
-                    document.getElementById('case-result').innerText = "Yutdingiz: " + data.reward.name;
+                    setTimeout(() => {
+                        resultDiv.classList.remove('result-pop');
+                        void resultDiv.offsetWidth;
+                        resultDiv.classList.add('result-pop');
+                        resultDiv.innerText = "Tushdi: " + data.reward.name;
+                        document.getElementById('balance').innerText = data.new_balance;
+                    }, 600);
+                } else {
+                    resultDiv.innerText = data.message;
+                }
+            });
+        }
+
+        function buyShopItem(itemType) {
+            fetch('/api/shop/buy', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ user_id: user.id, item_type: itemType })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.status === 'success') {
+                    alert(data.message);
                     document.getElementById('balance').innerText = data.new_balance;
+                    document.getElementById('energy').innerText = data.new_energy;
                 } else {
                     alert(data.message);
                 }
             });
         }
 
-        function addChannel() {
-            const ch = document.getElementById('chan-input').value;
-            fetch('/api/admin/add_channel', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ user_id: user.id, channel_username: ch })
-            })
-            .then(res => res.json())
-            .then(data => alert(data.message));
+        function copyRefLink() {
+            navigator.clipboard.writeText(refLink);
+            alert("Referal havola nusxalandi!");
         }
     </script>
 </body>
