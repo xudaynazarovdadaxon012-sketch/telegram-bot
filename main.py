@@ -12,16 +12,15 @@ from telebot.types import LabeledPrice
 # 1. RENDER ENVIRONMENT VARIABLES & CONFIG
 # ==========================================
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-# Xatoliklar oldini olish uchun fallback va tur tekshiruvi bilan
 ADMIN_ID = int(os.getenv("ADMIN_ID") or 123456789)
-WEBAPP_URL = os.getenv("https://telegram-bot-7n6t.onrender.com")
+WEBAPP_URL = os.getenv("WEBAPP_URL")
 
 if not BOT_TOKEN:
     raise ValueError("XATO: BOT_TOKEN Render Environment Variables'da topilmadi!")
 
 bot = telebot.TeleBot(BOT_TOKEN)
 
-# Papkasiz (ildiz papkadan) index.html ni o'quvchi Flask sozlamasi
+# PAPKASIZ (ILDIZ PAPKADAN) MINIAPP.HTML NI O'QIYDIGAN FLASK SOZLAMASI
 app = Flask(__name__, template_folder='.', static_folder='.')
 
 # ==========================================
@@ -155,11 +154,11 @@ def admin_dashboard():
     })
 
 # ==========================================
-# 7. MAIN INDEX ROUTE
+# 7. MAIN INDEX ROUTE (MINIAPP.HTML NI O'QIYDI)
 # ==========================================
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('miniapp.html')
 
 # ==========================================
 # 8. TELEGRAM BOT HANDLERS & START
@@ -192,7 +191,7 @@ def start_cmd(message):
     
     bot.send_message(
         message.chat.id,
-        "🪙 **Clicker Gold** o'yiniga xush kelibsiz!\n\nTangalar yiging, qutilarni oching va Stars yutib oling!",
+        "🪙 **Clicker Gold** o'yiniga xush kelibsiz!\n\nTangalar yig'ing, qutilarni oching va Stars yutib oling!",
         reply_markup=keyboard,
         parse_mode="Markdown"
     )
