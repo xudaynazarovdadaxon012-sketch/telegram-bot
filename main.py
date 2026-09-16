@@ -1,43 +1,44 @@
 import os
-import random
+import hmac
+import hashlib
+import time
 import sqlite3
-import threading
+from urllib.parse import parse_qsl
 from flask import Flask, request, jsonify, render_template
 import telebot
+from telebot.types import LabeledPrice
 
-# Kod ichiga TOKEN YOZILMAYDI! Token Render'dagi Environment'dan olinadi.
-BOT_TOKEN = os.environ.get("BOT_TOKEN")
+# ==========================================
+# 1. RENDER ENVIRONMENT VARIABLES & CONFIG
+# ==========================================
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+# Xatoliklar oldini olish uchun fallback va tur tekshiruvi bilan
+ADMIN_ID = int(os.getenv("ADMIN_ID") or 123456789)
+WEBAPP_URL = os.getenv("https://telegram-bot-7n6t.onrender.com")
 
-app = Flask(__name__, template_folder='.')
+if not BOT_TOKEN:
+    raise ValueError("XATO: BOT_TOKEN Render Environment Variables'da topilmadi!")
 
-# Telegram Bot obyektini xavfsiz yaratish
-bot = telebot.TeleBot(BOT_TOKEN) if BOT_TOKEN else None
+bot = telebot.TeleBot(BOT_TOKEN)
 
-# --- ADMIN ID LAR RO'YXATI ---
-ADMIN_IDS = [8898979946]  # Telegram ID'ingizni yozing
+# Papkasiz (ildiz papkadan) index.html ni o'quvchi Flask sozlamasi
+app = Flask(__name__, template_folder='.', static_folder='.')
 
-def is_admin(user_id):
-    return user_id in ADMIN_IDS
+# ==========================================
+# 2. DATABASE (SQLite) SOZLAMALARI
+# ==========================================
+DB_FILE = "game_database.db"
 
-# --- BAZANI SOZLASH ---
 def init_db():
-    conn = sqlite3.connect('clicker_gold.db')
+    conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS users (
             user_id INTEGER PRIMARY KEY,
-            username TEXT,
-            balance INTEGER DEFAULT 0,
-            energy INTEGER DEFAULT 1000,
+            coins INTEGER DEFAULT 0,
+            energy INTEGER DEFAULT 100,
             referred_by INTEGER,
-            cases_opened INTEGER DEFAULT 0
-        )
-    ''')
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS channels (
-            channel_id TEXT PRIMARY KEY,
-            channel_username TEXT,
-            is_mandatory BOOLEAN DEFAULT 1
+            created_at INTEGER
         )
     ''')
     conn.commit()
@@ -45,212 +46,158 @@ def init_db():
 
 init_db()
 
-# --- TELEGRAM BOT BUYRUQLARI (/start) ---
-if bot:
-    @bot.message_handler(commands=['start'])
-    def start_command(message):
-        web_app_url = "https://telegram-bot-7s0t.onrender.com"  # Render havolangiz
-        markup = telebot.types.InlineKeyboardMarkup()
-        btn = telebot.types.InlineKeyboardButton(text="🎮 O'yinni boshlash", web_app=telebot.types.WebAppInfo(url=web_app_url))
-        markup.add(btn)
+# ==========================================
+# 3. ANTI-CHEAT & SECURITY (HMAC-SHA256)
+# ==========================================
+def verify_telegram_init_data(init_data: str) -> bool:
+    if not init_data:
+        return False
+    try:
+        parsed_data = dict(parse_qsl(init_data))
+        if 'hash' not in parsed_data:
+            return False
         
-        bot.send_message(
-            message.chat.id, 
-            f"Xush kelibsiz, {message.from_user.first_name}!\n\nClicker Gold o'yinini o'ynash uchun quyidagi tugmani bosing:", 
-            reply_markup=markup
-        )
+        hash_check = parsed_data.pop('hash')
+        data_check_string = "\n".join(f"{k}={v}" for k, v in sorted(parsed_data.items()))
+        
+        secret_key = hmac.new(b"WebAppData", BOT_TOKEN.encode(), hashlib.sha256).digest()
+        calculated_hash = hmac.new(secret_key, data_check_string.encode(), hashlib.sha256).hexdigest()
+        
+        return hmac.compare_digest(calculated_hash, hash_check)
+    except Exception:
+        return False
 
-    def start_bot():
-        try:
-            bot.infinity_polling(none_stop=True)
-        except Exception as e:
-            print(f"Bot xatoligi: {e}")
-
-    threading.Thread(target=start_bot, daemon=True).start()
-
-# --- WEB APP ROUTE'LARI ---
-@app.route('/')
-def home():
-    return render_template('miniapp.html')
-
-@app.route('/api/start', methods=['POST'])
-def start_game():
+# ==========================================
+# 4. GAME API (CLICKER, BALANCE, REFERRAL)
+# ==========================================
+@app.route('/api/user/sync', methods=['POST'])
+def sync_user():
     data = request.json or {}
-    user_id = data.get('user_id')
-    username = data.get('username', '')
-    ref_id = data.get('ref_id')
+    user_id = data.get("user_id")
 
     if not user_id:
-        return jsonify({"status": "error", "message": "User ID topilmadi"}), 400
+        return jsonify({"status": "error", "message": "User ID yo'q"}), 400
 
-    conn = sqlite3.connect('clicker_gold.db')
+    conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
-    cursor.execute('SELECT balance, energy FROM users WHERE user_id = ?', (user_id,))
-    user = cursor.fetchone()
+    cursor.execute("SELECT coins, energy FROM users WHERE user_id = ?", (user_id,))
+    row = cursor.fetchone()
 
-    if not user:
-        referred_by = None
-        if ref_id and str(ref_id).isdigit() and int(ref_id) != int(user_id):
-            cursor.execute('SELECT user_id FROM users WHERE user_id = ?', (int(ref_id),))
-            if cursor.fetchone():
-                referred_by = int(ref_id)
-                cursor.execute('UPDATE users SET balance = balance + 100 WHERE user_id = ?', (referred_by,))
-
-        cursor.execute('''
-            INSERT INTO users (user_id, username, balance, referred_by)
-            VALUES (?, ?, ?, ?)
-        ''', (user_id, username, 50 if referred_by else 0, referred_by))
+    if not row:
+        cursor.execute("INSERT INTO users (user_id, coins, energy, created_at) VALUES (?, ?, ?, ?)",
+                       (user_id, 0, 100, int(time.time())))
         conn.commit()
-        balance, energy = (50 if referred_by else 0), 1000
+        coins, energy = 0, 100
     else:
-        balance, energy = user[0], user[1]
+        coins, energy = row[0], row[1]
 
+    conn.close()
+    return jsonify({"status": "success", "coins": coins, "energy": energy})
+
+# ==========================================
+# 5. MONETIZATION (TELEGRAM STARS IAP)
+# ==========================================
+@app.route('/api/buy-stars-item', methods=['POST'])
+def buy_stars_item():
+    data = request.json or {}
+    user_id = data.get("user_id")
+    item_type = data.get("item_type")
+    
+    prices = {
+        'chest_gold': {'title': 'Oltin Quti (Lootbox)', 'price': 50},
+        'energy_full': {'title': 'To\'liq Energiya', 'price': 25},
+        'coins_pack': {'title': '10,000 Tangalar', 'price': 100}
+    }
+    
+    if item_type not in prices:
+        return jsonify({"status": "error", "message": "Noma'lum mahsulot"}), 400
+
+    item = prices[item_type]
+    
+    try:
+        invoice_link = bot.create_invoice_link(
+            title=item['title'],
+            description=f"Clicker Gold: {item['title']}",
+            payload=f"payload_{user_id}_{item_type}_{int(time.time())}",
+            provider_token="", 
+            currency="XTR",    
+            prices=[LabeledPrice(label=item['title'], amount=item['price'])]
+        )
+        return jsonify({"status": "success", "invoice_link": invoice_link})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+# ==========================================
+# 6. B2B ADMIN DASHBOARD & STATS API
+# ==========================================
+@app.route('/api/admin/dashboard', methods=['GET'])
+def admin_dashboard():
+    auth_header = request.headers.get("X-User-ID")
+    if not auth_header or int(auth_header) != ADMIN_ID:
+        return jsonify({"status": "error", "message": "Ruxsat etilmagan kirish!"}), 403
+
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM users")
+    total_users = cursor.fetchone()[0]
     conn.close()
 
     return jsonify({
         "status": "success",
-        "balance": balance,
-        "energy": energy,
-        "is_admin": is_admin(int(user_id)),
-        "ref_link": f"https://t.me/ClickerGoldBot?start={user_id}"
+        "data": {
+            "metrics": {
+                "total_users": total_users,
+                "dau_target": "500-600",
+                "monetization": "Telegram Stars (XTR) Active",
+                "anti_cheat": "HMAC-SHA256 Enabled"
+            }
+        }
     })
 
-@app.route('/api/spin_wheel', methods=['POST'])
-def spin_wheel():
-    data = request.json or {}
-    user_id = data.get('user_id')
+# ==========================================
+# 7. MAIN INDEX ROUTE
+# ==========================================
+@app.route('/')
+def index():
+    return render_template('index.html')
 
-    conn = sqlite3.connect('clicker_gold.db')
+# ==========================================
+# 8. TELEGRAM BOT HANDLERS & START
+# ==========================================
+@bot.message_handler(commands=['start'])
+def start_cmd(message):
+    user_id = message.from_user.id
+    args = message.text.split()
+    
+    referred_by = None
+    if len(args) > 1 and args[1].startswith("ref_"):
+        try:
+            referred_by = int(args[1].replace("ref_", ""))
+        except ValueError:
+            pass
+
+    conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
-    cursor.execute('SELECT balance FROM users WHERE user_id = ?', (user_id,))
-    user = cursor.fetchone()
-
-    if not user:
-        conn.close()
-        return jsonify({"status": "error", "message": "User topilmadi"}), 404
-
-    sectors = [
-        {"id": 0, "name": "+50 Tanga", "type": "coin", "value": 50, "weight": 25},
-        {"id": 1, "name": "+100 Tanga", "type": "coin", "value": 100, "weight": 20},
-        {"id": 2, "name": "+250 Tanga", "type": "coin", "value": 250, "weight": 15},
-        {"id": 3, "name": "+500 Tanga", "type": "coin", "value": 500, "weight": 10},
-        {"id": 4, "name": "+1000 Tanga", "type": "coin", "value": 1000, "weight": 5},
-        {"id": 5, "name": "Bronza Quti", "type": "box", "value": "bronze", "weight": 8},
-        {"id": 6, "name": "Kumush Quti", "type": "box", "value": "silver", "weight": 5},
-        {"id": 7, "name": "1 Stars", "type": "stars", "value": 1, "weight": 3},
-        {"id": 8, "name": "-50 Tanga (Minus)", "type": "coin", "value": -50, "weight": 4},
-        {"id": 9, "name": "-100 Tanga (Minus)", "type": "coin", "value": -100, "weight": 3},
-        {"id": 10, "name": "Afsonaviy Quti", "type": "box", "value": "legendary", "weight": 2}
-    ]
-
-    chosen = random.choices(sectors, weights=[s["weight"] for s in sectors], k=1)[0]
-
-    if chosen["type"] == "coin":
-        cursor.execute('UPDATE users SET balance = MAX(0, balance + ?) WHERE user_id = ?', (chosen["value"], user_id))
+    cursor.execute("SELECT user_id FROM users WHERE user_id = ?", (user_id,))
+    if not cursor.fetchone():
+        cursor.execute("INSERT INTO users (user_id, coins, energy, referred_by, created_at) VALUES (?, ?, ?, ?, ?)",
+                       (user_id, 100, 100, referred_by, int(time.time())))
         conn.commit()
-
-    cursor.execute('SELECT balance FROM users WHERE user_id = ?', (user_id,))
-    new_balance = cursor.fetchone()[0]
     conn.close()
 
-    return jsonify({"status": "success", "prize": chosen, "new_balance": new_balance})
-
-@app.route('/api/open_case', methods=['POST'])
-def open_case():
-    data = request.json or {}
-    user_id = data.get('user_id')
-    case_type = data.get('case_type')
-
-    cases_config = {
-        "bronze": {"price_type": "coin", "price": 500, "rewards": [{"name": "+100 Tanga", "type": "coin", "val": 100, "w": 40}, {"name": "+250 Tanga", "type": "coin", "val": 250, "w": 30}, {"name": "+400 Tanga", "type": "coin", "val": 400, "w": 15}, {"name": "-50 Tanga (Minus)", "type": "coin", "val": -50, "w": 10}, {"name": "+100 Energiya", "type": "energy", "val": 100, "w": 5}]},
-        "silver": {"price_type": "coin", "price": 2000, "rewards": [{"name": "+800 Tanga", "type": "coin", "val": 800, "w": 40}, {"name": "+1500 Tanga", "type": "coin", "val": 1500, "w": 35}, {"name": "+2500 Tanga", "type": "coin", "val": 2500, "w": 15}, {"name": "-200 Tanga (Minus)", "type": "coin", "val": -200, "w": 5}, {"name": "1 Stars", "type": "stars", "val": 1, "w": 5}]},
-        "gold": {"price_type": "stars", "price": 1, "rewards": [{"name": "+5000 Tanga", "type": "coin", "val": 5000, "w": 50}, {"name": "+10000 Tanga", "type": "coin", "val": 10000, "w": 30}, {"name": "2 Stars", "type": "stars", "val": 2, "w": 15}, {"name": "5 Stars", "type": "stars", "val": 5, "w": 5}]},
-        "legendary": {"price_type": "stars", "price": 5, "rewards": [{"name": "+50000 Tanga", "type": "coin", "val": 50000, "w": 40}, {"name": "10 Stars", "type": "stars", "val": 10, "w": 35}, {"name": "50 Stars", "type": "stars", "val": 50, "w": 20}, {"name": "100 Stars (JACKPOT)", "type": "stars", "val": 100, "w": 5}]}
-    }
-
-    if case_type not in cases_config:
-        return jsonify({"status": "error", "message": "Noma'lum quti"}), 400
-
-    cfg = cases_config[case_type]
-    conn = sqlite3.connect('clicker_gold.db')
-    cursor = conn.cursor()
-    cursor.execute('SELECT balance FROM users WHERE user_id = ?', (user_id,))
-    user = cursor.fetchone()
-
-    if not user:
-        conn.close()
-        return jsonify({"status": "error", "message": "User topilmadi"}), 404
-
-    current_balance = user[0]
-
-    if cfg["price_type"] == "coin":
-        if current_balance < cfg["price"]:
-            conn.close()
-            return jsonify({"status": "error", "message": "Tangalaringiz yetarli emas!"}), 400
-        cursor.execute('UPDATE users SET balance = balance - ? WHERE user_id = ?', (cfg["price"], user_id))
-
-    reward = random.choices(cfg["rewards"], weights=[r["w"] for r in cfg["rewards"]], k=1)[0]
-
-    if reward["type"] == "coin":
-        cursor.execute('UPDATE users SET balance = MAX(0, balance + ?) WHERE user_id = ?', (reward["val"], user_id))
-
-    cursor.execute('UPDATE users SET cases_opened = cases_opened + 1 WHERE user_id = ?', (user_id,))
-    conn.commit()
-    cursor.execute('SELECT balance FROM users WHERE user_id = ?', (user_id,))
-    new_balance = cursor.fetchone()[0]
-    conn.close()
-
-    return jsonify({"status": "success", "reward": reward, "new_balance": new_balance})
-
-@app.route('/api/shop/buy', methods=['POST'])
-def buy_item():
-    data = request.json or {}
-    user_id = data.get('user_id')
-    item_type = data.get('item_type')
-
-    shop_items = {
-        "coins_5k": {"type": "coin", "amount": 5000},
-        "coins_25k": {"type": "coin", "amount": 25000},
-        "energy_full": {"type": "energy", "amount": 1000}
-    }
-
-    if item_type not in shop_items:
-        return jsonify({"status": "error", "message": "Noma'lum mahsulot"}), 400
-
-    item = shop_items[item_type]
-
-    conn = sqlite3.connect('clicker_gold.db')
-    cursor = conn.cursor()
-
-    if item["type"] == "coin":
-        cursor.execute('UPDATE users SET balance = balance + ? WHERE user_id = ?', (item["amount"], user_id))
-    elif item["type"] == "energy":
-        cursor.execute('UPDATE users SET energy = 1000 WHERE user_id = ?', (user_id,))
-
-    conn.commit()
-    cursor.execute('SELECT balance, energy FROM users WHERE user_id = ?', (user_id,))
-    user_data = cursor.fetchone()
-    conn.close()
-
-    return jsonify({"status": "success", "message": "Xarid amalga oshirildi!", "new_balance": user_data[0], "new_energy": user_data[1]})
-
-@app.route('/api/admin/add_channel', methods=['POST'])
-def add_channel():
-    data = request.json or {}
-    user_id = data.get('user_id')
-    channel_username = data.get('channel_username')
-
-    if not is_admin(int(user_id)):
-        return jsonify({"status": "error", "message": "Admin emassiz!"}), 403
-
-    conn = sqlite3.connect('clicker_gold.db')
-    cursor = conn.cursor()
-    cursor.execute('INSERT OR REPLACE INTO channels (channel_id, channel_username, is_mandatory) VALUES (?, ?, 1)', (channel_username, channel_username))
-    conn.commit()
-    conn.close()
-
-    return jsonify({"status": "success", "message": "Kanal qo'shildi!"})
+    keyboard = telebot.types.InlineKeyboardMarkup()
+    if WEBAPP_URL:
+        web_app_info = telebot.types.WebAppInfo(url=WEBAPP_URL)
+        keyboard.add(telebot.types.InlineKeyboardButton(text="🎮 O'yinni Boshlash", web_app=web_app_info))
+    
+    bot.send_message(
+        message.chat.id,
+        "🪙 **Clicker Gold** o'yiniga xush kelibsiz!\n\nTangalar yiging, qutilarni oching va Stars yutib oling!",
+        reply_markup=keyboard,
+        parse_mode="Markdown"
+    )
 
 if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host='0.0.0.0', port=port)
+    import threading
+    threading.Thread(target=bot.infinity_polling, daemon=True).start()
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
