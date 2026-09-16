@@ -2,322 +2,444 @@
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clicker Gold</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Clicker Gold Premium</title>
+    <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- FontAwesome Ikonkalari -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
         :root {
-            --bg-color: #0d1117;
-            --card-bg: #161b22;
-            --accent-gold: #f1c40f;
-            --accent-glow: rgba(241, 196, 15, 0.3);
-            --button-bg: #238636;
-            --text-color: #f0f6fc;
+            --bg-color: #0b0e14;
+            --card-bg: rgba(22, 27, 38, 0.75);
+            --accent-gold: #ffb703;
+            --accent-glow: #fb8500;
+            --text-main: #ffffff;
+            --text-sub: #8e9aaf;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
         }
 
         body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            margin: 0;
-            padding: 15px;
-            user-select: none;
-            -webkit-user-select: none;
+            background: radial-gradient(circle at top, #1a2332 0%, var(--bg-color) 100%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            overflow: hidden;
         }
 
-        .card {
+        /* Top Bar / Stats */
+        .header {
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stat-card {
             background: var(--card-bg);
-            border: 1px solid #30363d;
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 10px 18px;
             border-radius: 16px;
-            padding: 16px;
-            margin-bottom: 15px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
         }
 
-        .gold-glow {
+        .stat-card i {
             color: var(--accent-gold);
-            text-shadow: 0 0 10px var(--accent-glow);
-            font-weight: bold;
+            font-size: 1.2rem;
         }
 
-        button {
-            background: linear-gradient(135deg, #2ea043, #238636);
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 12px;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            margin: 5px;
-            transition: transform 0.1s ease, box-shadow 0.2s ease;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        .stat-value {
+            font-weight: 700;
+            font-size: 1.1rem;
         }
 
-        button:active {
-            transform: scale(0.93);
-        }
-
-        .star-btn {
-            background: linear-gradient(135deg, #f39c12, #d35400) !important;
-            color: #fff !important;
-            box-shadow: 0 0 15px var(--accent-glow);
-        }
-
-        /* --- Omadli G'ildirak Animatsiyasi --- */
-        .wheel-container {
+        /* Main Clicker Section */
+        .clicker-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
             position: relative;
+        }
+
+        .balance-container {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .balance-title {
+            color: var(--text-sub);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .balance-amount {
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(180deg, #fff 0%, var(--accent-gold) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 20px rgba(255, 183, 3, 0.3);
+        }
+
+        /* Coin Pulse & Glow Animations */
+        .coin-wrapper {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .coin-glow {
+            position: absolute;
+            width: 220px;
+            height: 220px;
+            background: radial-gradient(circle, var(--accent-glow) 0%, rgba(0,0,0,0) 70%);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            opacity: 0.4;
+            filter: blur(20px);
+            animation: pulseGlow 3s infinite alternate;
+        }
+
+        @keyframes pulseGlow {
+            0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.3; }
+            100% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.6; }
+        }
+
+        .coin-btn {
             width: 200px;
             height: 200px;
-            margin: 15px auto;
-        }
-
-        .wheel {
-            width: 100%;
-            height: 100%;
             border-radius: 50%;
-            border: 4px solid var(--accent-gold);
-            box-shadow: 0 0 20px var(--accent-glow);
-            background: conic-gradient(
-                #e74c3c 0deg 32.7deg, #e67e22 32.7deg 65.4deg, #f1c40f 65.4deg 98.1deg,
-                #2ecc71 98.1deg 130.8deg, #3498db 130.8deg 163.5deg, #9b59b6 163.5deg 196.2deg,
-                #1abc9c 196.2deg 228.9deg, #34495e 228.9deg 261.6deg, #e74c3c 261.6deg 294.3deg,
-                #95a5a6 294.3deg 327deg, #f1c40f 327deg 360deg
-            );
-            transition: transform 4s cubic-bezier(0.15, 0.9, 0.2, 1);
-        }
-
-        .wheel-pointer {
-            position: absolute;
-            top: -10px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 0;
-            height: 0;
-            border-left: 12px solid transparent;
-            border-right: 12px solid transparent;
-            border-top: 20px solid #ffffff;
-            z-index: 10;
-            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
-        }
-
-        /* --- CS:GO Case Animatsiyasi --- */
-        .cases-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-
-        .case-card {
-            background: #21262d;
-            border-radius: 12px;
-            padding: 12px;
-            border: 1px solid #30363d;
+            background: linear-gradient(145deg, #ffd166, #e67e22);
+            border: 8px solid rgba(255, 255, 255, 0.2);
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.4), 0 15px 35px rgba(251, 133, 0, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
             position: relative;
-            overflow: hidden;
-            transition: border-color 0.3s ease;
+            transition: transform 0.05s ease;
         }
 
-        .case-card:hover {
-            border-color: var(--accent-gold);
+        .coin-btn:active {
+            transform: scale(0.94);
         }
 
-        .case-card::before {
-            content: '';
+        .coin-btn i {
+            font-size: 5rem;
+            color: #ffffff;
+            text-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        /* Floating Flying +1 Floating Effect */
+        .floating-text {
             position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.03), transparent);
-            transform: rotate(45deg);
-            animation: shine 3s infinite;
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--accent-gold);
+            pointer-events: none;
+            animation: floatUp 0.8s ease-out forwards;
+            text-shadow: 0 0 10px rgba(0,0,0,0.8);
         }
 
-        @keyframes shine {
-            0% { transform: translateX(-100%) rotate(45deg); }
-            100% { transform: translateX(100%) rotate(45deg); }
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(-80px) scale(1.3); }
         }
 
-        .result-pop {
-            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        /* Energy Progress Bar */
+        .energy-wrapper {
+            width: 80%;
+            margin-top: 30px;
         }
 
-        @keyframes popIn {
-            0% { opacity: 0; transform: scale(0.5); }
-            100% { opacity: 1; transform: scale(1); }
+        .energy-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            color: var(--text-sub);
+        }
+
+        .energy-bar-bg {
+            width: 100%;
+            height: 12px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .energy-bar-fill {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, #fb8500, #ffb703);
+            border-radius: 10px;
+            transition: width 0.2s ease;
+        }
+
+        /* Bottom Navigation Bar */
+        .bottom-nav {
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-around;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: var(--text-sub);
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .nav-item.active, .nav-item:hover {
+            color: var(--accent-gold);
+        }
+
+        .nav-item i {
+            font-size: 1.3rem;
+        }
+
+        /* Shop Modal (Telegram Stars) */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(8px);
+            z-index: 100;
+            align-items: flex-end;
+        }
+
+        .modal-content {
+            background: #161b26;
+            width: 100%;
+            border-radius: 24px 24px 0 0;
+            padding: 25px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        .shop-item {
+            background: rgba(255,255,255,0.05);
+            border-radius: 16px;
+            padding: 15px;
+            margin-top: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stars-btn {
+            background: linear-gradient(135deg, #0088cc, #00c3ff);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
 
-    <h2 class="gold-glow">✨ CLICKER GOLD ✨</h2>
-    
-    <div class="card">
-        <h3>Balans: <span id="balance" class="gold-glow">0</span> Tanga</h3>
-        <p style="color: #8b949e; font-size: 14px;">⚡ Energiya: <span id="energy" style="color:#fff;">1000</span> / 1000</p>
+    <!-- Header Stats -->
+    <div class="header">
+        <div class="stat-card">
+            <i class="fa-solid fa-bolt"></i>
+            <span class="stat-value" id="user-level">Lvl 1</span>
+        </div>
+        <div class="stat-card">
+            <i class="fa-solid fa-trophy"></i>
+            <span class="stat-value">Rank #42</span>
+        </div>
     </div>
 
-    <!-- Shop -->
-    <div class="card">
-        🛒 <b>Stars Do'koni</b>
-        <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 12px;">
-            <div style="background: #21262d; padding: 12px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center;">
-                <span>💰 +5,000 Tanga</span>
-                <button class="star-btn" onclick="buyShopItem('coins_5k')">⭐ 1 Stars</button>
+    <!-- Main Clicker Core -->
+    <div class="clicker-container">
+        <div class="balance-container">
+            <div class="balance-title">Umumiy Tangalar</div>
+            <div class="balance-amount" id="coin-balance">0</div>
+        </div>
+
+        <div class="coin-wrapper" id="coin-btn">
+            <div class="coin-glow"></div>
+            <div class="coin-btn">
+                <i class="fa-solid fa-coins"></i>
             </div>
-            <div style="background: #21262d; padding: 12px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center;">
-                <span>🚀 +25,000 Tanga</span>
-                <button class="star-btn" onclick="buyShopItem('coins_25k')">⭐ 4 Stars</button>
+        </div>
+
+        <!-- Energy Bar -->
+        <div class="energy-wrapper">
+            <div class="energy-info">
+                <span><i class="fa-solid fa-bolt"></i> Energiya</span>
+                <span id="energy-text">100 / 100</span>
+            </div>
+            <div class="energy-bar-bg">
+                <div class="energy-bar-fill" id="energy-fill"></div>
             </div>
         </div>
     </div>
 
-    <!-- Omadli G'ildirak -->
-    <div class="card">
-        🎡 <b>Omadli G'ildirak</b>
-        <div class="wheel-container">
-            <div class="wheel-pointer"></div>
-            <div class="wheel" id="wheel"></div>
+    <!-- Navigation Bar -->
+    <div class="bottom-nav">
+        <div class="nav-item active">
+            <i class="fa-solid fa-hand-pointer"></i>
+            <span>Tap</span>
         </div>
-        <button onclick="spinWheelAnimation('coin')">Tangagaylantirish</button>
-        <button class="star-btn" onclick="spinWheelAnimation('stars')">⭐ 1 Stars</button>
-        <div id="wheel-result" class="gold-glow result-pop" style="margin-top: 10px; min-height: 24px;"></div>
+        <div class="nav-item" onclick="openShop()">
+            <i class="fa-solid fa-store"></i>
+            <span>Do'kon</span>
+        </div>
+        <div class="nav-item">
+            <i class="fa-solid fa-users"></i>
+            <span>Do'stlar</span>
+        </div>
     </div>
 
-    <!-- CS:GO Cases -->
-    <div class="card">
-        📦 <b>CS:GO Drop Qutilar</b>
-        <div class="cases-grid" style="margin-top: 12px;">
-            <div class="case-card">
-                <b>🥉 Bronza</b><br><small style="color:#8b949e;">500 tanga</small><br>
-                <button onclick="openCase('bronze')">Ochish</button>
+    <!-- Telegram Stars Shop Modal -->
+    <div class="modal" id="shop-modal">
+        <div class="modal-content">
+            <div style="display:flex; justify-size:space-between; align-items:center; margin-bottom:15px;">
+                <h2>Stars Do'koni ⭐️</h2>
+                <span style="font-size:1.5rem; cursor:pointer;" onclick="closeShop()">&times;</span>
             </div>
-            <div class="case-card">
-                <b>🥈 Kumush</b><br><small style="color:#8b949e;">2000 tanga</small><br>
-                <button onclick="openCase('silver')">Ochish</button>
+            
+            <div class="shop-item">
+                <div>
+                    <h4>Oltin Lootbox</h4>
+                    <p style="font-size:0.8rem; color:var(--text-sub);">Tasodifiy 50,000 tanga yuting</p>
+                </div>
+                <button class="stars-btn" onclick="buyItem('chest_gold')">
+                    <i class="fa-solid fa-star"></i> 50
+                </button>
             </div>
-            <div class="case-card">
-                <b>🥇 Oltin</b><br><small style="color:#f1c40f;">⭐ 1 Stars</small><br>
-                <button class="star-btn" onclick="openCase('gold')">Ochish</button>
-            </div>
-            <div class="case-card">
-                <b>💎 Afsonaviy</b><br><small style="color:#f1c40f;">⭐ 5 Stars</small><br>
-                <button class="star-btn" onclick="openCase('legendary')">Ochish</button>
+
+            <div class="shop-item">
+                <div>
+                    <h4>To'liq Energiya</h4>
+                    <p style="font-size:0.8rem; color:var(--text-sub);">Energiyani darhol to'ldirish</p>
+                </div>
+                <button class="stars-btn" onclick="buyItem('energy_full')">
+                    <i class="fa-solid fa-star"></i> 25
+                </button>
             </div>
         </div>
-        <div id="case-result" class="gold-glow result-pop" style="margin-top: 12px; min-height: 24px;"></div>
-    </div>
-
-    <!-- Referal -->
-    <div class="card">
-        🎯 <b>Do'stlarni Taklif Qilish</b>
-        <p style="font-size: 13px; color: #8b949e;">Har bir do'stingiz uchun <b>+100 tanga</b> oling!</p>
-        <button onclick="copyRefLink()" style="background: #1f6feb;">Nusxalash</button>
     </div>
 
     <script>
+        // Telegram WebApp Initialization
         const tg = window.Telegram.WebApp;
-        tg.expand();
+        tg.expand(); // Ekran bo'ylab ochish
 
-        const user = tg.initDataUnsafe.user || { id: 123456789, username: "TestUser" };
-        const startParam = tg.initDataUnsafe.start_param || null;
-        let refLink = "";
-        let currentRotation = 0;
+        let coins = 0;
+        let energy = 100;
+        const maxEnergy = 100;
 
-        fetch('/api/start', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ user_id: user.id, username: user.username, ref_id: startParam })
-        })
-        .then(res => res.json())
-        .then(data => {
-            if(data.status === 'success') {
-                document.getElementById('balance').innerText = data.balance;
-                document.getElementById('energy').innerText = data.energy;
-                refLink = data.ref_link;
+        const coinBalanceEl = document.getElementById('coin-balance');
+        const energyTextEl = document.getElementById('energy-text');
+        const energyFillEl = document.getElementById('energy-fill');
+        const coinBtn = document.getElementById('coin-btn');
+
+        // Clicker Engine
+        coinBtn.addEventListener('click', (e) => {
+            if (energy <= 0) return;
+
+            coins += 1;
+            energy -= 1;
+
+            updateUI();
+            createFloatingText(e);
+
+            // VIBRATION (Haptic Feedback) - Qimmati yuqori o'yinlar hissini beradi
+            if (tg.HapticFeedback) {
+                tg.HapticFeedback.impactOccurred('light');
             }
         });
 
-        function spinWheelAnimation(type) {
-            const wheel = document.getElementById('wheel');
-            const resultDiv = document.getElementById('wheel-result');
-            resultDiv.innerText = "Aylanmoqda...";
+        function updateUI() {
+            coinBalanceEl.innerText = coins.toLocaleString();
+            energyTextEl.innerText = `${energy} / ${maxEnergy}`;
+            energyFillEl.style.width = `${(energy / maxEnergy) * 100}%`;
+        }
 
-            fetch('/api/spin_wheel', {
+        function createFloatingText(e) {
+            const rect = coinBtn.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            const text = document.createElement('div');
+            text.className = 'floating-text';
+            text.innerText = '+1';
+            text.style.left = `${x}px`;
+            text.style.top = `${y}px`;
+
+            coinBtn.appendChild(text);
+
+            setTimeout(() => text.remove(), 800);
+        }
+
+        // Shop Functions
+        function openShop() { document.getElementById('shop-modal').style.display = 'flex'; }
+        function closeShop() { document.getElementById('shop-modal').style.display = 'none'; }
+
+        async function buyItem(itemType) {
+            const userId = tg.initDataUnsafe?.user?.id || 12345;
+            
+            const response = await fetch('/api/buy-stars-item', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ user_id: user.id, spin_type: type })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if(data.status === 'success') {
-                    const sectorAngle = 360 / 11;
-                    const randomTurns = 5 * 360;
-                    const targetAngle = randomTurns + (data.prize.id * sectorAngle);
-                    
-                    currentRotation += targetAngle;
-                    wheel.style.transform = `rotate(${currentRotation}deg)`;
-
-                    setTimeout(() => {
-                        resultDiv.classList.remove('result-pop');
-                        void resultDiv.offsetWidth;
-                        resultDiv.classList.add('result-pop');
-                        resultDiv.innerText = "Yutug'ingiz: " + data.prize.name;
-                        document.getElementById('balance').innerText = data.new_balance;
-                    }, 4000);
-                }
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: userId, item_type: itemType })
             });
+            
+            const resData = await response.json();
+            if (resData.status === 'success') {
+                tg.openInvoice(resData.invoice_link, (status) => {
+                    if (status === 'paid') {
+                        tg.showAlert('Xarid muvaffaqiyatli amalga oshirildi! ⭐️');
+                        closeShop();
+                    }
+                });
+            }
         }
 
-        function openCase(type) {
-            const resultDiv = document.getElementById('case-result');
-            resultDiv.innerText = "Quti ochilmoqda...";
-
-            fetch('/api/open_case', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ user_id: user.id, case_type: type })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if(data.status === 'success') {
-                    setTimeout(() => {
-                        resultDiv.classList.remove('result-pop');
-                        void resultDiv.offsetWidth;
-                        resultDiv.classList.add('result-pop');
-                        resultDiv.innerText = "Tushdi: " + data.reward.name;
-                        document.getElementById('balance').innerText = data.new_balance;
-                    }, 600);
-                } else {
-                    resultDiv.innerText = data.message;
-                }
-            });
-        }
-
-        function buyShopItem(itemType) {
-            fetch('/api/shop/buy', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ user_id: user.id, item_type: itemType })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if(data.status === 'success') {
-                    alert(data.message);
-                    document.getElementById('balance').innerText = data.new_balance;
-                    document.getElementById('energy').innerText = data.new_energy;
-                } else {
-                    alert(data.message);
-                }
-            });
-        }
-
-        function copyRefLink() {
-            navigator.clipboard.writeText(refLink);
-            alert("Referal havola nusxalandi!");
-        }
+        // Energiya Tiklanishi (Har 2 sekunda +1 energiya)
+        setInterval(() => {
+            if (energy < maxEnergy) {
+                energy += 1;
+                updateUI();
+            }
+        }, 2000);
     </script>
 </body>
 </html>
