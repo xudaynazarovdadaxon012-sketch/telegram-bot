@@ -7,7 +7,7 @@ from telebot.types import LabeledPrice, InlineKeyboardMarkup, InlineKeyboardButt
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 ADMIN_ID = int(os.getenv("ADMIN_ID") or 0)
-WEBAPP_URL = os.getenv("WEBAPP_URL")
+WEBAPP_URL = os.getenv("https://telegram-bot-7n6t.onrender.com")
 
 if not BOT_TOKEN:
     raise ValueError("XATO: BOT_TOKEN Render Environment Variables'da topilmadi!")
