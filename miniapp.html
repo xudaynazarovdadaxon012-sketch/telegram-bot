@@ -3,197 +3,208 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pro Crypto Tap Game</title>
+    <title>Crypto Case Clicker</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
-            --bg-color: #0f1423;
-            --card-bg: #192036;
-            --accent-color: #f3ba2f;
-            --text-color: #ffffff;
-            --text-secondary: #94a3b8;
+            --bg: #0b0e14;
+            --card: #151d2a;
+            --accent: #f59e0b;
+            --purple: #8b5cf6;
+            --text: #ffffff;
         }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
             margin: 0; padding: 0;
-            display: flex; flex-direction: column; align-items: center; justify-content: space-between;
-            height: 100vh; overflow: hidden; user-select: none;
-            -webkit-user-select: none;
+            display: flex; flex-direction: column; height: 100vh;
+            user-select: none;
         }
-        .header { text-align: center; padding-top: 40px; }
-        .balance-container {
-            display: flex; align-items: center; justify-content: center; gap: 12px;
-            font-size: 42px; font-weight: 900; color: var(--accent-color);
-            text-shadow: 0 0 20px rgba(243, 186, 47, 0.5);
-        }
-        .coin-icon { width: 44px; height: 44px; background: var(--accent-color); border-radius: 50%; box-shadow: 0 0 15px var(--accent-color); display: inline-block; }
+        .header { text-align: center; padding: 20px; background: var(--card); border-bottom: 2px solid #1f293d; }
+        .balance { font-size: 32px; font-weight: 900; color: var(--accent); }
         
-        .clicker-area { position: relative; display: flex; justify-content: center; align-items: center; flex-grow: 1; width: 100%; }
-        .coin-btn {
-            width: 230px; height: 230px; background: radial-gradient(circle, #fde047 0%, #ca8a04 100%);
-            border: 6px solid #fef08a; border-radius: 50%; cursor: pointer;
-            box-shadow: 0 20px 40px rgba(202, 138, 4, 0.4), inset 0 5px 15px rgba(255,255,255,0.5);
-            display: flex; align-items: center; justify-content: center; font-size: 65px;
-            transition: transform 0.05s ease;
+        .nav-tabs { display: flex; justify-content: space-around; background: #111827; padding: 10px; }
+        .tab-btn { background: none; border: none; color: #9ca3af; font-size: 16px; font-weight: bold; cursor: pointer; }
+        .tab-btn.active { color: var(--accent); border-bottom: 2px solid var(--accent); }
+
+        .tab-content { display: none; flex-direction: column; align-items: center; justify-content: center; flex-grow: 1; padding: 20px; }
+        .tab-content.active { display: flex; }
+
+        /* Tap Zone */
+        .coin {
+            width: 200px; height: 200px; background: radial-gradient(circle, #fcd34d, #d97706);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 80px; box-shadow: 0 0 30px rgba(245, 158, 11, 0.4); cursor: pointer;
+            transition: transform 0.05s;
         }
-        .coin-btn:active { transform: scale(0.92); }
-        
-        .floating-score {
-            position: absolute; font-size: 30px; font-weight: 900; color: #ffffff;
-            pointer-events: none; animation: floatUp 0.7s ease-out forwards;
-            text-shadow: 0 2px 5px rgba(0,0,0,0.6);
+        .coin:active { transform: scale(0.92); }
+
+        /* Case Zone */
+        .case-box {
+            width: 260px; height: 160px; background: var(--card); border: 2px solid var(--purple);
+            border-radius: 16px; display: flex; flex-direction: column; align-items: center;
+            justify-content: center; box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
         }
-        @keyframes floatUp {
-            0% { opacity: 1; transform: translateY(0) scale(1); }
-            100% { opacity: 0; transform: translateY(-100px) scale(1.4); }
+        .open-btn {
+            margin-top: 20px; padding: 12px 30px; background: var(--purple);
+            border: none; border-radius: 10px; color: white; font-weight: bold; font-size: 18px;
+            cursor: pointer; box-shadow: 0 4px 12px rgba(139, 92, 246, 0.5);
         }
 
-        .footer-panel {
-            width: 100%; background: var(--card-bg);
-            border-top-left-radius: 30px; border-top-right-radius: 30px;
-            padding: 24px; box-sizing: border-box;
-            box-shadow: 0 -10px 30px rgba(0,0,0,0.4);
+        /* Store Zone */
+        .store-item {
+            width: 100%; max-width: 300px; background: var(--card); padding: 15px;
+            border-radius: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;
         }
-        .energy-info { display: flex; justify-content: space-between; font-size: 15px; color: var(--text-secondary); margin-bottom: 10px; font-weight: 700; }
-        .energy-bar-container { width: 100%; background: #111827; height: 16px; border-radius: 8px; overflow: hidden; border: 2px solid #374151; }
-        .energy-bar { width: 100%; height: 100%; background: linear-gradient(90deg, #f59e0b, #10b981); transition: width 0.1s linear; }
+        .buy-btn { background: var(--accent); border: none; padding: 8px 15px; border-radius: 8px; font-weight: bold; }
+
+        .footer { padding: 20px; background: var(--card); }
+        .progress-bar { width: 100%; background: #374151; height: 12px; border-radius: 6px; overflow: hidden; }
+        .progress-fill { width: 100%; height: 100%; background: var(--accent); transition: width 0.2s; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <div class="balance-container">
-            <span class="coin-icon"></span>
-            <span id="score">0</span>
+        <div class="balance">🪙 <span id="score">0</span></div>
+    </div>
+
+    <div class="nav-tabs">
+        <button class="tab-btn active" onclick="switchTab('tap')">Tap</button>
+        <button class="tab-btn" onclick="switchTab('case')">CS Case</button>
+        <button class="tab-btn" onclick="switchTab('store')">Store</button>
+    </div>
+
+    <!-- TAP TAB -->
+    <div id="tap" class="tab-content active">
+        <div class="coin" id="coinBtn">⚡</div>
+    </div>
+
+    <!-- CS CASE TAB -->
+    <div id="case" class="tab-content">
+        <div class="case-box">
+            <div style="font-size: 50px;">📦</div>
+            <div style="font-weight: bold; margin-top: 10px;">Crypto Case</div>
+        </div>
+        <button class="open-btn" onclick="openCase()">Open (200 🪙)</button>
+        <div id="caseResult" style="margin-top: 15px; font-weight: bold; color: var(--accent);"></div>
+    </div>
+
+    <!-- STORE TAB -->
+    <div id="store" class="tab-content">
+        <div class="store-item">
+            <div>
+                <div><b>Multi-Tap</b></div>
+                <small>+1 har bir bosishga</small>
+            </div>
+            <button class="buy-btn" onclick="buyUpgrade('tap')">100 🪙</button>
+        </div>
+        <div class="store-item">
+            <div>
+                <div><b>Energy Capacity</b></div>
+                <small>+500 Maksimal energiya</small>
+            </div>
+            <button class="buy-btn" onclick="buyUpgrade('energy')">300 🪙</button>
         </div>
     </div>
 
-    <div class="clicker-area" id="clickerArea">
-        <div class="coin-btn" id="coinBtn">🪙</div>
-    </div>
-
-    <div class="footer-panel">
-        <div class="energy-info">
+    <div class="footer">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
             <span>⚡ Energy</span>
-            <span><span id="energy">1000</span> / 1000</span>
+            <span><span id="energy">1000</span>/<span id="maxEnergy">1000</span></span>
         </div>
-        <div class="energy-bar-container">
-            <div class="energy-bar" id="energyBar"></div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="energyFill"></div>
         </div>
     </div>
 
     <script>
         let tg = window.Telegram?.WebApp;
-        if (tg) {
-            tg.expand();
-            tg.ready();
+        if(tg) { tg.expand(); tg.ready(); }
+        let userId = tg?.initDataUnsafe?.user?.id?.toString() || "demo_user";
+
+        let score = 0, energy = 1000, maxEnergy = 1000, tapLevel = 1;
+
+        async function loadData() {
+            let res = await fetch(`/get_user?tg_id=${userId}`);
+            let data = await res.json();
+            score = data.score;
+            energy = data.energy;
+            tapLevel = data.tap_level;
+            maxEnergy = data.max_energy;
+            updateUI();
         }
 
-        // Telegram ID ni xavfsiz aniqlash
-        let userId = "test_user_123";
-        if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.id) {
-            userId = tg.initDataUnsafe.user.id.toString();
+        function updateUI() {
+            document.getElementById('score').innerText = score;
+            document.getElementById('energy').innerText = energy;
+            document.getElementById('maxEnergy').innerText = maxEnergy;
+            document.getElementById('energyFill').style.width = (energy / maxEnergy * 100) + '%';
         }
 
-        let score = 0;
-        let energy = 1000;
-        const maxEnergy = 1000;
-        let isSaving = false;
-        let needsSave = false;
+        document.getElementById('coinBtn').addEventListener('pointerdown', () => {
+            if (energy >= tapLevel) {
+                score += tapLevel;
+                energy -= tapLevel;
+                updateUI();
+                saveData();
+                if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+            }
+        });
 
-        const scoreEl = document.getElementById('score');
-        const energyEl = document.getElementById('energy');
-        const energyBarEl = document.getElementById('energyBar');
-        const coinBtn = document.getElementById('coinBtn');
-
-        async function loadUserData() {
-            try {
-                let response = await fetch(`/get_user?tg_id=${encodeURIComponent(userId)}`);
-                if (!response.ok) throw new Error("Network error");
-                let data = await response.json();
-                score = data.score ?? 0;
-                energy = data.energy ?? 1000;
-                scoreEl.textContent = score;
-                updateEnergyUI();
-            } catch (e) {
-                console.log("Load error:", e);
+        async function openCase() {
+            let res = await fetch('/open_case', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({tg_id: userId})
+            });
+            let data = await res.json();
+            if (res.ok) {
+                score = data.new_score;
+                document.getElementById('caseResult').innerText = `Yutug'ingiz: +${data.win} 🪙!`;
+                updateUI();
+            } else {
+                alert(data.error);
             }
         }
 
-        loadUserData();
+        function buyUpgrade(type) {
+            if (type === 'tap' && score >= 100) {
+                score -= 100;
+                tapLevel += 1;
+            } else if (type === 'energy' && score >= 300) {
+                score -= 300;
+                maxEnergy += 500;
+                energy += 500;
+            }
+            updateUI();
+            saveData();
+        }
 
         async function saveData() {
-            if (isSaving) {
-                needsSave = true;
-                return;
-            }
-            isSaving = true;
-            needsSave = false;
+            await fetch('/update_data', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({tg_id: userId, score, energy, tap_level: tapLevel, max_energy: maxEnergy})
+            });
+        }
 
-            try {
-                await fetch('/update_score', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ tg_id: userId, score: score, energy: energy })
-                });
-            } catch (e) {
-                console.log("Save error:", e);
-            } finally {
-                isSaving = false;
-                if (needsSave) {
-                    saveData();
-                }
-            }
+        function switchTab(name) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(name).classList.add('active');
+            event.target.classList.add('active');
         }
 
         setInterval(() => {
             if (energy < maxEnergy) {
-                energy = Math.min(maxEnergy, energy + 5);
-                updateEnergyUI();
-                needsSave = true;
+                energy = Math.min(maxEnergy, energy + 3);
+                updateUI();
             }
         }, 1000);
 
-        setInterval(() => {
-            if (needsSave) {
-                saveData();
-            }
-        }, 3000);
-
-        function updateEnergyUI() {
-            energyEl.textContent = energy;
-            energyBarEl.style.width = (energy / maxEnergy) * 100 + '%';
-        }
-
-        coinBtn.addEventListener('pointerdown', (e) => {
-            if (energy <= 0) return;
-
-            score += 1;
-            energy -= 1;
-            scoreEl.textContent = score;
-            updateEnergyUI();
-            needsSave = true;
-
-            const floating = document.createElement('div');
-            floating.className = 'floating-score';
-            floating.textContent = '+1';
-            floating.style.left = (e.clientX - 25) + 'px';
-            floating.style.top = (e.clientY - 45) + 'px';
-            document.body.appendChild(floating);
-            setTimeout(() => floating.remove(), 700);
-
-            if (tg && tg.HapticFeedback) {
-                tg.HapticFeedback.impactOccurred('light');
-            }
-        });
-
-        window.addEventListener('visibilitychange', () => {
-            if (document.visibilityState === 'hidden' && needsSave) {
-                navigator.sendBeacon('/update_score', JSON.stringify({ tg_id: userId, score: score, energy: energy }));
-            }
-        });
+        loadData();
     </script>
 </body>
 </html>
