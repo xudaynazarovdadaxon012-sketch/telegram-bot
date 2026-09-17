@@ -13,7 +13,7 @@ def init_db():
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS users (
             telegram_id TEXT PRIMARY KEY,
-            score INTEGER DEFAULT 0,
+            score INTEGER DEFAULT 1000,
             energy INTEGER DEFAULT 1000,
             max_energy INTEGER DEFAULT 1000,
             tap_level INTEGER DEFAULT 1,
