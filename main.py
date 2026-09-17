@@ -2,14 +2,13 @@ import os
 import threading
 import sqlite3
 import telebot
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, request, jsonify, render_template_string
 
-# Render Environment Variable'dan token olinadi
 TOKEN = os.environ.get('BOT_TOKEN')
 bot = telebot.TeleBot(TOKEN) if TOKEN else None
 app = Flask(__name__)
 
-# --- DATABASE OPTIMIZATION ---
+# --- BAZA OPTIMIZATSIYASI ---
 def get_db_connection():
     conn = sqlite3.connect('database.db', timeout=30.0)
     conn.row_factory = sqlite3.Row
@@ -31,10 +30,13 @@ def init_db():
 
 init_db()
 
-# --- ROUTES ---
+# --- PAPKASIZ HTML O'QISH ---
 @app.route('/')
 def index():
-    return render_template('miniapp.html')
+    # miniapp.html faylini hech qanday 'templates' papkasisiz to'g'ridan-to'g'ri o'qiydi
+    with open('miniapp.html', 'r', encoding='utf-8') as f:
+        html_content = f.read()
+    return render_template_string(html_content)
 
 @app.route('/get_user', methods=['GET'])
 def get_user():
@@ -84,15 +86,12 @@ def update_score():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# --- BOT HANDLERS ---
+# --- BOT ---
 if bot:
     @bot.message_handler(commands=['start'])
     def send_welcome(message):
         markup = telebot.types.InlineKeyboardMarkup()
-        
-        # Render domeniz avtomatik aniqlanadi yoki havola shakllantiriladi
-        render_url = os.environ.get('RENDER_EXTERNAL_URL', 'https://telegram-bot-7n6t.onrender.com')
-        
+        render_url = os.environ.get('RENDER_EXTERNAL_URL', 'https://sizning-saytingiz.onrender.com')
         web_app = telebot.types.WebAppInfo(url=render_url)
         markup.add(telebot.types.InlineKeyboardButton("🚀 Play Mini App", web_app=web_app))
         bot.reply_to(message, "Hush kelibsiz! O'yinni boshlash uchun pastdagi tugmani bosing:", reply_markup=markup)
