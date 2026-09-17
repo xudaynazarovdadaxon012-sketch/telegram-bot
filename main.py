@@ -1,4 +1,5 @@
 import os
+import random
 import threading
 import sqlite3
 import telebot
@@ -8,7 +9,6 @@ TOKEN = os.environ.get('BOT_TOKEN')
 bot = telebot.TeleBot(TOKEN) if TOKEN else None
 app = Flask(__name__)
 
-# --- BAZA OPTIMIZATSIYASI ---
 def get_db_connection():
     conn = sqlite3.connect('database.db', timeout=30.0)
     conn.row_factory = sqlite3.Row
@@ -22,6 +22,9 @@ def init_db():
             telegram_id TEXT PRIMARY KEY,
             score INTEGER DEFAULT 0,
             energy INTEGER DEFAULT 1000,
+            tap_level INTEGER DEFAULT 1,
+            max_energy INTEGER DEFAULT 1000,
+            referrals INTEGER DEFAULT 0,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
@@ -30,92 +33,96 @@ def init_db():
 
 init_db()
 
-# --- PAPKASIZ HTML O'QISH ---
 @app.route('/')
 def index():
-    # miniapp.html faylini hech qanday 'templates' papkasisiz to'g'ridan-to'g'ri o'qiydi
     with open('miniapp.html', 'r', encoding='utf-8') as f:
-        html_content = f.read()
-    return render_template_string(html_content)
+        return render_template_string(f.read())
 
 @app.route('/get_user', methods=['GET'])
 def get_user():
-    tg_id = request.args.get('tg_id')
-    if not tg_id:
-        return jsonify({'error': 'Telegram ID topilmadi'}), 400
-
-    tg_id = str(tg_id)
-
+    tg_id = request.args.get('tg_id', 'demo_user')
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute('SELECT score, energy FROM users WHERE telegram_id = ?', (tg_id,))
+    cursor.execute('SELECT * FROM users WHERE telegram_id = ?', (tg_id,))
     row = cursor.fetchone()
     
     if not row:
-        cursor.execute('INSERT INTO users (telegram_id, score, energy) VALUES (?, 0, 1000)', (tg_id,))
+        cursor.execute('INSERT INTO users (telegram_id, score, energy, tap_level, max_energy, referrals) VALUES (?, 500, 1000, 1, 1000, 0)', (tg_id,))
         conn.commit()
-        score, energy = 0, 1000
+        data = {'score': 500, 'energy': 1000, 'tap_level': 1, 'max_energy': 1000, 'referrals': 0}
     else:
-        score, energy = row['score'], row['energy']
+        data = dict(row)
         
     conn.close()
-    return jsonify({'score': score, 'energy': energy})
+    return jsonify(data)
 
-@app.route('/update_score', methods=['POST'])
-def update_score():
+@app.route('/update_data', methods=['POST'])
+def update_data():
     data = request.get_json(silent=True) or {}
-    tg_id = data.get('tg_id')
+    tg_id = data.get('tg_id', 'demo_user')
     score = data.get('score')
     energy = data.get('energy')
+    tap_level = data.get('tap_level', 1)
+    max_energy = data.get('max_energy', 1000)
 
-    if not tg_id or score is None or energy is None:
-        return jsonify({'error': 'Noto\'g\'ri ma\'lumotlar'}), 400
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('''
+        UPDATE users 
+        SET score = ?, energy = ?, tap_level = ?, max_energy = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE telegram_id = ?
+    ''', (score, energy, tap_level, max_energy, tg_id))
+    conn.commit()
+    conn.close()
+    return jsonify({'status': 'ok'})
 
-    tg_id = str(tg_id)
+@app.route('/open_case', methods=['POST'])
+def open_case():
+    data = request.get_json(silent=True) or {}
+    tg_id = data.get('tg_id', 'demo_user')
+    case_price = 200
 
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute('''
-            INSERT INTO users (telegram_id, score, energy, updated_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP)
-            ON CONFLICT(telegram_id) DO UPDATE SET score = ?, energy = ?, updated_at = CURRENT_TIMESTAMP
-        ''', (tg_id, score, energy, score, energy))
-        conn.commit()
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('SELECT score FROM users WHERE telegram_id = ?', (tg_id,))
+    row = cursor.fetchone()
+
+    if not row or row['score'] < case_price:
         conn.close()
-        return jsonify({'status': 'success'})
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': 'Mablag\' yetarli emas!'}), 400
 
-# --- BOT ---
+    # CS Style Drop Logikasi
+    prizes = [50, 100, 150, 300, 500, 1000, 2500]
+    weights = [40, 30, 15, 9, 4, 1.8, 0.2]
+    win_amount = random.choices(prizes, weights=weights)[0]
+
+    new_score = row['score'] - case_price + win_amount
+    cursor.execute('UPDATE users SET score = ? WHERE telegram_id = ?', (new_score, tg_id))
+    conn.commit()
+    conn.close()
+
+    return jsonify({'win': win_amount, 'new_score': new_score})
+
 if bot:
     @bot.message_handler(commands=['start'])
     def send_welcome(message):
         markup = telebot.types.InlineKeyboardMarkup()
-        render_url = os.environ.get('RENDER_EXTERNAL_URL', 'https://sizning-saytingiz.onrender.com')
+        render_url = os.environ.get('RENDER_EXTERNAL_URL', 'https://your-app.onrender.com')
         web_app = telebot.types.WebAppInfo(url=render_url)
-        markup.add(telebot.types.InlineKeyboardButton("🚀 Play Mini App", web_app=web_app))
-        bot.reply_to(message, "Hush kelibsiz! O'yinni boshlash uchun pastdagi tugmani bosing:", reply_markup=markup)
+        markup.add(telebot.types.InlineKeyboardButton("🎮 Play & Open Cases", web_app=web_app))
+        bot.reply_to(message, "🔥 Premium Mini App'ga xush kelibsiz!", reply_markup=markup)
 
-# --- BOT THREADING & SERVER RUN ---
 def run_bot():
     if bot:
-        print("Bot ishga tushdi...")
         try:
-            bot.remove_webhook()  # Eski webhook'larni tozalaydi
+            bot.remove_webhook()
             bot.infinity_polling(skip_pending=True)
         except Exception as e:
-            print(f"Botda xatolik: {e}")
+            print(f"Bot error: {e}")
 
 if __name__ == '__main__':
-    # Baza jadvallarini yaratish
-    init_db()
-    
-    # Botni alohida treda ishga tushirish
     if bot:
-        bot_thread = threading.Thread(target=run_bot)
-        bot_thread.daemon = True
-        bot_thread.start()
-
-    # Flask serverini ishga tushirish
+        t = threading.Thread(target=run_bot, daemon=True)
+        t.start()
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
