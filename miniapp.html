@@ -252,197 +252,219 @@
 
     <script>
         let tg = window.Telegram?.WebApp;
-        if(tg) { tg.expand(); tg.ready(); }
-        let userId = tg?.initDataUnsafe?.user?.id?.toString() || "demo_user";
+if(tg) { tg.expand(); tg.ready(); }
+let userId = tg?.initDataUnsafe?.user?.id?.toString() || "demo_user";
 
-        let score = 1000, energy = 1000, maxEnergy = 1000, tapLevel = 1;
-        let isSpinning = false;
+// Boshlang'ich qiymatlarni 0 qilamiz, serverdan kelguncha
+let score = 0, energy = 0, maxEnergy = 1000, tapLevel = 1;
+let isSpinning = false;
+let isLoaded = false; // Serverdan yuklanish holati
 
-        /* Canvas Background Particles */
-        const canvas = document.getElementById('particleCanvas');
-        const ctx = canvas.getContext('2d');
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+const canvas = document.getElementById('particleCanvas');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
 
-        let particles = [];
-        for(let i=0; i<30; i++) {
-            particles.push({
-                x: Math.random() * canvas.width,
-                y: Math.random() * canvas.height,
-                radius: Math.random() * 2 + 1,
-                speed: Math.random() * 0.5 + 0.2
-            });
-        }
+let particles = [];
+for(let i=0; i<30; i++) {
+    particles.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        radius: Math.random() * 2 + 1,
+        speed: Math.random() * 0.5 + 0.2
+    });
+}
 
-        function drawParticles() {
-            ctx.clearRect(0,0,canvas.width,canvas.height);
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
-            particles.forEach(p => {
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-                ctx.fill();
-                p.y -= p.speed;
-                if(p.y < 0) p.y = canvas.height;
-            });
-            requestAnimationFrame(drawParticles);
-        }
-        drawParticles();
+function drawParticles() {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+    particles.forEach(p => {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fill();
+        p.y -= p.speed;
+        if(p.y < 0) p.y = canvas.height;
+    });
+    requestAnimationFrame(drawParticles);
+}
+drawParticles();
 
-        async function loadData() {
-            try {
-                let res = await fetch(`/get_user?tg_id=${userId}`);
-                let data = await res.json();
-                score = data.score;
-                energy = data.energy;
-                maxEnergy = data.max_energy;
-                tapLevel = data.tap_level;
-                updateUI();
-            } catch(e){}
-        }
-
-        function updateUI() {
-            document.getElementById('score').innerText = score;
-            document.getElementById('energy').innerText = energy;
-            document.getElementById('maxEnergy').innerText = maxEnergy;
-            document.getElementById('energyFill').style.width = (energy / maxEnergy * 100) + '%';
-            document.getElementById('tapLvl').innerText = tapLevel;
-            document.getElementById('tapCostBtn').innerText = (tapLevel * 200) + ' 🪙';
-        }
-
-        /* Tap & Floating Effect */
-        document.getElementById('coinBtn').addEventListener('pointerdown', (e) => {
-            if (energy >= tapLevel) {
-                score += tapLevel;
-                energy -= tapLevel;
-                updateUI();
-                saveData();
-
-                // Create Floating Number
-                let floatNum = document.createElement('div');
-                floatNum.className = 'floating-num';
-                floatNum.innerText = '+' + tapLevel;
-                floatNum.style.left = (e.clientX - 15) + 'px';
-                floatNum.style.top = (e.clientY - 30) + 'px';
-                document.body.appendChild(floatNum);
-                setTimeout(() => floatNum.remove(), 800);
-
-                if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
-            }
-        });
-
-        /* CS Roulette logic */
-        const items = [50, 100, 200, 500, 1000, 5000];
-        function generateTrack() {
-            const track = document.getElementById('track');
-            track.innerHTML = '';
-            for(let i=0; i<40; i++) {
-                let val = items[Math.floor(Math.random() * items.length)];
-                let div = document.createElement('div');
-                div.className = 'roulette-item';
-                div.innerText = '+' + val;
-                track.appendChild(div);
-            }
-        }
-        generateTrack();
-
-        async function openCase() {
-            if (isSpinning) return;
-            if (score < 300) { alert("Mablag' yetarli emas!"); return; }
-
-            isSpinning = true;
-            document.getElementById('caseResult').innerText = '';
-
-            let res = await fetch('/open_case', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({tg_id: userId})
-            });
+// Serverdan ma'lumotni yuklash
+async function loadData() {
+    try {
+        let res = await fetch(`/get_user?tg_id=${userId}`);
+        if (res.ok) {
             let data = await res.json();
-
-            if (res.ok) {
-                score = data.new_score;
-                const track = document.getElementById('track');
-                track.style.transition = 'none';
-                track.style.transform = 'translateX(0px)';
-                
-                setTimeout(() => {
-                    track.style.transition = 'transform 4s cubic-bezier(0.1, 1, 0.1, 1)';
-                    track.style.transform = `translateX(-${2700 + Math.random() * 80}px)`;
-                }, 50);
-
-                setTimeout(() => {
-                    document.getElementById('caseResult').innerText = `🎉 WIN: +${data.win} 🪙!`;
-                    if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
-                    updateUI();
-                    isSpinning = false;
-                    generateTrack();
-                }, 4100);
-            } else {
-                alert(data.error);
-                isSpinning = false;
-            }
+            score = data.score;
+            energy = data.energy;
+            maxEnergy = data.max_energy;
+            tapLevel = data.tap_level;
+            isLoaded = true; // Ma'lumot to'liq yuklandi
+            updateUI();
         }
+    } catch(e) {
+        console.error("Yuklashda xatolik:", e);
+    }
+}
 
-        async function buyUpgrade(type) {
-            let res = await fetch('/buy_upgrade', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({tg_id: userId, type: type})
-            });
-            if (res.ok) {
-                let data = await res.json();
-                score = data.score;
-                energy = data.energy;
-                maxEnergy = data.max_energy;
-                tapLevel = data.tap_level;
+function updateUI() {
+    document.getElementById('score').innerText = score;
+    document.getElementById('energy').innerText = energy;
+    document.getElementById('maxEnergy').innerText = maxEnergy;
+    document.getElementById('energyFill').style.width = (energy / maxEnergy * 100) + '%';
+    document.getElementById('tapLvl').innerText = tapLevel;
+    let tapBtn = document.getElementById('tapCostBtn');
+    if (tapBtn) tapBtn.innerText = (tapLevel * 200) + ' 🪙';
+}
+
+// Tap tugmasi
+document.getElementById('coinBtn').addEventListener('pointerdown', (e) => {
+    if (!isLoaded) return; // Serverdan ma me'lumot kelmaguncha bosishni taqiqlaymiz
+
+    if (energy >= tapLevel) {
+        score += tapLevel;
+        energy -= tapLevel;
+        updateUI();
+        saveData();
+
+        let floatNum = document.createElement('div');
+        floatNum.className = 'floating-num';
+        floatNum.innerText = '+' + tapLevel;
+        floatNum.style.left = (e.clientX - 15) + 'px';
+        floatNum.style.top = (e.clientY - 30) + 'px';
+        document.body.appendChild(floatNum);
+        setTimeout(() => floatNum.remove(), 800);
+
+        if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+    }
+});
+
+const items = [50, 100, 200, 500, 1000, 5000];
+function generateTrack() {
+    const track = document.getElementById('track');
+    track.innerHTML = '';
+    for(let i=0; i<40; i++) {
+        let val = items[Math.floor(Math.random() * items.length)];
+        let div = document.createElement('div');
+        div.className = 'roulette-item';
+        div.innerText = '+' + val;
+        track.appendChild(div);
+    }
+}
+generateTrack();
+
+async function openCase() {
+    if (!isLoaded || isSpinning) return;
+    if (score < 300) { alert("Mablag' yetarli emas!"); return; }
+
+    isSpinning = true;
+    document.getElementById('caseResult').innerText = 'Aylanmoqda...';
+
+    try {
+        let res = await fetch('/open_case', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({tg_id: userId})
+        });
+        let data = await res.json();
+
+        if (res.ok) {
+            score = data.new_score;
+            const track = document.getElementById('track');
+            track.style.transition = 'none';
+            track.style.transform = 'translateX(0px)';
+            
+            setTimeout(() => {
+                track.style.transition = 'transform 4s cubic-bezier(0.1, 1, 0.1, 1)';
+                track.style.transform = `translateX(-${2700 + Math.random() * 80}px)`;
+            }, 50);
+
+            setTimeout(() => {
+                document.getElementById('caseResult').innerText = `🎉 WIN: +${data.win} 🪙!`;
+                if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
                 updateUI();
-                if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
-            }
+                isSpinning = false;
+                generateTrack();
+            }, 4100);
+        } else {
+            alert(data.error || "Xatolik yuz berdi");
+            isSpinning = false;
+            document.getElementById('caseResult').innerText = '';
         }
+    } catch(e) {
+        alert("Server bilan aloqa uzildi!");
+        isSpinning = false;
+        document.getElementById('caseResult').innerText = '';
+    }
+}
 
-        function copyInvite() {
-    // YOUR_BOT_USERNAME o'rniga o'zingizning real botingiz usernamesini yozing (masalan: MyCrypto_bot)
-    let botUsername = "@kunlik_vazifalar_2026_bot"; 
+async function buyUpgrade(type) {
+    if (!isLoaded) return;
+    try {
+        let res = await fetch('/buy_upgrade', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({tg_id: userId, type: type})
+        });
+        if (res.ok) {
+            let data = await res.json();
+            score = data.score;
+            energy = data.energy;
+            maxEnergy = data.max_energy;
+            tapLevel = data.tap_level;
+            updateUI();
+            if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+        } else {
+            alert("Balans yetarli emas!");
+        }
+    } catch(e) {
+        alert("Server bilan aloqa uzildi!");
+    }
+}
+
+function copyInvite() {
+    let botUsername = tg?.initDataUnsafe?.bot?.username || "O_ZINGIZNING_BOT_USERNAMENGIZ";
     let link = `https://t.me/${botUsername}?start=${userId}`;
-    
     navigator.clipboard.writeText(link);
     alert("Referral link copied!");
 }
 
-        async function saveData() {
-            await fetch('/update_data', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    tg_id: userId, score: score, energy: energy, tap_level: tapLevel, max_energy: maxEnergy
-                })
-            });
-        }
+async function saveData() {
+    if (!isLoaded) return;
+    await fetch('/update_data', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            tg_id: userId, score: score, energy: energy, tap_level: tapLevel, max_energy: maxEnergy
+        })
+    });
+}
 
-        function switchTab(name) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-            let target = name === 'ref' ? 'tab-ref' : name;
-            document.getElementById(target).classList.add('active');
-            event.target.classList.add('active');
-        }
+function switchTab(name) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    let target = name === 'ref' ? 'tab-ref' : name;
+    document.getElementById(target).classList.add('active');
+    event.target.classList.add('active');
+}
 
-        const fakeUsers = ['@alex_crypto', '@dev_john', '@crypto_king', '@sam_web3', '@lisa_tg'];
-        const fakePrizes = [200, 500, 1000, 2500];
-        setInterval(() => {
-            let u = fakeUsers[Math.floor(Math.random() * fakeUsers.length)];
-            let p = fakePrizes[Math.floor(Math.random() * fakePrizes.length)];
-            document.getElementById('liveFeed').innerText = `🔥 ${u} just won +${p} 🪙!`;
-        }, 4000);
+const fakeUsers = ['@alex_crypto', '@dev_john', '@crypto_king', '@sam_web3', '@lisa_tg'];
+const fakePrizes = [200, 500, 1000, 2500];
+setInterval(() => {
+    let u = fakeUsers[Math.floor(Math.random() * fakeUsers.length)];
+    let p = fakePrizes[Math.floor(Math.random() * fakePrizes.length)];
+    document.getElementById('liveFeed').innerText = `🔥 ${u} just won +${p} 🪙!`;
+}, 4000);
 
-        setInterval(() => {
-            if (energy < maxEnergy) {
-                energy = Math.min(maxEnergy, energy + 4);
-                updateUI();
-            }
-        }, 1000);
+setInterval(() => {
+    if (isLoaded && energy < maxEnergy) {
+        energy = Math.min(maxEnergy, energy + 4);
+        updateUI();
+    }
+}, 1000);
 
-        loadData();
+// Ilova ishga tushishi bilan ma'lumotlarni yuklaymiz
+loadData();
     </script>
 </body>
 </html>
