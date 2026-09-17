@@ -1,545 +1,199 @@
 <!DOCTYPE html>
-<html lang="uz">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Clicker Pro Mini App</title>
-    <!-- Telegram WebApp SDK -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pro Crypto Tap Game</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
-            --bg-color: #0f172a;
-            --card-bg: #1e293b;
-            --accent-color: #f59e0b;
+            --bg-color: #0f1423;
+            --card-bg: #192036;
+            --accent-color: #f3ba2f;
             --text-color: #ffffff;
-            --text-muted: #94a3b8;
+            --text-secondary: #94a3b8;
         }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            user-select: none;
-            -webkit-user-select: none;
-        }
-
         body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            overflow: hidden;
+            margin: 0; padding: 0;
+            display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+            height: 100vh; overflow: hidden; user-select: none;
+            -webkit-user-select: none;
         }
-
-        /* HEADER & STATS */
-        .header {
-            display: flex;
-            justify-content: space-around;
-            padding: 15px;
-            background: var(--card-bg);
-            border-bottom-left-radius: 16px;
-            border-bottom-right-radius: 16px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        }
-
-        .stat-card {
-            text-align: center;
-        }
-
-        .stat-card .title {
-            font-size: 11px;
-            color: var(--text-muted);
-            text-transform: uppercase;
-        }
-
-        .stat-card .value {
-            font-size: 16px;
-            font-weight: bold;
-            color: var(--accent-color);
-            margin-top: 4px;
-        }
-
-        /* BALANCE DISPLAY */
+        .header { text-align: center; padding-top: 40px; }
         .balance-container {
-            text-align: center;
-            margin: 20px 0 10px 0;
+            display: flex; align-items: center; justify-content: center; gap: 12px;
+            font-size: 42px; font-weight: 900; color: var(--accent-color);
+            text-shadow: 0 0 20px rgba(243, 186, 47, 0.5);
         }
-
-        .balance-amount {
-            font-size: 38px;
-            font-weight: 800;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        .coin-icon {
-            width: 38px;
-            height: 38px;
-        }
-
-        /* TAB PAGES */
-        .tab-content {
-            flex: 1;
-            display: none;
-            overflow-y: auto;
-            padding: 15px;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        /* TAPPER PAGE */
-        .tap-area {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            position: relative;
-        }
-
-        .main-coin {
-            width: 220px;
-            height: 220px;
-            border-radius: 50%;
-            background: radial-gradient(circle, #fbbf24 0%, #d97706 100%);
-            box-shadow: 0 0 30px rgba(245, 158, 11, 0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 90px;
-            cursor: pointer;
+        .coin-icon { width: 44px; height: 44px; background: var(--accent-color); border-radius: 50%; box-shadow: 0 0 15px var(--accent-color); display: inline-block; }
+        
+        .clicker-area { position: relative; display: flex; justify-content: center; align-items: center; flex-grow: 1; width: 100%; }
+        .coin-btn {
+            width: 230px; height: 230px; background: radial-gradient(circle, #fde047 0%, #ca8a04 100%);
+            border: 6px solid #fef08a; border-radius: 50%; cursor: pointer;
+            box-shadow: 0 20px 40px rgba(202, 138, 4, 0.4), inset 0 5px 15px rgba(255,255,255,0.5);
+            display: flex; align-items: center; justify-content: center; font-size: 65px;
             transition: transform 0.05s ease;
-            position: relative;
         }
-
-        .main-coin:active {
-            transform: scale(0.95);
+        .coin-btn:active { transform: scale(0.92); }
+        
+        .floating-score {
+            position: absolute; font-size: 30px; font-weight: 900; color: #ffffff;
+            pointer-events: none; animation: floatUp 0.7s ease-out forwards;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.6);
         }
-
-        /* FLOATING TEXT ANIMATION */
-        .floating-text {
-            position: absolute;
-            font-size: 28px;
-            font-weight: bold;
-            color: #ffffff;
-            pointer-events: none;
-            animation: floatUp 0.8s ease-out forwards;
-        }
-
         @keyframes floatUp {
-            0% { opacity: 1; transform: translateY(0); }
-            100% { opacity: 0; transform: translateY(-80px); }
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(-100px) scale(1.4); }
         }
 
-        /* ENERGY BAR */
-        .energy-container {
-            width: 100%;
-            max-width: 300px;
-            margin-top: 30px;
+        .footer-panel {
+            width: 100%; background: var(--card-bg);
+            border-top-left-radius: 30px; border-top-right-radius: 30px;
+            padding: 24px; box-sizing: border-box;
+            box-shadow: 0 -10px 30px rgba(0,0,0,0.4);
         }
-
-        .energy-text {
-            display: flex;
-            justify-content: space-between;
-            font-size: 14px;
-            margin-bottom: 6px;
-        }
-
-        .energy-bar-bg {
-            width: 100%;
-            height: 12px;
-            background: #334155;
-            border-radius: 6px;
-            overflow: hidden;
-        }
-
-        .energy-bar-fill {
-            height: 100%;
-            width: 100%;
-            background: linear-gradient(90deg, #f59e0b, #ef4444);
-            transition: width 0.2s ease;
-        }
-
-        /* CARDS / MINERS LIST */
-        .card-item {
-            background: var(--card-bg);
-            border-radius: 12px;
-            padding: 15px;
-            margin-bottom: 12px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .card-info h4 {
-            font-size: 16px;
-            margin-bottom: 4px;
-        }
-
-        .card-info p {
-            font-size: 12px;
-            color: var(--text-muted);
-        }
-
-        .btn-upgrade {
-            background: #2563eb;
-            color: #fff;
-            border: none;
-            padding: 10px 14px;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        .btn-upgrade:disabled {
-            background: #475569;
-            opacity: 0.6;
-        }
-
-        /* NAVIGATION BAR */
-        .navbar {
-            display: flex;
-            background: var(--card-bg);
-            border-top: 1px solid #334155;
-            padding: 10px 0;
-        }
-
-        .nav-item {
-            flex: 1;
-            text-align: center;
-            color: var(--text-muted);
-            font-size: 12px;
-            cursor: pointer;
-        }
-
-        .nav-item.active {
-            color: var(--accent-color);
-            font-weight: bold;
-        }
-
-        .nav-icon {
-            font-size: 20px;
-            display: block;
-            margin-bottom: 2px;
-        }
+        .energy-info { display: flex; justify-content: space-between; font-size: 15px; color: var(--text-secondary); margin-bottom: 10px; font-weight: 700; }
+        .energy-bar-container { width: 100%; background: #111827; height: 16px; border-radius: 8px; overflow: hidden; border: 2px solid #374151; }
+        .energy-bar { width: 100%; height: 100%; background: linear-gradient(90deg, #f59e0b, #10b981); transition: width 0.1s linear; }
     </style>
 </head>
 <body>
 
-    <!-- HEADER STATS -->
     <div class="header">
-        <div class="stat-card">
-            <div class="title">Tap Kuchingiz</div>
-            <div class="value" id="tapPower">+1</div>
-        </div>
-        <div class="stat-card">
-            <div class="title">Soatlik Daromad</div>
-            <div class="value" id="profitPerHour">+0/h</div>
+        <div class="balance-container">
+            <span class="coin-icon"></span>
+            <span id="score">0</span>
         </div>
     </div>
 
-    <!-- BALANCE -->
-    <div class="balance-container">
-        <div class="balance-amount">
-            🪙 <span id="coinBalance">0</span>
+    <div class="clicker-area" id="clickerArea">
+        <div class="coin-btn" id="coinBtn">🪙</div>
+    </div>
+
+    <div class="footer-panel">
+        <div class="energy-info">
+            <span>⚡ Energy</span>
+            <span><span id="energy">1000</span> / 1000</span>
+        </div>
+        <div class="energy-bar-container">
+            <div class="energy-bar" id="energyBar"></div>
         </div>
     </div>
 
-    <!-- TAB 1: TAPPER PAGE -->
-    <div id="tabTap" class="tab-content active">
-        <div class="tap-area">
-            <div class="main-coin" id="coinBtn">🪙</div>
-
-            <div class="energy-container">
-                <div class="energy-text">
-                    <span>⚡️ Energiya</span>
-                    <span id="energyText">100 / 100</span>
-                </div>
-                <div class="energy-bar-bg">
-                    <div class="energy-bar-fill" id="energyFill"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- TAB 2: CARDS / MINERS -->
-    <div id="tabCards" class="tab-content">
-        <h3 style="margin-bottom: 12px;">⛏ Hardware & Mining Cards</h3>
-        
-        <div class="card-item">
-            <div class="card-info">
-                <h4>GPU Mining Rig</h4>
-                <p>Daromad: +50/h | Level: <span id="lvlGpu">0</span></p>
-            </div>
-            <button class="btn-upgrade" onclick="buyCard('gpu_mining')">
-                <span id="priceGpu">500</span> 🪙
-            </button>
-        </div>
-
-        <div class="card-item">
-            <div class="card-info">
-                <h4>AI Server Center</h4>
-                <p>Daromad: +250/h | Level: <span id="lvlAi">0</span></p>
-            </div>
-            <button class="btn-upgrade" onclick="buyCard('ai_datacenter')">
-                <span id="priceAi">2000</span> 🪙
-            </button>
-        </div>
-
-        <div class="card-item">
-            <div class="card-info">
-                <h4>Auto Trading Bot</h4>
-                <p>Daromad: +1200/h | Level: <span id="lvlBot">0</span></p>
-            </div>
-            <button class="btn-upgrade" onclick="buyCard('crypto_bot')">
-                <span id="priceBot">10000</span> 🪙
-            </button>
-        </div>
-    </div>
-
-    <!-- TAB 3: DAILY REWARDS -->
-    <div id="tabDaily" class="tab-content">
-        <h3>🎁 Kundalik Kirish Mukofoti</h3>
-        <p style="color: var(--text-muted); font-size: 13px; margin: 8px 0 16px 0;">
-            Har kuni o'yinga kiring va oshib boruvchi mukofotlarni qo'lga kiriting!
-        </p>
-        <button class="btn-upgrade" style="width: 100%; padding: 14px; font-size: 16px;" onclick="claimDailyReward()">
-            🎁 Bugungi Mukofotni Olish
-        </button>
-    </div>
-
-    <!-- TAB 4: SHOP (TELEGRAM STARS) -->
-    <div id="tabShop" class="tab-content">
-        <h3>⭐️ Stars Premium Shop</h3>
-        <p style="color: var(--text-muted); font-size: 13px; margin: 8px 0 16px 0;">
-            Telegram Stars orqali tezkor kuchaytirgichlar sotib oling!
-        </p>
-
-        <div class="card-item">
-            <div class="card-info">
-                <h4>⚡️ To'liq Energiya</h4>
-                <p>Energiyangizni darhol 100% ga to'ldiring</p>
-            </div>
-            <button class="btn-upgrade" style="background: #eab308;" onclick="buyStarsItem('energy_full')">
-                15 ⭐️
-            </button>
-        </div>
-
-        <div class="card-item">
-            <div class="card-info">
-                <h4>🪙 100,000 Tangalar Paket</h4>
-                <p>Hisobingizga darhol +100k tanga</p>
-            </div>
-            <button class="btn-upgrade" style="background: #eab308;" onclick="buyStarsItem('coins_100k')">
-                50 ⭐️
-            </button>
-        </div>
-    </div>
-
-    <!-- NAVBAR -->
-    <div class="navbar">
-        <div class="nav-item active" onclick="switchTab('tabTap', this)">
-            <span class="nav-icon">🪙</span> Tap
-        </div>
-        <div class="nav-item" onclick="switchTab('tabCards', this)">
-            <span class="nav-icon">⛏</span> Kartalar
-        </div>
-        <div class="nav-item" onclick="switchTab('tabDaily', this)">
-            <span class="nav-icon">🎁</span> Bonus
-        </div>
-        <div class="nav-item" onclick="switchTab('tabShop', this)">
-            <span class="nav-icon">⭐️</span> Do'kon
-        </div>
-    </div>
-
-    <!-- JAVASCRIPT & BACKEND INTEGRATION -->
     <script>
-        const tg = window.Telegram?.WebApp;
-        if (tg) tg.expand();
+        let tg = window.Telegram?.WebApp;
+        if (tg) {
+            tg.expand();
+            tg.ready();
+        }
 
-        const userId = tg?.initDataUnsafe?.user?.id || 12345678; // Test uchun default ID
+        // Telegram ID ni xavfsiz aniqlash
+        let userId = "test_user_123";
+        if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.id) {
+            userId = tg.initDataUnsafe.user.id.toString();
+        }
 
-        let coins = 0;
-        let energy = 100;
-        let maxEnergy = 100;
-        let tapPower = 1;
-        let profitPerHour = 0;
+        let score = 0;
+        let energy = 1000;
+        const maxEnergy = 1000;
+        let isSaving = false;
+        let needsSave = false;
 
-        // 1. BACKEND BILAN SINXRONIZATSIYA
-        async function syncUserData() {
+        const scoreEl = document.getElementById('score');
+        const energyEl = document.getElementById('energy');
+        const energyBarEl = document.getElementById('energyBar');
+        const coinBtn = document.getElementById('coinBtn');
+
+        async function loadUserData() {
             try {
-                const res = await fetch('/api/user/sync', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ user_id: userId })
-                });
-                const data = await res.json();
-                
-                if (data.status === 'success') {
-                    coins = data.user.coins;
-                    energy = data.user.energy;
-                    maxEnergy = data.user.max_energy;
-                    tapPower = data.user.tap_power;
-                    profitPerHour = data.user.profit_per_hour;
-
-                    if (data.offline_earned > 0) {
-                        alert(`😴 G'oyib bo'lganingizda sizga +${data.offline_earned} tanga pasiv daromad tushdi!`);
-                    }
-
-                    updateUI();
-                }
-            } catch (err) {
-                console.error("Sync error:", err);
+                let response = await fetch(`/get_user?tg_id=${encodeURIComponent(userId)}`);
+                if (!response.ok) throw new Error("Network error");
+                let data = await response.json();
+                score = data.score ?? 0;
+                energy = data.energy ?? 1000;
+                scoreEl.textContent = score;
+                updateEnergyUI();
+            } catch (e) {
+                console.log("Load error:", e);
             }
         }
 
-        // 2. UI NI YANGILASH
-        function updateUI() {
-            document.getElementById('coinBalance').innerText = coins.toLocaleString();
-            document.getElementById('energyText').innerText = `${energy} / ${maxEnergy}`;
-            document.getElementById('tapPower').innerText = `+${tapPower}`;
-            document.getElementById('profitPerHour').innerText = `+${profitPerHour}/h`;
+        loadUserData();
 
-            const fillPercent = (energy / maxEnergy) * 100;
-            document.getElementById('energyFill').style.width = `${fillPercent}%`;
-        }
-
-        // 3. TANGA BOSISH (TAP)
-        document.getElementById('coinBtn').addEventListener('click', async (e) => {
-            if (energy < tapPower) {
-                if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
+        async function saveData() {
+            if (isSaving) {
+                needsSave = true;
                 return;
             }
+            isSaving = true;
+            needsSave = false;
 
-            // Haptic (vibratsiya)
-            if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
-
-            // Ekrandagi animatsiya (+1 Matn)
-            showFloatingText(e.clientX, e.clientY, `+${tapPower}`);
-
-            // UI ni lokal oshirib turamiz
-            coins += tapPower;
-            energy -= tapPower;
-            updateUI();
-
-            // Backendga yuborish
             try {
-                await fetch('/api/user/tap', {
+                await fetch('/update_score', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ user_id: userId, count: 1 })
+                    body: JSON.stringify({ tg_id: userId, score: score, energy: energy })
                 });
-            } catch (err) {
-                console.error("Tap error:", err);
-            }
-        });
-
-        // Floating Text (+1)
-        function showFloatingText(x, y, text) {
-            const el = document.createElement('div');
-            el.className = 'floating-text';
-            el.innerText = text;
-            el.style.left = `${x - 15}px`;
-            el.style.top = `${y - 30}px`;
-            document.body.appendChild(el);
-
-            setTimeout(() => el.remove(), 800);
-        }
-
-        // 4. KARTALARNI SOTIB OLISH
-        async function buyCard(cardId) {
-            try {
-                const res = await fetch('/api/cards/upgrade', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ user_id: userId, card_id: cardId })
-                });
-                const data = await res.json();
-
-                if (data.status === 'success') {
-                    alert("✅ Karta muvaffaqiyatli darajasi oshirildi!");
-                    syncUserData();
-                } else {
-                    alert("⚠️ " + data.message);
+            } catch (e) {
+                console.log("Save error:", e);
+            } finally {
+                isSaving = false;
+                if (needsSave) {
+                    saveData();
                 }
-            } catch (err) {
-                alert("Xatolik yuz berdi");
             }
         }
 
-        // 5. KUNDALIK BONUS OLISH
-        async function claimDailyReward() {
-            try {
-                const res = await fetch('/api/user/claim-daily', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ user_id: userId })
-                });
-                const data = await res.json();
-
-                if (data.status === 'success') {
-                    alert(`🎉 Mukofot olindi: +${data.reward} tanga!`);
-                    syncUserData();
-                } else {
-                    alert("⚠️ " + data.message);
-                }
-            } catch (err) {
-                alert("Xatolik yuz berdi");
-            }
-        }
-
-        // 6. TELEGRAM STARS BILAN XARID
-        async function buyStarsItem(itemType) {
-            try {
-                const res = await fetch('/api/buy-stars-item', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ user_id: userId, item_type: itemType })
-                });
-                const data = await res.json();
-
-                if (data.status === 'success' && data.invoice_link) {
-                    if (tg?.openInvoice) {
-                        tg.openInvoice(data.invoice_link, (status) => {
-                            if (status === 'paid') {
-                                alert("⭐️ To'lov muvaffaqiyatli bajarildi!");
-                                syncUserData();
-                            }
-                        });
-                    } else {
-                        window.open(data.invoice_link, '_blank');
-                    }
-                }
-            } catch (err) {
-                alert("To'lov havolasini olishda xatolik");
-            }
-        }
-
-        // TAB MESHING
-        function switchTab(tabId, el) {
-            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-
-            document.getElementById(tabId).classList.add('active');
-            el.classList.add('active');
-        }
-
-        // Avto-energiya tiklanish taymeri (Har soniyada UI ni yangilab turadi)
         setInterval(() => {
             if (energy < maxEnergy) {
-                energy = Math.min(maxEnergy, energy + 1);
-                updateUI();
+                energy = Math.min(maxEnergy, energy + 5);
+                updateEnergyUI();
+                needsSave = true;
+            }
+        }, 1000);
+
+        setInterval(() => {
+            if (needsSave) {
+                saveData();
             }
         }, 3000);
 
-        // Sahifa yuklanganda ma'lumotlarni yuklash
-        syncUserData();
+        function updateEnergyUI() {
+            energyEl.textContent = energy;
+            energyBarEl.style.width = (energy / maxEnergy) * 100 + '%';
+        }
+
+        coinBtn.addEventListener('pointerdown', (e) => {
+            if (energy <= 0) return;
+
+            score += 1;
+            energy -= 1;
+            scoreEl.textContent = score;
+            updateEnergyUI();
+            needsSave = true;
+
+            const floating = document.createElement('div');
+            floating.className = 'floating-score';
+            floating.textContent = '+1';
+            floating.style.left = (e.clientX - 25) + 'px';
+            floating.style.top = (e.clientY - 45) + 'px';
+            document.body.appendChild(floating);
+            setTimeout(() => floating.remove(), 700);
+
+            if (tg && tg.HapticFeedback) {
+                tg.HapticFeedback.impactOccurred('light');
+            }
+        });
+
+        window.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden' && needsSave) {
+                navigator.sendBeacon('/update_score', JSON.stringify({ tg_id: userId, score: score, energy: energy }));
+            }
+        });
     </script>
 </body>
 </html>
