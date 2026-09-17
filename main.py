@@ -96,18 +96,26 @@ if bot:
         markup.add(telebot.types.InlineKeyboardButton("🚀 Play Mini App", web_app=web_app))
         bot.reply_to(message, "Hush kelibsiz! O'yinni boshlash uchun pastdagi tugmani bosing:", reply_markup=markup)
 
+# --- BOT THREADING & SERVER RUN ---
 def run_bot():
     if bot:
+        print("Bot ishga tushdi...")
         try:
+            bot.remove_webhook()  # Eski webhook'larni tozalaydi
             bot.infinity_polling(skip_pending=True)
         except Exception as e:
             print(f"Botda xatolik: {e}")
 
 if __name__ == '__main__':
+    # Baza jadvallarini yaratish
+    init_db()
+    
+    # Botni alohida treda ishga tushirish
     if bot:
         bot_thread = threading.Thread(target=run_bot)
         bot_thread.daemon = True
         bot_thread.start()
 
+    # Flask serverini ishga tushirish
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
