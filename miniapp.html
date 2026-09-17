@@ -401,10 +401,13 @@
         }
 
         function copyInvite() {
-            let link = `https://t.me/YOUR_BOT_USERNAME?start=${userId}`;
-            navigator.clipboard.writeText(link);
-            alert("Referral link copied!");
-        }
+    // YOUR_BOT_USERNAME o'rniga o'zingizning real botingiz usernamesini yozing (masalan: MyCrypto_bot)
+    let botUsername = "@kunlik_vazifalar_2026_bot"; 
+    let link = `https://t.me/${botUsername}?start=${userId}`;
+    
+    navigator.clipboard.writeText(link);
+    alert("Referral link copied!");
+}
 
         async function saveData() {
             await fetch('/update_data', {
