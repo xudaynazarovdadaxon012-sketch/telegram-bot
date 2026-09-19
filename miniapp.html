@@ -8,8 +8,8 @@
     <style>
         :root {
             --bg: #090d16;
-            --card: rgba(20, 27, 45, 0.75);
-            --border: rgba(0, 242, 254, 0.2);
+            --card: rgba(20, 27, 45, 0.85);
+            --border: rgba(0, 242, 254, 0.25);
             --accent: #00f2fe;
             --purple: #7928ca;
             --gold: #ff0080;
@@ -62,9 +62,9 @@
         }
 
         .content { flex: 1; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 15px; overflow-y: auto; }
-        .content.active { display: flex; animation: fadeIn 0.4s ease; }
+        .content.active { display: flex; animation: fadeIn 0.3s ease; }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 
         /* TAP ANIMATION */
         .coin-box { position: relative; width: 190px; height: 190px; display: flex; align-items: center; justify-content: center; margin: 20px 0; }
@@ -97,7 +97,7 @@
         .btn {
             width: 100%; padding: 12px; background: linear-gradient(135deg, var(--accent), #4facfe);
             border: none; border-radius: 12px; color: #000; font-weight: 900; cursor: pointer;
-            font-size: 13px; margin-top: 10px; transition: transform 0.2s, box-shadow 0.2s;
+            font-size: 13px; margin-top: 10px; transition: transform 0.2s;
         }
         .btn:active { transform: scale(0.97); }
         .btn-purple { background: linear-gradient(135deg, var(--purple), var(--gold)); color: #fff; }
@@ -108,7 +108,7 @@
             text-align: center; margin: 10px 0; outline: none; font-size: 13px;
         }
 
-        /* SPIN WHEEL */
+        /* PREMIUM SPIN WHEEL */
         .wheel-container { position: relative; width: 220px; height: 220px; margin: 15px auto; }
         .wheel {
             width: 100%; height: 100%; border-radius: 50%; border: 5px solid var(--accent);
@@ -124,7 +124,7 @@
 
         .footer { padding: 15px 20px; background: var(--card); border-top: 1px solid var(--border); }
         .energy-bar { width: 100%; height: 10px; background: rgba(255,255,255,0.08); border-radius: 10px; overflow: hidden; margin-top: 6px; }
-        .energy-fill { width: 100%; height: 100%; background: linear-gradient(90deg, var(--accent), var(--purple)); transition: width 0.2s; }
+        .energy-fill { width: 100%; height: 100%; background: linear-gradient(90deg, var(--accent), var(--purple)); transition: width 0.3s ease; }
     </style>
 </head>
 <body>
@@ -159,7 +159,7 @@
             </div>
             <p style="font-size: 11px; color: var(--text-sub);">Narxi: <b>200 Coin</b></p>
             <div id="spinRes" style="font-size: 14px; font-weight: 800; margin: 8px 0; color: var(--accent);">Omadingizni sinang!</div>
-            <button class="btn btn-purple" onclick="spinGame()">Aylantirish</button>
+            <button class="btn btn-purple" onclick="spinGame()" id="spinBtn">Aylantirish</button>
         </div>
     </div>
 
@@ -189,7 +189,7 @@
     <div class="footer">
         <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:700;">
             <span>⚡ Energiya</span>
-            <span><span id="energy">100</span> / 100</span>
+            <span><span id="energy">100</span> / <span id="maxEnergy">100</span></span>
         </div>
         <div class="energy-bar"><div class="energy-fill" id="energyFill"></div></div>
     </div>
@@ -204,9 +204,13 @@
         let startParam = tg?.initDataUnsafe?.start_param || null;
 
         let AppState = {
-            userId: tg?.initDataUnsafe?.user?.id || 123456,
+            userId: tg?.initDataUnsafe?.user?.id || Math.floor(Math.random() * 1000000),
             username: tg?.initDataUnsafe?.user?.first_name || "O'yinchi",
-            score: 0, energy: 100, tapPower: 1, quizIndex: 0
+            score: 0, 
+            energy: 100, 
+            maxEnergy: 100,
+            tapPower: 1, 
+            quizIndex: 0
         };
 
         const quizData = [
@@ -228,26 +232,33 @@
                 if(data.success) {
                     AppState.score = data.user.score;
                     AppState.energy = data.user.energy;
+                    AppState.maxEnergy = data.user.maxEnergy || 100;
                     AppState.tapPower = data.user.tapPower || 1;
                     updateUI();
                 }
-            } catch(e) { updateUI(); }
+            } catch(e) { 
+                console.log("Server bilan aloqa yo'q, lokal rejimda ishlamoqda");
+                updateUI(); 
+            }
         }
 
         function updateUI() {
             document.getElementById('score').innerText = AppState.score.toLocaleString();
             document.getElementById('energy').innerText = AppState.energy;
+            document.getElementById('maxEnergy').innerText = AppState.maxEnergy;
             document.getElementById('powerText').innerText = AppState.tapPower;
-            document.getElementById('energyFill').style.width = AppState.energy + '%';
+            let percent = (AppState.energy / AppState.maxEnergy) * 100;
+            document.getElementById('energyFill').style.width = percent + '%';
         }
 
         // TAP EVENT WITH ANIMATION
         document.getElementById('tapBtn').addEventListener('click', (e) => {
             if(AppState.energy >= AppState.tapPower) {
                 AppState.score += AppState.tapPower;
-                AppState.energy -= 1;
+                AppState.energy -= AppState.tapPower;
                 updateUI();
 
+                // +1 Animatsiyasi
                 let floatText = document.createElement('div');
                 floatText.className = 'floating-text';
                 floatText.innerText = '+' + AppState.tapPower;
@@ -260,17 +271,25 @@
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({ userId: AppState.userId })
+                }).then(res => res.json()).then(data => {
+                    if(data.success) {
+                        AppState.score = data.score;
+                        AppState.energy = data.energy;
+                        updateUI();
+                    }
                 }).catch(()=>{});
             }
         });
 
         // SPIN LOGIC
         let currentRotation = 0;
+        let isSpinning = false;
         async function spinGame() {
+            if(isSpinning) return;
             if(AppState.score < 200) return alert("Aylantirish uchun 200 Coin kerak!");
             
-            AppState.score -= 200; 
-            updateUI();
+            isSpinning = true;
+            document.getElementById('spinBtn').disabled = true;
 
             let prizes = [0, 100, 250, 500, 750, 1000];
             let randomIndex = Math.floor(Math.random() * prizes.length);
@@ -282,16 +301,27 @@
 
             document.getElementById('wheel').style.transform = `rotate(${currentRotation}deg)`;
 
-            setTimeout(async () => {
-                AppState.score += win; 
-                updateUI();
-                document.getElementById('spinRes').innerText = win > 0 ? `🎉 Yutuq: +${win} Coin!` : "😢 Tangalar tushmadi";
-                
-                await fetch(`${API_URL}/spin`, {
+            try {
+                let res = await fetch(`${API_URL}/spin`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({ userId: AppState.userId, reward: win })
-                }).catch(()=>{});
+                });
+                let data = await res.json();
+                if(data.success) {
+                    AppState.score = data.score;
+                } else {
+                    AppState.score = AppState.score - 200 + win;
+                }
+            } catch(e) {
+                AppState.score = AppState.score - 200 + win;
+            }
+
+            setTimeout(() => {
+                updateUI();
+                document.getElementById('spinRes').innerText = win > 0 ? `🎉 Yutuq: +${win} Coin!` : "😢 Tangalar tushmadi";
+                isSpinning = false;
+                document.getElementById('spinBtn').disabled = false;
             }, 4000);
         }
 
@@ -306,10 +336,15 @@
             let ans = document.getElementById('ansInput').value.trim().toLowerCase();
             let item = quizData[AppState.quizIndex % quizData.length];
             if(ans === item.a) {
-                AppState.score += 150; AppState.quizIndex++; updateUI(); loadQuiz();
+                AppState.score += 150; 
+                AppState.quizIndex++; 
+                updateUI(); 
+                loadQuiz();
                 document.getElementById('ansInput').value = '';
                 alert("To'g'ri javob! +150 Coin");
-            } else alert("Noto'g'ri, qayta urinib ko'ring!");
+            } else {
+                alert("Noto'g'ri, qayta urinib ko'ring!");
+            }
         }
 
         // REFERRAL FUNCTIONS
@@ -348,10 +383,10 @@
             if(name === 'quiz') loadQuiz();
         }
 
-        // Auto energy recovery locally
+        // Lokal tarzda energiyani har 3 soniyada +1 ga oshirib borish (vizual qulaylik uchun)
         setInterval(() => {
-            if (AppState.energy < 100) {
-                AppState.energy = Math.min(100, AppState.energy + 1);
+            if (AppState.energy < AppState.maxEnergy) {
+                AppState.energy = Math.min(AppState.maxEnergy, AppState.energy + 1);
                 updateUI();
             }
         }, 3000);
