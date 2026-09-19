@@ -12,14 +12,10 @@ def sync():
     username = data.get('username', "O'yinchi")
     ref_by = data.get('refBy')
 
-    # User ID kelmagan bo'lsa xatolik qaytarish
     if not user_id:
-        return jsonify({'error': 'User ID ko\'rsatilmadi'}), 400
+        return jsonify({'success': False, 'error': 'User ID mavjud emas'}), 400
 
-    # database.py orqali foydalanuvchini olish va energiyasini yangilash
     user = database.get_or_create_user(user_id, username, ref_by)
-
-    # Javobni qaytarish
     return jsonify({
         'success': True,
         'user': {
@@ -37,7 +33,7 @@ def tap():
     data = request.json or {}
     user_id = data.get('userId')
     if not user_id:
-        return jsonify({'error': 'User ID mavjud emas'}), 400
+        return jsonify({'success': False, 'error': 'User ID mavjud emas'}), 400
 
     result = database.process_tap(user_id)
     return jsonify(result)
@@ -49,10 +45,12 @@ def spin():
     reward = data.get('reward', 0)
     
     if not user_id:
-        return jsonify({'error': 'User ID mavjud emas'}), 400
+        return jsonify({'success': False, 'error': 'User ID mavjud emas'}), 400
 
-    database.update_score(user_id, reward - 200) # -200 cost + reward
-    return jsonify({'success': True})
+    # Narxi 200 coin çıxılıb, yutuq qo'shiladi (reward - 200)
+    net_change = reward - 200
+    res = database.update_score_and_energy(user_id, net_change)
+    return jsonify(res)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
