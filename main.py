@@ -40,8 +40,9 @@ def spin():
     data = request.json or {}
     user_id = data.get('userId')
     reward = data.get('reward', 0)
+    cost = data.get('cost', 50)
     if not user_id: return jsonify({'success': False}), 400
-    return jsonify(database.update_score_and_energy(user_id, reward - 200))
+    return jsonify(database.update_score_and_energy(user_id, reward, cost))
 
 @app.route('/api/daily', methods=['POST'])
 def daily():
@@ -50,12 +51,13 @@ def daily():
     if not user_id: return jsonify({'success': False}), 400
     return jsonify(database.claim_daily(user_id))
 
-@app.route('/api/ad', methods=['POST'])
-def ad():
+@app.route('/api/ad-reward', methods=['POST'])
+def ad_reward():
     data = request.json or {}
     user_id = data.get('userId')
+    amount = data.get('amount', 300)
     if not user_id: return jsonify({'success': False}), 400
-    return jsonify(database.watch_ad(user_id))
+    return jsonify(database.add_ad_reward(user_id, amount))
 
 @app.route('/api/vip', methods=['POST'])
 def vip():
@@ -63,6 +65,13 @@ def vip():
     user_id = data.get('userId')
     if not user_id: return jsonify({'success': False}), 400
     return jsonify(database.buy_vip(user_id))
+
+@app.route('/api/exchange-stars', methods=['POST'])
+def exchange_stars():
+    data = request.json or {}
+    user_id = data.get('userId')
+    if not user_id: return jsonify({'success': False}), 400
+    return jsonify(database.exchange_to_stars(user_id))
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
