@@ -12,8 +12,7 @@ def sync():
     username = data.get('username', "O'yinchi")
     ref_by = data.get('refBy')
 
-    if not user_id:
-        return jsonify({'success': False, 'error': 'User ID mavjud emas'}), 400
+    if not user_id: return jsonify({'success': False}), 400
 
     user = database.get_or_create_user(user_id, username, ref_by)
     return jsonify({
@@ -24,7 +23,8 @@ def sync():
             'score': user['score'],
             'energy': user['energy'],
             'maxEnergy': user['max_energy'],
-            'tapPower': user['tap_power']
+            'tapPower': user['tap_power'],
+            'isVip': user.get('is_vip', False)
         }
     })
 
@@ -32,25 +32,37 @@ def sync():
 def tap():
     data = request.json or {}
     user_id = data.get('userId')
-    if not user_id:
-        return jsonify({'success': False, 'error': 'User ID mavjud emas'}), 400
-
-    result = database.process_tap(user_id)
-    return jsonify(result)
+    if not user_id: return jsonify({'success': False}), 400
+    return jsonify(database.process_tap(user_id))
 
 @app.route('/api/spin', methods=['POST'])
 def spin():
     data = request.json or {}
     user_id = data.get('userId')
     reward = data.get('reward', 0)
-    
-    if not user_id:
-        return jsonify({'success': False, 'error': 'User ID mavjud emas'}), 400
+    if not user_id: return jsonify({'success': False}), 400
+    return jsonify(database.update_score_and_energy(user_id, reward - 200))
 
-    # Narxi 200 coin çıxılıb, yutuq qo'shiladi (reward - 200)
-    net_change = reward - 200
-    res = database.update_score_and_energy(user_id, net_change)
-    return jsonify(res)
+@app.route('/api/daily', methods=['POST'])
+def daily():
+    data = request.json or {}
+    user_id = data.get('userId')
+    if not user_id: return jsonify({'success': False}), 400
+    return jsonify(database.claim_daily(user_id))
+
+@app.route('/api/ad', methods=['POST'])
+def ad():
+    data = request.json or {}
+    user_id = data.get('userId')
+    if not user_id: return jsonify({'success': False}), 400
+    return jsonify(database.watch_ad(user_id))
+
+@app.route('/api/vip', methods=['POST'])
+def vip():
+    data = request.json or {}
+    user_id = data.get('userId')
+    if not user_id: return jsonify({'success': False}), 400
+    return jsonify(database.buy_vip(user_id))
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
