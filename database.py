@@ -115,21 +115,49 @@ def add_ad_reward(user_id, amount=300):
         return {"success": True, "score": data[str_user_id]['score'], "message": f"Adsgram reklamasi ko'rildi: +{amount} Coin!"}
     return {"success": False, "message": "Foydalanuvchi topilmadi"}
 
-def buy_vip(user_id):
+def buy_boost(user_id, boost_type):
     data = load_data()
     str_user_id = str(user_id)
-    if str_user_id in data:
-        user = data[str_user_id]
-        if user['score'] >= 10000:
-            user['score'] -= 10000
-            user['is_vip'] = True
-            user['tap_power'] = 5
-            user['max_energy'] = 300
-            user['energy'] = 300
+    if str_user_id not in data:
+        return {"success": False, "message": "Foydalanuvchi topilmadi"}
+    
+    user = data[str_user_id]
+    
+    if boost_type == "energy_500":
+        cost = 50
+        if user['score'] >= cost:
+            user['score'] -= cost
+            user['max_energy'] += 500
+            user['energy'] = user['max_energy']
             save_data(data)
-            return {"success": True, "score": user['score'], "energy": user['energy'], "maxEnergy": user['max_energy'], "tapPower": user['tap_power'], "message": "Tabriklaymiz! VIP Status muvaffaqiyatli faollashdi!"}
-        return {"success": False, "message": f"VIP sotib olish uchun 10,000 Coin kerak! Sizda: {user['score']} Coin"}
-    return {"success": False, "message": "Foydalanuvchi topilmadi"}
+            return {"success": True, "score": user['score'], "energy": user['energy'], "maxEnergy": user['max_energy'], "message": "Maksimal energiya +500 ga oshdi va FULL qilindi!"}
+        return {"success": False, "message": f"Tangalar yetarli emas! Kerak: {cost} Coin"}
+
+    elif boost_type == "tap_power":
+        cost = user['tap_power'] * 200
+        if user['score'] >= cost:
+            user['score'] -= cost
+            user['tap_power'] += 1
+            save_data(data)
+            return {"success": True, "score": user['score'], "tapPower": user['tap_power'], "message": f"Tap kuchi oshdi! Hozir: +{user['tap_power']} Coin/bosish"}
+        return {"success": False, "message": f"Tangalar yetarli emas! Kerak: {cost} Coin"}
+
+    elif boost_type == "vip":
+        cost = 10000
+        if user.get('is_vip'):
+            return {"success": False, "message": "Sizda allaqachon VIP status mavjud!"}
+        
+        if user['score'] >= cost:
+            user['score'] -= cost
+            user['is_vip'] = True
+            user['tap_power'] = max(user['tap_power'], 5)
+            user['max_energy'] = max(user['max_energy'], 1000)
+            user['energy'] = user['max_energy']
+            save_data(data)
+            return {"success": True, "score": user['score'], "energy": user['energy'], "maxEnergy": user['max_energy'], "tapPower": user['tap_power'], "isVip": True, "message": "Tabriklaymiz! VIP Status muvaffaqiyatli sotib olindi!"}
+        return {"success": False, "message": f"Tangalar yetarli emas! VIP uchun {cost} Coin kerak (Sizda: {user['score']})"}
+
+    return {"success": False, "message": "Noma'lum xizmat"}
 
 def exchange_to_stars(user_id):
     data = load_data()
