@@ -3,155 +3,234 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Crypto Empire Pro - AI Fitness & Tap</title>
+    <title>Telegram Mini App Pro</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
-    
     <style>
         :root {
-            --bg: #07090e; --card-bg: rgba(21, 29, 42, 0.7);
-            --card-border: rgba(255, 255, 255, 0.12); --accent: #ffb703;
-            --accent-glow: rgba(255, 183, 3, 0.4); --purple: #8b5cf6;
-            --green: #10b981; --text: #ffffff;
+            --bg: #0b0f19;
+            --card: rgba(23, 32, 51, 0.9);
+            --border: rgba(255, 255, 255, 0.1);
+            --accent: #00f2fe;
+            --purple: #7928ca;
+            --gold: #ff0080;
+            --yellow: #f59e0b;
+            --text: #ffffff;
+            --text-sub: #94a3b8;
         }
-        * { box-sizing: border-box; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background-color: var(--bg); background-image: radial-gradient(circle at 50% 10%, #1e1b4b 0%, var(--bg) 70%);
-            color: var(--text); margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh;
-            user-select: none; overflow: hidden; position: relative;
+            background: var(--bg);
+            background-image: radial-gradient(circle at 50% 0%, rgba(0, 242, 254, 0.15), transparent 70%);
+            color: var(--text); display: flex; flex-direction: column; height: 100vh; overflow: hidden; user-select: none;
         }
-        .header { text-align: center; padding: 15px; background: var(--card-bg); backdrop-filter: blur(20px); border-bottom: 1px solid var(--card-border); }
-        .balance-box { font-size: 38px; font-weight: 900; color: var(--accent); text-shadow: 0 0 25px var(--accent-glow); }
-        .nav-tabs { display: flex; justify-content: space-around; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(20px); padding: 8px 5px; border-bottom: 1px solid var(--card-border); }
-        .tab-btn { background: none; border: none; color: #94a3b8; font-size: 11px; font-weight: 700; cursor: pointer; padding: 8px 10px; border-radius: 12px; }
-        .tab-btn.active { color: #fff; background: linear-gradient(135deg, rgba(255,183,3,0.25), rgba(139,92,246,0.25)); border: 1px solid rgba(255,255,255,0.2); }
-        .tab-content { display: none; flex-direction: column; align-items: center; justify-content: center; flex-grow: 1; padding: 15px; overflow-y: auto; }
-        .tab-content.active { display: flex; }
-        .coin-container { perspective: 1000px; display: flex; justify-content: center; align-items: center; }
-        .coin { width: 180px; height: 180px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #ffe169 0%, #ffb703 50%, #d97706 100%); display: flex; align-items: center; justify-content: center; font-size: 75px; box-shadow: 0 20px 40px rgba(0,0,0,0.7), 0 0 60px var(--accent-glow); cursor: pointer; animation: coinFloat 3s ease-in-out infinite; }
-        .coin:active { transform: scale(0.88); }
-        @keyframes coinFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-        .floating-num { position: absolute; color: #fff; font-weight: 900; font-size: 28px; pointer-events: none; z-index: 99; animation: floatUp 0.8s forwards ease-out; }
-        @keyframes floatUp { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-80px) scale(1.4); } }
-        .glass-card { width: 100%; max-width: 330px; background: var(--card-bg); backdrop-filter: blur(20px); padding: 14px; border-radius: 16px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--card-border); }
-        .action-btn { background: linear-gradient(135deg, #ffb703, #fb8500); border: none; padding: 8px 14px; border-radius: 10px; font-weight: 900; color: #000; cursor: pointer; }
-        .camera-wrapper { position: relative; width: 100%; max-width: 320px; height: 380px; border-radius: 20px; overflow: hidden; border: 2px solid var(--purple); background: #000; display: flex; align-items: center; justify-content: center; }
-        #webcam { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
-        .fitness-overlay { position: absolute; bottom: 15px; left: 15px; right: 15px; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(10px); padding: 10px; border-radius: 12px; text-align: center; }
-        .footer { padding: 14px 20px; background: var(--card-bg); border-top: 1px solid var(--card-border); }
-        .progress-bar { width: 100%; background: rgba(255,255,255,0.05); height: 8px; border-radius: 8px; overflow: hidden; }
-        .progress-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #ffb703, #10b981); }
+        .header { padding: 15px; background: var(--card); border-bottom: 1px solid var(--border); text-align: center; }
+        .user-info { font-size: 11px; color: var(--text-sub); margin-bottom: 4px; }
+        .balance { font-size: 28px; font-weight: 900; color: var(--accent); display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .league { display: inline-block; font-size: 10px; font-weight: 800; background: linear-gradient(135deg, var(--gold), var(--purple)); padding: 3px 10px; border-radius: 12px; margin-top: 4px; }
+
+        .tabs { display: flex; background: rgba(11, 15, 25, 0.95); border-bottom: 1px solid var(--border); }
+        .tab-btn { flex: 1; padding: 12px 6px; background: none; border: none; color: var(--text-sub); font-size: 10px; font-weight: 800; cursor: pointer; }
+        .tab-btn.active { color: #fff; border-bottom: 2px solid var(--accent); }
+
+        .content { flex: 1; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 15px; overflow-y: auto; }
+        .content.active { display: flex; }
+
+        .coin-box { position: relative; width: 170px; height: 170px; display: flex; align-items: center; justify-content: center; margin: 20px 0; }
+        .coin { width: 150px; height: 150px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #00f2fe, #4facfe, #7928ca); box-shadow: 0 0 35px rgba(0, 242, 254, 0.4); display: flex; align-items: center; justify-content: center; font-size: 65px; cursor: pointer; }
+        .coin:active { transform: scale(0.92); }
+
+        .card { width: 100%; max-width: 340px; background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 15px; text-align: center; margin-bottom: 10px; }
+        .btn { width: 100%; padding: 12px; background: linear-gradient(135deg, var(--accent), #4facfe); border: none; border-radius: 10px; color: #000; font-weight: 900; cursor: pointer; font-size: 13px; margin-top: 8px; }
+        .btn-purple { background: linear-gradient(135deg, var(--purple), var(--gold)); color: #fff; }
+        .input { width: 100%; padding: 10px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 8px; color: #fff; text-align: center; margin: 8px 0; outline: none; }
+
+        .footer { padding: 12px 20px; background: var(--card); border-top: 1px solid var(--border); }
+        .energy-bar { width: 100%; height: 8px; background: rgba(255,255,255,0.05); border-radius: 10px; overflow: hidden; margin-top: 4px; }
+        .energy-fill { width: 100%; height: 100%; background: linear-gradient(90deg, var(--accent), var(--purple)); transition: width 0.2s; }
     </style>
 </head>
 <body>
-    <div class="header">
-        <div class="balance-box">🪙 <span id="score">0</span></div>
-    </div>
-    <div class="nav-tabs">
-        <button class="tab-btn active" onclick="switchTab(event, 'tap')">⚡ Tap</button>
-        <button class="tab-btn" onclick="switchTab(event, 'fitness')">🤖 AI Fitness</button>
-        <button class="tab-btn" onclick="switchTab(event, 'stars')">⭐ Stars</button>
-    </div>
-    <div id="tap" class="tab-content active">
-        <div class="coin-container"><div class="coin" id="coinBtn">🪙</div></div>
-    </div>
-    <div id="fitness" class="tab-content">
-        <h3 style="margin-top: 0; color: var(--purple);">💪 Otjimaniya & AI</h3>
-        <p style="color: #94a3b8; font-size: 11px; text-align: center;">Kameraga qarab otjimaniya qiling, har biri <b>+50 🪙</b>!</p>
-        <div class="camera-wrapper">
-            <video id="webcam" autoplay playsinline></video>
-            <div class="fitness-overlay">
-                <div style="font-size: 13px; color: #94a3b8;">Sanoq: <b id="pushupCount" style="color: var(--accent); font-size: 18px;">0</b></div>
-                <div id="aiStatus" style="font-size: 11px; color: var(--green);">Kamera ishga tushmoqda...</div>
-            </div>
-        </div>
-    </div>
-    <div id="stars" class="tab-content">
-        <h3>⭐ Telegram Stars</h3>
-        <div class="glass-card">
-            <div><div><b>⭐ 1 Telegram Star</b></div><small style="color: #94a3b8;">Narxi: 5,000 🪙</small></div>
-            <button class="action-btn" onclick="withdrawStars(1, 5000)">Olish</button>
-        </div>
-    </div>
-    <div class="footer">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 12px; font-weight: 700;">
-            <span>⚡ Energiya</span><span><span id="energy">500</span> / <span id="maxEnergy">500</span></span>
-        </div>
-        <div class="progress-bar"><div class="progress-fill" id="energyFill"></div></div>
-    </div>
-    <script>
-        let tg = window.Telegram?.WebApp;
-        if(tg) { tg.expand(); tg.ready(); }
-        let userId = tg?.initDataUnsafe?.user?.id?.toString() || "demo_user_123";
-        let score = 0, energy = 500, maxEnergy = 500, pushups = 0, exerciseState = "up";
 
-        async function loadUserData() {
+    <div class="header">
+        <div class="user-info">Foydalanuvchi: <b id="uName" style="color:#fff;">O'yinchi</b></div>
+        <div class="balance">🪙 <span id="score">0</span></div>
+        <div class="league" id="leagueBadge">Bronze League</div>
+    </div>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="setTab('tap', event)">⚡ TAP</button>
+        <button class="tab-btn" onclick="setTab('spin', event)">🎰 G'ILDIRAK</button>
+        <button class="tab-btn" onclick="setTab('quiz', event)">🧠 TOPISHMOQ</button>
+        <button class="tab-btn" onclick="setTab('ref', event)">👥 DO'STLAR</button>
+    </div>
+
+    <!-- TAP -->
+    <div id="tap" class="content active">
+        <div class="coin-box">
+            <div class="coin" id="tapBtn">🪙</div>
+        </div>
+        <div style="font-size: 12px; color: var(--text-sub);">Har bosish: <b style="color:var(--accent);">+<span id="powerText">1</span> Coin</b></div>
+    </div>
+
+    <!-- SPIN -->
+    <div id="spin" class="content">
+        <div class="card">
+            <h3 style="color:var(--yellow); font-size: 15px; margin-bottom: 8px;">🎰 Omadli G'ildirak</h3>
+            <div style="position: relative; width: 180px; height: 180px; margin: 10px auto;">
+                <div id="wheel" style="position: relative; width: 100%; height: 100%; border-radius: 50%; border: 5px solid var(--accent); background: conic-gradient(#ff0080 0deg 60deg, #7928ca 60deg 120deg, #00f2fe 120deg 180deg, #f59e0b 180deg 240deg, #10b981 240deg 300deg, #ef4444 300deg 360deg); transition: transform 3s cubic-bezier(0.15, 0.9, 0.15, 1); overflow: hidden;">
+                    <span style="position: absolute; top: 15px; left: 50%; transform: translateX(-50%); font-size: 11px; font-weight: 900; color: #fff;">1000</span>
+                    <span style="position: absolute; top: 45px; right: 20px; font-size: 11px; font-weight: 900; color: #fff;">500</span>
+                    <span style="position: absolute; bottom: 45px; right: 20px; font-size: 11px; font-weight: 900; color: #fff;">300</span>
+                    <span style="position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); font-size: 11px; font-weight: 900; color: #fff;">150</span>
+                    <span style="position: absolute; bottom: 45px; left: 20px; font-size: 11px; font-weight: 900; color: #fff;">50</span>
+                    <span style="position: absolute; top: 45px; left: 20px; font-size: 11px; font-weight: 900; color: #fff;">0</span>
+                </div>
+                <div style="position: absolute; top: -8px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-top: 15px solid #fff; z-index: 5;"></div>
+            </div>
+            <p style="font-size: 11px; color: var(--text-sub);">Aylantirish: <b>200 Coin</b></p>
+            <div id="spinRes" style="font-size: 15px; font-weight: 900; margin: 8px 0; color: var(--accent);">🎁 Omadni sinab ko'ring!</div>
+            <button class="btn btn-purple" onclick="spinGame()">Aylantirish</button>
+        </div>
+    </div>
+
+    <!-- QUIZ -->
+    <div id="quiz" class="content">
+        <div class="card">
+            <h4 style="font-size: 11px; color: var(--accent); margin-bottom: 6px;">TOPISHMOQ N°<span id="qNum">1</span></h4>
+            <p id="qText" style="font-size: 13px; font-weight: 700; margin-bottom: 8px;">Yuklanmoqda...</p>
+            <input type="text" id="ansInput" class="input" placeholder="Javobingiz...">
+            <button class="btn" onclick="checkAnswer()">Tekshirish</button>
+        </div>
+    </div>
+
+    <!-- REFERRAL -->
+    <div id="ref" class="content">
+        <div class="card">
+            <h3 style="font-size: 14px; margin-bottom: 6px;">👥 Do'stlarni taklif qiling</h3>
+            <p style="font-size: 11px; color: var(--text-sub); margin-bottom: 10px;">Har bir do'st uchun: <b style="color:var(--accent);">+1,000 Coin</b></p>
+            <input type="text" id="refLink" class="input" readonly value="https://t.me/BotUsername?start=">
+            <button class="btn btn-purple" onclick="copyRef()">Nusxalash</button>
+        </div>
+    </div>
+
+    <div class="footer">
+        <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:700;">
+            <span>⚡ Energiya</span>
+            <span><span id="energy">100</span> / 100</span>
+        </div>
+        <div class="energy-bar"><div class="energy-fill" id="energyFill"></div></div>
+    </div>
+
+    <script>
+        const API_URL = "http://localhost:5000/api"; // Python backend manzili
+        let tg = window.Telegram?.WebApp;
+        if(tg) tg.expand();
+
+        let AppState = {
+            userId: tg?.initDataUnsafe?.user?.id || 123456,
+            username: tg?.initDataUnsafe?.user?.first_name || "O'yinchi",
+            score: 0, energy: 100, tapPower: 1, quizIndex: 0
+        };
+
+        const quizData = [
+            { q: "Suvga tushsa ham ho'l bo'lmaydigan narsa?", a: "soya" },
+            { q: "Narsa qanchalik ko'p olinsa, shunchalik kattalashadi?", a: "o'ra" }
+        ];
+
+        document.getElementById('uName').innerText = AppState.username;
+        document.getElementById('refLink').value = "https://t.me/BotUsername?start=" + AppState.userId;
+
+        // SERVER BILAN SINXRONIZATSIYA (FETCH)
+        async function syncData() {
             try {
-                let res = await fetch('/api/get_user', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ tg_id: userId }) });
+                let res = await fetch(`${API_URL}/sync`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ userId: AppState.userId, username: AppState.username })
+                });
                 let data = await res.json();
-                score = data.score; energy = data.energy; pushups = data.pushups;
-                document.getElementById('pushupCount').innerText = pushups;
-                updateUI();
-            } catch (e) {}
+                if(data.success) {
+                    AppState.score = data.user.score;
+                    AppState.energy = data.user.energy;
+                    AppState.tapPower = data.user.tapPower;
+                    updateUI();
+                }
+            } catch(e) { updateUI(); }
         }
-        async function saveUserData() {
-            try {
-                await fetch('/api/save_user', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ tg_id: userId, score: score, energy: energy, pushups: pushups }) });
-            } catch (e) {}
-        }
+
         function updateUI() {
-            document.getElementById('score').innerText = score;
-            document.getElementById('energy').innerText = energy;
-            document.getElementById('maxEnergy').innerText = maxEnergy;
-            document.getElementById('energyFill').style.width = Math.max(0, Math.min(100, (energy / maxEnergy * 100))) + '%';
+            document.getElementById('score').innerText = AppState.score.toLocaleString();
+            document.getElementById('energy').innerText = AppState.energy;
+            document.getElementById('powerText').innerText = AppState.tapPower;
+            document.getElementById('energyFill').style.width = (AppState.energy) + '%';
         }
-        document.getElementById('coinBtn').addEventListener('pointerdown', (e) => {
-            if (energy >= 1) {
-                score += 1; energy -= 1; updateUI(); saveUserData();
-                let f = document.createElement('div'); f.className = 'floating-num'; f.innerText = '+1';
-                f.style.left = (e.clientX - 15) + 'px'; f.style.top = (e.clientY - 30) + 'px';
-                document.body.appendChild(f); setTimeout(() => f.remove(), 800);
+
+        // TAP
+        document.getElementById('tapBtn').addEventListener('click', async () => {
+            if(AppState.energy >= 1) {
+                AppState.score += AppState.tapPower;
+                AppState.energy -= 1;
+                updateUI();
+                try {
+                    await fetch(`${API_URL}/tap`, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ userId: AppState.userId })
+                    });
+                } catch(e){}
             }
         });
-        const videoElement = document.getElementById('webcam');
-        let poseInstance = null;
-        function onResults(results) {
-            if (!results.poseLandmarks) return;
-            let sh = results.poseLandmarks[11], hip = results.poseLandmarks[23];
-            if (sh && hip) {
-                let h = Math.abs(sh.y - hip.y);
-                if (h < 0.35 && exerciseState === "up") exerciseState = "down";
-                else if (h >= 0.35 && exerciseState === "down") {
-                    exerciseState = "up"; pushups++; score += 50; updateUI(); saveUserData();
-                    document.getElementById('pushupCount').innerText = pushups;
-                }
-            }
+
+        // SPIN LOGIC
+        let currentRotation = 0;
+        function spinGame() {
+            if(AppState.score < 200) return alert("Kamida 200 Coin kerak!");
+            AppState.score -= 200; updateUI();
+
+            let prizes = [0, 50, 150, 300, 500, 1000];
+            let randomIndex = Math.floor(Math.random() * prizes.length);
+            let win = prizes[randomIndex];
+
+            let degPerSlice = 360 / prizes.length;
+            let targetDegree = (prizes.length - randomIndex) * degPerSlice - (degPerSlice / 2);
+            currentRotation += 1800 + targetDegree;
+
+            document.getElementById('wheel').style.transform = `rotate(${currentRotation}deg)`;
+
+            setTimeout(() => {
+                AppState.score += win; updateUI();
+                document.getElementById('spinRes').innerText = win > 0 ? `🎉 Yutug'ingiz: +${win} Coin!` : "😢 0 Coin tushdi";
+            }, 3000);
         }
-        async function initCamera() {
-            try {
-                const pose = new Pose({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}` });
-                pose.setOptions({ modelComplexity: 1, smoothLandmarks: true, minDetectionConfidence: 0.5 });
-                pose.onResults(onResults);
-                const camera = new Camera(videoElement, { onFrame: async () => { await pose.send({image: videoElement}); }, width: 320, height: 380 });
-                camera.start();
-            } catch (err) { document.getElementById('aiStatus').innerText = "Kamera ishlamadi!"; }
+
+        function loadQuiz() {
+            let item = quizData[AppState.quizIndex % quizData.length];
+            document.getElementById('qNum').innerText = (AppState.quizIndex + 1);
+            document.getElementById('qText').innerText = item.q;
         }
-        async function withdrawStars(stars, cost) {
-            if (score < cost) { alert("Coin yetarli emas!"); return; }
-            let res = await fetch('/api/request_stars', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ tg_id: userId, stars, cost }) });
-            let data = await res.json();
-            if(res.ok) { score = data.new_score; updateUI(); alert("✅ Ariza qabul qilindi!"); }
+
+        function checkAnswer() {
+            let ans = document.getElementById('ansInput').value.trim().toLowerCase();
+            let item = quizData[AppState.quizIndex % quizData.length];
+            if(ans === item.a) {
+                AppState.score += 150; AppState.quizIndex++; updateUI(); loadQuiz(); alert("To'g'ri! +150 Coin");
+            } else alert("Noto'g'ri!");
         }
-        switchTab = function(e, name) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-            document.getElementById(name).classList.add('active'); e.target.classList.add('active');
-            if(name === 'fitness' && !poseInstance) { initCamera(); poseInstance = true; }
+
+        function copyRef() {
+            navigator.clipboard.writeText(document.getElementById('refLink').value);
+            alert("Nusxalandi!");
         }
-        setInterval(() => { if (energy < maxEnergy) { energy = Math.min(maxEnergy, energy + 1); updateUI(); saveUserData(); } }, 3000);
-        loadUserData();
+
+        function setTab(name, e) {
+            document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(name).classList.add('active');
+            e.currentTarget.classList.add('active');
+            if(name === 'quiz') loadQuiz();
+        }
+
+        syncData();
     </script>
 </body>
 </html>
