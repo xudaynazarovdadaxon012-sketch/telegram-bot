@@ -40,7 +40,7 @@ def spin():
     data = request.json or {}
     user_id = data.get('userId')
     reward = data.get('reward', 0)
-    cost = data.get('cost', 50)
+    cost = data.get('cost', 100)
     if not user_id: return jsonify({'success': False}), 400
     return jsonify(database.update_score_and_energy(user_id, reward, cost))
 
@@ -59,12 +59,13 @@ def ad_reward():
     if not user_id: return jsonify({'success': False}), 400
     return jsonify(database.add_ad_reward(user_id, amount))
 
-@app.route('/api/vip', methods=['POST'])
-def vip():
+@app.route('/api/buy-boost', methods=['POST'])
+def buy_boost():
     data = request.json or {}
     user_id = data.get('userId')
-    if not user_id: return jsonify({'success': False}), 400
-    return jsonify(database.buy_vip(user_id))
+    boost_type = data.get('type')
+    if not user_id or not boost_type: return jsonify({'success': False}), 400
+    return jsonify(database.buy_boost(user_id, boost_type))
 
 @app.route('/api/exchange-stars', methods=['POST'])
 def exchange_stars():
