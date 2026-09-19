@@ -24,7 +24,6 @@ def init_db():
         ''')
         conn.commit()
 
-# Server ishga tushganda jadvalni yaratish
 init_db()
 
 def get_or_create_user(user_id, username="O'yinchi", ref_by=None):
@@ -35,13 +34,11 @@ def get_or_create_user(user_id, username="O'yinchi", ref_by=None):
         user = cursor.fetchone()
 
         if not user:
-            # Yangi foydalanuvchi yaratish
             cursor.execute('''
                 INSERT INTO users (user_id, username, last_energy_update)
                 VALUES (?, ?, ?)
             ''', (user_id, username, current_time))
             
-            # Referal bonus (agar do'sti orqali kirgan bo'lsa)
             if ref_by and str(ref_by) != str(user_id):
                 cursor.execute('UPDATE users SET score = score + 1000 WHERE user_id = ?', (ref_by,))
                 
@@ -49,10 +46,9 @@ def get_or_create_user(user_id, username="O'yinchi", ref_by=None):
             cursor.execute('SELECT * FROM users WHERE user_id = ?', (user_id,))
             user = cursor.fetchone()
 
-        # Energiyani vaqt bo'yicha avto-tiklash (Har 3 soniyada +1 energiya)
         user = dict(user)
         time_passed = current_time - user['last_energy_update']
-        energy_to_add = time_passed // 3  # 3 soniyada 1 ta energiya tiklanadi
+        energy_to_add = time_passed // 3
 
         if energy_to_add > 0 and user['energy'] < user['max_energy']:
             new_energy = min(user['max_energy'], user['energy'] + energy_to_add)
@@ -68,7 +64,6 @@ def process_tap(user_id):
     current_time = int(time.time())
     with get_connection() as conn:
         cursor = conn.cursor()
-        # Avval joriy foydalanuvchi holatini tekshiramiz
         user = get_or_create_user(user_id)
 
         if user['energy'] >= user['tap_power']:
@@ -84,3 +79,9 @@ def process_tap(user_id):
             return {"success": True, "score": new_score, "energy": new_energy}
         else:
             return {"success": False, "error": "Energiya yetarli emas"}
+
+def update_score(user_id, score_change):
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute('UPDATE users SET score = score + ? WHERE user_id = ?', (score_change, user_id))
+        conn.commit()
