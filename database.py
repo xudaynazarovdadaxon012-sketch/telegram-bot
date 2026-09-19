@@ -42,8 +42,6 @@ def get_or_create_user(user_id, username="O'yinchi", ref_by=None):
         save_data(data)
 
     user = data[str_user_id]
-
-    # VIP foydalanuvchilar uchun energiya tezroq to'ladi (1 soniyada +1)
     regen_rate = 1 if user.get('is_vip') else 3
     time_passed = current_time - user['last_energy_update']
     energy_to_add = time_passed // regen_rate
@@ -60,8 +58,10 @@ def process_tap(user_id):
     str_user_id = str(user_id)
     current_time = int(time.time())
 
-    user = get_or_create_user(user_id)
-    data = load_data()
+    if str_user_id not in data:
+        get_or_create_user(user_id)
+        data = load_data()
+
     user = data[str_user_id]
 
     if user['energy'] >= user['tap_power']:
@@ -73,16 +73,21 @@ def process_tap(user_id):
     else:
         return {"success": False, "error": "Energiya yetarli emas"}
 
-def update_score_and_energy(user_id, score_change):
+def update_score_and_energy(user_id, score_change, cost=0):
     data = load_data()
     str_user_id = str(user_id)
     current_time = int(time.time())
 
     if str_user_id in data:
-        data[str_user_id]['score'] = max(0, data[str_user_id]['score'] + score_change)
-        data[str_user_id]['last_energy_update'] = current_time
+        user = data[str_user_id]
+        total_change = score_change - cost
+        if user['score'] + total_change < 0:
+            return {"success": False, "error": "Tangalar yetarli emas"}
+        
+        user['score'] += total_change
+        user['last_energy_update'] = current_time
         save_data(data)
-        return {"success": True, "score": data[str_user_id]['score']}
+        return {"success": True, "score": user['score']}
     return {"success": False}
 
 def claim_daily(user_id):
@@ -101,21 +106,14 @@ def claim_daily(user_id):
         return {"success": False, "message": "Kunlik bonus allaqachon olingan (24 soat kuting)!"}
     return {"success": False}
 
-def watch_ad(user_id):
+def add_ad_reward(user_id, amount=300):
     data = load_data()
     str_user_id = str(user_id)
-    current_time = time.time()
-
     if str_user_id in data:
-        user = data[str_user_id]
-        # Har 1 minutda reklama ko'rib tanga olish imkoniyati (simulyatsiya)
-        if current_time - user.get('last_ad', 0) >= 60:
-            user['score'] += 300
-            user['last_ad'] = current_time
-            save_data(data)
-            return {"success": True, "score": user['score'], "message": "Reklama ko'rildi: +300 Coin!"}
-        return {"success": False, "message": "Keyingi reklamagacha 1 daqiqa kuting!"}
-    return {"success": False}
+        data[str_user_id]['score'] += amount
+        save_data(data)
+        return {"success": True, "score": data[str_user_id]['score'], "message": f"Adsgram reklamasi ko'rildi: +{amount} Coin!"}
+    return {"success": False, "message": "Foydalanuvchi topilmadi"}
 
 def buy_vip(user_id):
     data = load_data()
@@ -125,9 +123,23 @@ def buy_vip(user_id):
         if user['score'] >= 10000:
             user['score'] -= 10000
             user['is_vip'] = True
-            user['tap_power'] = 5 # VIP larda har bosish 5 ta tanga beradi
+            user['tap_power'] = 5
             user['max_energy'] = 300
+            user['energy'] = 300
             save_data(data)
-            return {"success": True, "score": user['score'], "message": "Tabriklaymiz! VIP Status faollashdi!"}
-        return {"success": False, "message": "VIP sotib olish uchun 10,000 Coin kerak!"}
-    return {"success": False}
+            return {"success": True, "score": user['score'], "energy": user['energy'], "maxEnergy": user['max_energy'], "tapPower": user['tap_power'], "message": "Tabriklaymiz! VIP Status muvaffaqiyatli faollashdi!"}
+        return {"success": False, "message": f"VIP sotib olish uchun 10,000 Coin kerak! Sizda: {user['score']} Coin"}
+    return {"success": False, "message": "Foydalanuvchi topilmadi"}
+
+def exchange_to_stars(user_id):
+    data = load_data()
+    str_user_id = str(user_id)
+    if str_user_id in data:
+        user = data[str_user_id]
+        required_coins = 5000
+        if user['score'] >= required_coins:
+            user['score'] -= required_coins
+            save_data(data)
+            return {"success": True, "score": user['score'], "message": "5000 Coin muvaffaqiyatli 1 Telegram Star ga almashtirildi!"}
+        return {"success": False, "message": f"Yetarli coin yo'q! 1 Star uchun 5000 Coin kerak (Sizda: {user['score']})"}
+    return {"success": False, "message": "Foydalanuvchi topilmadi"}
