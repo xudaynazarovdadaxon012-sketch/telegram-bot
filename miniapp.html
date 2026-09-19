@@ -109,17 +109,17 @@
         }
 
         /* SPIN WHEEL */
-        .wheel-container { position: relative; width: 200px; height: 200px; margin: 12px auto; }
+        .wheel-container { position: relative; width: 220px; height: 220px; margin: 15px auto; }
         .wheel {
-            width: 100%; height: 100%; border-radius: 50%; border: 4px solid var(--accent);
-            background: conic-gradient(#ff0080 0deg 60deg, #7928ca 60deg 120deg, #00f2fe 120deg 180deg, #f59e0b 180deg 240deg, #10b981 240deg 300deg, #ef4444 300deg 360deg);
-            transition: transform 3.5s cubic-bezier(0.1, 0.9, 0.1, 1);
-            box-shadow: 0 0 25px rgba(0, 242, 254, 0.3);
+            width: 100%; height: 100%; border-radius: 50%; border: 5px solid var(--accent);
+            background: conic-gradient(#ff0080 0deg 60deg, #7928ca 60deg 120deg, #00f2fe 120deg 180deg, #f1c40f 180deg 240deg, #10b981 240deg 300deg, #ef4444 300deg 360deg);
+            transition: transform 4s cubic-bezier(0.15, 0.9, 0.15, 1);
+            box-shadow: 0 0 30px rgba(0, 242, 254, 0.5);
         }
         .pointer {
-            position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
-            width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent;
-            border-top: 18px solid #fff; z-index: 10; filter: drop-shadow(0 2px 4px #000);
+            position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+            width: 0; height: 0; border-left: 12px solid transparent; border-right: 12px solid transparent;
+            border-top: 22px solid #fff; z-index: 10; filter: drop-shadow(0 0 5px var(--accent));
         }
 
         .footer { padding: 15px 20px; background: var(--card); border-top: 1px solid var(--border); }
@@ -228,7 +228,7 @@
                 if(data.success) {
                     AppState.score = data.user.score;
                     AppState.energy = data.user.energy;
-                    AppState.tapPower = data.user.tap_power || 1;
+                    AppState.tapPower = data.user.tapPower || 1;
                     updateUI();
                 }
             } catch(e) { updateUI(); }
@@ -248,7 +248,6 @@
                 AppState.energy -= 1;
                 updateUI();
 
-                // +1 Animation
                 let floatText = document.createElement('div');
                 floatText.className = 'floating-text';
                 floatText.innerText = '+' + AppState.tapPower;
@@ -267,24 +266,33 @@
 
         // SPIN LOGIC
         let currentRotation = 0;
-        function spinGame() {
+        async function spinGame() {
             if(AppState.score < 200) return alert("Aylantirish uchun 200 Coin kerak!");
-            AppState.score -= 200; updateUI();
+            
+            AppState.score -= 200; 
+            updateUI();
 
-            let prizes = [0, 50, 150, 300, 500, 1000];
+            let prizes = [0, 100, 250, 500, 750, 1000];
             let randomIndex = Math.floor(Math.random() * prizes.length);
             let win = prizes[randomIndex];
 
             let degPerSlice = 360 / prizes.length;
             let targetDegree = (prizes.length - randomIndex) * degPerSlice - (degPerSlice / 2);
-            currentRotation += 1800 + targetDegree;
+            currentRotation += 2160 + targetDegree;
 
             document.getElementById('wheel').style.transform = `rotate(${currentRotation}deg)`;
 
-            setTimeout(() => {
-                AppState.score += win; updateUI();
+            setTimeout(async () => {
+                AppState.score += win; 
+                updateUI();
                 document.getElementById('spinRes').innerText = win > 0 ? `🎉 Yutuq: +${win} Coin!` : "😢 Tangalar tushmadi";
-            }, 3500);
+                
+                await fetch(`${API_URL}/spin`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ userId: AppState.userId, reward: win })
+                }).catch(()=>{});
+            }, 4000);
         }
 
         // QUIZ LOGIC
@@ -339,6 +347,14 @@
             e.currentTarget.classList.add('active');
             if(name === 'quiz') loadQuiz();
         }
+
+        // Auto energy recovery locally
+        setInterval(() => {
+            if (AppState.energy < 100) {
+                AppState.energy = Math.min(100, AppState.energy + 1);
+                updateUI();
+            }
+        }, 3000);
 
         syncData();
     </script>
