@@ -27,33 +27,45 @@ def get_or_create_user(user_id, username="O'yinchi", ref_by=None):
             "user_id": user_id,
             "username": username,
             "score": 0,
+            "total_taps": 0,
             "energy": 100,
             "max_energy": 100,
             "tap_power": 1,
             "is_vip": False,
+            "theme": "default",
+            "auto_bot": False,
+            "last_auto_bot": current_time,
             "last_energy_update": current_time,
-            "last_daily": 0,
-            "last_ad": 0
+            "last_daily_claim": 0,
+            "completed_tasks": []
         }
-        
         if ref_by and str(ref_by) != str_user_id and str(ref_by) in data:
             data[str(ref_by)]["score"] += 1000
-            
         save_data(data)
 
     user = data[str_user_id]
-    regen_rate = 1 if user.get('is_vip') else 3
+    
+    # Auto-bot (Passiv daromad)
+    if user.get("auto_bot"):
+        passed = current_time - user.get("last_auto_bot", current_time)
+        earned = min(passed, 10800) # Max 3 soat = 10800 coin
+        if earned > 0:
+            user["score"] += earned
+            user["last_auto_bot"] = current_time
+
+    # Energiya qayta tiklanishi
+    regen_rate = 1 if user.get('is_vip') else 2
     time_passed = current_time - user['last_energy_update']
     energy_to_add = time_passed // regen_rate
 
     if energy_to_add > 0 and user['energy'] < user['max_energy']:
         user['energy'] = min(user['max_energy'], user['energy'] + energy_to_add)
         user['last_energy_update'] = current_time
-        save_data(data)
 
+    save_data(data)
     return user
 
-def process_tap(user_id):
+def process_tap(user_id, tap_count=1):
     data = load_data()
     str_user_id = str(user_id)
     current_time = int(time.time())
@@ -63,75 +75,68 @@ def process_tap(user_id):
         data = load_data()
 
     user = data[str_user_id]
-
-    if user['energy'] >= user['tap_power']:
-        user['score'] += user['tap_power']
-        user['energy'] -= user['tap_power']
+    total_power = user['tap_power'] * tap_count
+    
+    if user['energy'] >= total_power:
+        user['score'] += total_power
+        user['total_taps'] = user.get('total_taps', 0) + tap_count
+        user['energy'] -= total_power
         user['last_energy_update'] = current_time
         save_data(data)
         return {"success": True, "score": user['score'], "energy": user['energy']}
-    else:
-        return {"success": False, "error": "Energiya yetarli emas"}
-
-def update_score_and_energy(user_id, score_change, cost=0):
-    data = load_data()
-    str_user_id = str(user_id)
-    current_time = int(time.time())
-
-    if str_user_id in data:
-        user = data[str_user_id]
-        total_change = score_change - cost
-        if user['score'] + total_change < 0:
-            return {"success": False, "error": "Tangalar yetarli emas"}
-        
-        user['score'] += total_change
-        user['last_energy_update'] = current_time
-        save_data(data)
-        return {"success": True, "score": user['score']}
-    return {"success": False}
+    return {"success": False, "error": "Energiya tugadi"}
 
 def claim_daily(user_id):
     data = load_data()
     str_user_id = str(user_id)
-    current_time = time.time()
+    if str_user_id not in data: return {"success": False, "message": "Topilmadi"}
 
-    if str_user_id in data:
-        user = data[str_user_id]
-        if current_time - user.get('last_daily', 0) >= 86400:
-            bonus = 1000 if user.get('is_vip') else 500
-            user['score'] += bonus
-            user['last_daily'] = current_time
-            save_data(data)
-            return {"success": True, "score": user['score'], "message": f"Kunlik bonus +{bonus} Coin berildi!"}
-        return {"success": False, "message": "Kunlik bonus allaqachon olingan (24 soat kuting)!"}
-    return {"success": False}
+    user = data[str_user_id]
+    current_time = int(time.time())
+    last_claim = user.get("last_daily_claim", 0)
 
-def add_ad_reward(user_id, amount=300):
+    if current_time - last_claim >= 86400:
+        user["score"] += 1500
+        user["last_daily_claim"] = current_time
+        save_data(data)
+        return {"success": True, "message": "🎁 Kunlik bonus: +1,500 Coin!"}
+    else:
+        hours_left = int((86400 - (current_time - last_claim)) // 3600)
+        return {"success": False, "message": f"Kuting: {hours_left} soat qoldi."}
+
+def complete_task(user_id, task_id):
     data = load_data()
     str_user_id = str(user_id)
-    if str_user_id in data:
-        data[str_user_id]['score'] += amount
-        save_data(data)
-        return {"success": True, "score": data[str_user_id]['score'], "message": f"Adsgram reklamasi ko'rildi: +{amount} Coin!"}
-    return {"success": False, "message": "Foydalanuvchi topilmadi"}
+    if str_user_id not in data: return {"success": False, "message": "Topilmadi"}
+
+    user = data[str_user_id]
+    completed = user.get("completed_tasks", [])
+
+    if task_id in completed:
+        return {"success": False, "message": "Vazifa allaqachon bajarilgan!"}
+
+    reward = 2000
+    user["score"] += reward
+    completed.append(task_id)
+    user["completed_tasks"] = completed
+    save_data(data)
+    return {"success": True, "message": f"✅ Vazifa bajarildi! +{reward} Coin"}
 
 def buy_boost(user_id, boost_type):
     data = load_data()
     str_user_id = str(user_id)
-    if str_user_id not in data:
-        return {"success": False, "message": "Foydalanuvchi topilmadi"}
+    if str_user_id not in data: return {"success": False, "message": "Topilmadi"}
     
     user = data[str_user_id]
     
     if boost_type == "energy_500":
-        cost = 50
-        if user['score'] >= cost:
-            user['score'] -= cost
+        if user['score'] >= 50:
+            user['score'] -= 50
             user['max_energy'] += 500
             user['energy'] = user['max_energy']
             save_data(data)
-            return {"success": True, "score": user['score'], "energy": user['energy'], "maxEnergy": user['max_energy'], "message": "Maksimal energiya +500 ga oshdi va FULL qilindi!"}
-        return {"success": False, "message": f"Tangalar yetarli emas! Kerak: {cost} Coin"}
+            return {"success": True, "message": "⚡ Energiya +500 ga oshdi!"}
+        return {"success": False, "message": "Tangalar yetarli emas!"}
 
     elif boost_type == "tap_power":
         cost = user['tap_power'] * 200
@@ -139,35 +144,32 @@ def buy_boost(user_id, boost_type):
             user['score'] -= cost
             user['tap_power'] += 1
             save_data(data)
-            return {"success": True, "score": user['score'], "tapPower": user['tap_power'], "message": f"Tap kuchi oshdi! Hozir: +{user['tap_power']} Coin/bosish"}
-        return {"success": False, "message": f"Tangalar yetarli emas! Kerak: {cost} Coin"}
+            return {"success": True, "message": "🚀 Tap kuchi oshdi!"}
+        return {"success": False, "message": f"Tangalar yetarli emas ({cost} 🪙)"}
 
-    elif boost_type == "vip":
-        cost = 10000
-        if user.get('is_vip'):
-            return {"success": False, "message": "Sizda allaqachon VIP status mavjud!"}
-        
-        if user['score'] >= cost:
-            user['score'] -= cost
-            user['is_vip'] = True
-            user['tap_power'] = max(user['tap_power'], 5)
-            user['max_energy'] = max(user['max_energy'], 1000)
-            user['energy'] = user['max_energy']
+    elif boost_type == "auto_bot":
+        if user.get("auto_bot"): return {"success": False, "message": "Auto-bot yoqilgan!"}
+        if user['score'] >= 3000:
+            user['score'] -= 3000
+            user['auto_bot'] = True
+            user['last_auto_bot'] = int(time.time())
             save_data(data)
-            return {"success": True, "score": user['score'], "energy": user['energy'], "maxEnergy": user['max_energy'], "tapPower": user['tap_power'], "isVip": True, "message": "Tabriklaymiz! VIP Status muvaffaqiyatli sotib olindi!"}
-        return {"success": False, "message": f"Tangalar yetarli emas! VIP uchun {cost} Coin kerak (Sizda: {user['score']})"}
+            return {"success": True, "message": "🤖 Auto-bot ishga tushdi!"}
+        return {"success": False, "message": "Auto-bot uchun 3,000 Coin kerak!"}
 
-    return {"success": False, "message": "Noma'lum xizmat"}
+    return {"success": False, "message": "Xatolik"}
 
-def exchange_to_stars(user_id):
+def set_theme(user_id, theme_name):
     data = load_data()
     str_user_id = str(user_id)
     if str_user_id in data:
-        user = data[str_user_id]
-        required_coins = 5000
-        if user['score'] >= required_coins:
-            user['score'] -= required_coins
-            save_data(data)
-            return {"success": True, "score": user['score'], "message": "5000 Coin muvaffaqiyatli 1 Telegram Star ga almashtirildi!"}
-        return {"success": False, "message": f"Yetarli coin yo'q! 1 Star uchun 5000 Coin kerak (Sizda: {user['score']})"}
-    return {"success": False, "message": "Foydalanuvchi topilmadi"}
+        data[str_user_id]["theme"] = theme_name
+        save_data(data)
+        return {"success": True}
+    return {"success": False}
+
+def get_leaderboard():
+    data = load_data()
+    users = list(data.values())
+    users.sort(key=lambda x: x.get('score', 0), reverse=True)
+    return users[:10]
