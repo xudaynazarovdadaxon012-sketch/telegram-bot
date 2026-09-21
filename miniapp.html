@@ -418,7 +418,7 @@
         <!-- Header Section -->
         <div class="header">
             <div class="top-row">
-                <div class="user-rank-badge" id="rank-badge">BRONZA KIBER</div>
+                <div class="user-rank-badge" id="rank-badge">KIBER LVL 1</div>
                 <div class="stars-badge">
                     <span>⭐</span>
                     <span id="stars-count">0 STARS</span>
@@ -597,7 +597,7 @@
         }
         animate();
 
-        /* UI Update Function */
+        /* UI Update Function with Infinite Level System */
         function updateUI() {
             document.getElementById('balance').innerText = state.coins.toLocaleString();
             document.getElementById('stars-count').innerText = `${state.stars} STARS`;
@@ -613,23 +613,18 @@
             document.getElementById('buy-energy').disabled = state.coins < state.energyCost;
             document.getElementById('buy-miner').disabled = state.coins < state.minerCost;
 
-            // Dynamic Rank & Color Theme
+            // Infinite Level Formula: Level = 1 + Math.floor(coins / 2000)
+            const currentLevel = 1 + Math.floor(state.coins / 2000);
             const rankBadge = document.getElementById('rank-badge');
-            const root = document.documentElement;
+            rankBadge.innerText = `KIBER LVL ${currentLevel}`;
 
-            if (state.coins >= 10000) {
-                rankBadge.innerText = "KIBER USTA";
-                root.style.setProperty('--active-glow', '#ffd700');
-                material.color.setHex(0xffd700);
-            } else if (state.coins >= 2500) {
-                rankBadge.innerText = "OLTIN KIBER";
-                root.style.setProperty('--active-glow', '#ff0055');
-                material.color.setHex(0xff0055);
-            } else {
-                rankBadge.innerText = "BRONZA KIBER";
-                root.style.setProperty('--active-glow', '#00f3ff');
-                material.color.setHex(0x00f3ff);
-            }
+            // Dynamic Infinite Color Shifting based on Level
+            const root = document.documentElement;
+            const hue = (currentLevel * 45) % 360; // Har bir levelda neon rangi aylanib turadi
+            const dynamicColor = `hsl(${hue}, 100%, 50%)`;
+            
+            root.style.setProperty('--active-glow', dynamicColor);
+            material.color.setHSL(hue / 360, 1.0, 0.5);
 
             // Persistence
             Object.keys(state).forEach(key => localStorage.setItem(key, state[key]));
