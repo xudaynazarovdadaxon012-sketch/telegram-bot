@@ -15,6 +15,7 @@
             --primary-neon: #00f3ff;
             --secondary-neon: #ff0055;
             --accent-gold: #ffd700;
+            --star-yellow: #ffaa00;
             --bg-dark: #050508;
             --glass-bg: rgba(15, 20, 35, 0.65);
             --glass-border: rgba(0, 243, 255, 0.25);
@@ -84,7 +85,7 @@
             height: 100%;
             display: flex;
             flex-direction: column;
-            padding: 20px 16px;
+            padding: 16px 16px;
             justify-content: space-between;
         }
 
@@ -93,32 +94,56 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
+        }
+
+        .top-row {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            align-items: center;
         }
 
         .user-rank-badge {
             background: var(--glass-bg);
             border: 1px solid var(--glass-border);
-            padding: 6px 16px;
+            padding: 4px 12px;
             border-radius: 20px;
             font-family: var(--font-title);
-            font-size: 13px;
-            letter-spacing: 1.5px;
+            font-size: 11px;
+            letter-spacing: 1px;
             color: var(--active-glow);
             text-transform: uppercase;
-            box-shadow: 0 0 15px rgba(0, 243, 255, 0.15);
+            box-shadow: 0 0 10px rgba(0, 243, 255, 0.15);
+            backdrop-filter: blur(8px);
+        }
+
+        .stars-badge {
+            background: rgba(255, 170, 0, 0.15);
+            border: 1px solid var(--star-yellow);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-family: var(--font-title);
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--star-yellow);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            box-shadow: 0 0 12px rgba(255, 170, 0, 0.25);
             backdrop-filter: blur(8px);
         }
 
         .balance-container {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
+            margin-top: 4px;
         }
 
         .balance-value {
             font-family: var(--font-title);
-            font-size: 42px;
+            font-size: 38px;
             font-weight: 900;
             color: #ffffff;
             text-shadow: 0 0 20px var(--active-glow);
@@ -129,7 +154,7 @@
         .canvas-area {
             position: relative;
             width: 100%;
-            height: 320px;
+            height: 300px;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -147,7 +172,7 @@
             position: absolute;
             font-family: var(--font-title);
             font-weight: 900;
-            font-size: 28px;
+            font-size: 26px;
             color: #ffffff;
             text-shadow: 0 0 10px var(--active-glow);
             pointer-events: none;
@@ -172,7 +197,7 @@
             top: 10px;
             right: 20px;
             font-family: var(--font-title);
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 700;
             color: var(--secondary-neon);
             text-shadow: 0 0 10px var(--secondary-neon);
@@ -184,14 +209,14 @@
         .controls-area {
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 14px;
         }
 
         .energy-wrapper {
             background: var(--glass-bg);
             border: 1px solid var(--glass-border);
             border-radius: 16px;
-            padding: 12px 16px;
+            padding: 10px 16px;
             backdrop-filter: blur(10px);
         }
 
@@ -199,16 +224,16 @@
             display: flex;
             justify-content: space-between;
             font-family: var(--font-title);
-            font-size: 14px;
-            margin-bottom: 8px;
+            font-size: 13px;
+            margin-bottom: 6px;
             color: rgba(255, 255, 255, 0.8);
         }
 
         .energy-bar-bg {
             width: 100%;
-            height: 10px;
+            height: 8px;
             background: rgba(255, 255, 255, 0.1);
-            border-radius: 5px;
+            border-radius: 4px;
             overflow: hidden;
             position: relative;
         }
@@ -217,7 +242,7 @@
             height: 100%;
             width: 100%;
             background: linear-gradient(90deg, var(--primary-neon), var(--secondary-neon));
-            border-radius: 5px;
+            border-radius: 4px;
             box-shadow: 0 0 12px var(--primary-neon);
             transition: width 0.2s ease;
         }
@@ -278,12 +303,12 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(5, 5, 8, 0.85);
+            background: rgba(5, 5, 8, 0.88);
             backdrop-filter: blur(15px);
             z-index: 50;
             display: flex;
             flex-direction: column;
-            padding: 24px 16px;
+            padding: 20px 16px;
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.3s ease;
@@ -298,12 +323,12 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
         }
 
         .modal-title {
             font-family: var(--font-title);
-            font-size: 20px;
+            font-size: 18px;
             color: var(--active-glow);
         }
 
@@ -311,7 +336,7 @@
             background: none;
             border: none;
             color: #fff;
-            font-size: 24px;
+            font-size: 22px;
             cursor: pointer;
         }
 
@@ -332,6 +357,11 @@
             align-items: center;
         }
 
+        .upgrade-card.star-card {
+            border-color: var(--star-yellow);
+            background: rgba(255, 170, 0, 0.08);
+        }
+
         .upgrade-info {
             display: flex;
             flex-direction: column;
@@ -346,12 +376,12 @@
 
         .upgrade-desc {
             font-size: 12px;
-            color: rgba(255, 255, 255, 0.6);
+            color: rgba(255, 255, 255, 0.65);
         }
 
         .upgrade-cost {
             font-family: var(--font-title);
-            font-size: 14px;
+            font-size: 13px;
             color: var(--accent-gold);
             margin-top: 4px;
         }
@@ -363,12 +393,18 @@
             color: #fff;
             font-family: var(--font-title);
             font-weight: 700;
-            padding: 8px 16px;
+            font-size: 12px;
+            padding: 8px 14px;
             cursor: pointer;
         }
 
+        .buy-btn.star-btn {
+            background: linear-gradient(135deg, var(--star-yellow), #ff5500);
+            color: #000;
+        }
+
         .buy-btn:disabled {
-            opacity: 0.4;
+            opacity: 0.35;
             cursor: not-allowed;
         }
     </style>
@@ -381,7 +417,13 @@
     <div class="app-container">
         <!-- Header Section -->
         <div class="header">
-            <div class="user-rank-badge" id="rank-badge">BRONZA KIBER</div>
+            <div class="top-row">
+                <div class="user-rank-badge" id="rank-badge">BRONZA KIBER</div>
+                <div class="stars-badge">
+                    <span>⭐</span>
+                    <span id="stars-count">0 STARS</span>
+                </div>
+            </div>
             <div class="balance-container">
                 <div class="balance-value" id="balance">0</div>
             </div>
@@ -419,13 +461,23 @@
         </div>
     </div>
 
-    <!-- Upgrades Modal -->
+    <!-- Upgrades & Stars Exchange Modal -->
     <div class="modal-overlay" id="upgrades-modal">
         <div class="modal-header">
-            <div class="modal-title">KIBER DO'KON</div>
+            <div class="modal-title">KIBER DO'KON & STARS</div>
             <button class="close-btn" onclick="closeModal('upgrades-modal')">✕</button>
         </div>
         <div class="upgrades-list">
+            <!-- Telegram Star Exchange -->
+            <div class="upgrade-card star-card">
+                <div class="upgrade-info">
+                    <div class="upgrade-title" style="color: var(--star-yellow);">⭐ 1 Telegram Star</div>
+                    <div class="upgrade-desc">5,000 Coin evaziga 1 Star oling</div>
+                    <div class="upgrade-cost" style="color: var(--star-yellow);">5,000 Coin</div>
+                </div>
+                <button class="buy-btn star-btn" id="buy-star" onclick="buyTelegramStar()">ALMASHTIRISH</button>
+            </div>
+
             <div class="upgrade-card">
                 <div class="upgrade-info">
                     <div class="upgrade-title">Multi-Tap</div>
@@ -434,14 +486,16 @@
                 </div>
                 <button class="buy-btn" id="buy-multitap" onclick="buyMultiTap()">OSHIRISH</button>
             </div>
+
             <div class="upgrade-card">
                 <div class="upgrade-info">
                     <div class="upgrade-title">Energiya Sig'imi</div>
-                    <div class="upgrade-desc">Max energiyani +500 birlikka oshiradi</div>
+                    <div class="upgrade-desc">Max energiyani +500 ga oshiradi</div>
                     <div class="upgrade-cost" id="energy-cost">200 Coin</div>
                 </div>
                 <button class="buy-btn" id="buy-energy" onclick="buyEnergyLimit()">OSHIRISH</button>
             </div>
+
             <div class="upgrade-card">
                 <div class="upgrade-info">
                     <div class="upgrade-title">Cyber Miner (Auto)</div>
@@ -453,13 +507,13 @@
         </div>
     </div>
 
-    <!-- Simple Info Modals -->
+    <!-- Modals -->
     <div class="modal-overlay" id="tasks-modal">
         <div class="modal-header">
             <div class="modal-title">VAZIFALAR</div>
             <button class="close-btn" onclick="closeModal('tasks-modal')">✕</button>
         </div>
-        <p style="color: rgba(255,255,255,0.7); text-align: center; margin-top: 40px;">Barcha topshiriqlar bajarilgan!</p>
+        <p style="color: rgba(255,255,255,0.7); text-align: center; margin-top: 40px;">Barcha kiber-topshiriqlar bajarildi!</p>
     </div>
 
     <div class="modal-overlay" id="top-modal">
@@ -471,9 +525,10 @@
     </div>
 
     <script>
-        /* State & Logic Storage */
+        /* State & Storage */
         let state = {
             coins: parseInt(localStorage.getItem('coins')) || 0,
+            stars: parseInt(localStorage.getItem('stars')) || 0,
             energy: parseInt(localStorage.getItem('energy')) || 1000,
             maxEnergy: parseInt(localStorage.getItem('maxEnergy')) || 1000,
             tapPower: parseInt(localStorage.getItem('tapPower')) || 1,
@@ -520,8 +575,7 @@
         const material = new THREE.MeshStandardMaterial({
             color: 0x00f3ff,
             metalness: 0.8,
-            roughness: 0.2,
-            wireframe: false
+            roughness: 0.2
         });
         const coin = new THREE.Mesh(geometry, material);
         coin.rotation.x = Math.PI / 3;
@@ -546,6 +600,7 @@
         /* UI Update Function */
         function updateUI() {
             document.getElementById('balance').innerText = state.coins.toLocaleString();
+            document.getElementById('stars-count').innerText = `${state.stars} STARS`;
             document.getElementById('energy-text').innerText = `${state.energy} / ${state.maxEnergy}`;
             document.getElementById('energy-fill').style.width = `${(state.energy / state.maxEnergy) * 100}%`;
 
@@ -553,6 +608,7 @@
             document.getElementById('energy-cost').innerText = `${state.energyCost} Coin`;
             document.getElementById('miner-cost').innerText = `${state.minerCost} Coin`;
 
+            document.getElementById('buy-star').disabled = state.coins < 5000;
             document.getElementById('buy-multitap').disabled = state.coins < state.multitapCost;
             document.getElementById('buy-energy').disabled = state.coins < state.energyCost;
             document.getElementById('buy-miner').disabled = state.coins < state.minerCost;
@@ -575,30 +631,27 @@
                 material.color.setHex(0x00f3ff);
             }
 
-            // Save State
+            // Persistence
             Object.keys(state).forEach(key => localStorage.setItem(key, state[key]));
         }
 
-        /* Multi-Touch Tap Logic: Exactly 1 Energy per Tap */
+        /* Tap Logic: Exactly 1 Energy per Tap */
         function handleTap(e) {
             e.preventDefault();
             const touches = e.changedTouches ? e.changedTouches : [e];
 
             for (let i = 0; i < touches.length; i++) {
-                if (state.energy < 1) break; // Strict 1 energy check
+                if (state.energy < 1) break;
 
-                state.energy -= 1; // Exactly 1 energy deducted per tap
+                state.energy -= 1; // 1 tap = 1 energy
                 state.coins += state.tapPower;
 
-                // Visual Tap Effect
                 const touch = touches[i];
                 showFloatingText(touch.clientX || touch.pageX, touch.clientY || touch.pageY, `+${state.tapPower}`);
                 
-                // 3D Coin Animation Effect
                 coin.scale.set(0.95, 0.95, 0.95);
                 setTimeout(() => coin.scale.set(1, 1, 1), 50);
 
-                // Sound & Combo
                 playSound(400 + (comboCount * 20), 0.05);
                 triggerCombo();
             }
@@ -632,7 +685,7 @@
             }, 1000);
         }
 
-        /* Floating +1 Numbers */
+        /* Floating Numbers */
         function showFloatingText(x, y, text) {
             const el = document.createElement('div');
             el.className = 'tap-pop';
@@ -643,7 +696,16 @@
             setTimeout(() => el.remove(), 800);
         }
 
-        /* Upgrades Functions */
+        /* Upgrades & Stars Purchase Functions */
+        function buyTelegramStar() {
+            if (state.coins >= 5000) {
+                state.coins -= 5000;
+                state.stars += 1;
+                playSound(800, 0.2);
+                updateUI();
+            }
+        }
+
         function buyMultiTap() {
             if (state.coins >= state.multitapCost) {
                 state.coins -= state.multitapCost;
@@ -676,7 +738,7 @@
         function openModal(id) { document.getElementById(id).classList.add('active'); }
         function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
-        /* Timers: Energy Regeneration & Auto-Miner */
+        /* Energy & Auto-Miner Timers */
         setInterval(() => {
             if (state.energy < state.maxEnergy) {
                 state.energy = Math.min(state.energy + 2, state.maxEnergy);
@@ -691,7 +753,7 @@
             }
         }, 1000);
 
-        // Initial UI Render
+        // Initial Render
         updateUI();
     </script>
 </body>
