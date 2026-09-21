@@ -2,707 +2,696 @@
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
-    <title>3D Cyber Clicker Premium</title>
-    
-    <!-- Telegram WebApp SDK -->
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- Three.js 3D Engine -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Google Fonts: Orbitron & Rajdhani -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Cyber Tap 3D - Telegram Mini App</title>
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;800;900&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+    <!-- Three.js Library for 3D WebGL Rendering -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         :root {
-            --bg-dark: #05070f;
-            --accent-main: #00f3ff;
-            --accent-glow: rgba(0, 243, 255, 0.4);
-            --gold-main: #ffd700;
-            --glass-bg: rgba(12, 18, 30, 0.75);
-            --glass-border: rgba(0, 243, 255, 0.2);
-        }
-
-        /* Dynamic Rank Theme Overrides */
-        body[data-rank="1"] {
-            --accent-main: #00f3ff;
-            --accent-glow: rgba(0, 243, 255, 0.4);
+            --primary-neon: #00f3ff;
+            --secondary-neon: #ff0055;
+            --accent-gold: #ffd700;
+            --bg-dark: #050508;
+            --glass-bg: rgba(15, 20, 35, 0.65);
             --glass-border: rgba(0, 243, 255, 0.25);
-        }
-        body[data-rank="2"] {
-            --accent-main: #9d4edd;
-            --accent-glow: rgba(157, 78, 221, 0.4);
-            --glass-border: rgba(157, 78, 221, 0.3);
-        }
-        body[data-rank="3"] {
-            --accent-main: #ffd700;
-            --accent-glow: rgba(255, 215, 0, 0.4);
-            --glass-border: rgba(255, 215, 0, 0.35);
-        }
-        body[data-rank="4"] {
-            --accent-main: #ff0055;
-            --accent-glow: rgba(255, 0, 85, 0.5);
-            --glass-border: rgba(255, 0, 85, 0.4);
+            --font-title: 'Orbitron', sans-serif;
+            --font-ui: 'Rajdhani', sans-serif;
+            --active-glow: var(--primary-neon);
         }
 
         * {
             box-sizing: border-box;
+            margin: 0;
+            padding: 0;
             user-select: none;
             -webkit-user-select: none;
-            -webkit-touch-callout: none;
-            font-family: 'Rajdhani', -apple-system, sans-serif;
-        }
-
-        .font-orbitron {
-            font-family: 'Orbitron', -apple-system, sans-serif;
+            touch-action: manipulation;
         }
 
         body {
             background-color: var(--bg-dark);
             color: #ffffff;
+            font-family: var(--font-ui);
             overflow: hidden;
             height: 100vh;
             width: 100vw;
             display: flex;
             flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
             position: relative;
         }
 
-        /* Dynamic Cyber Grid Animation Background */
-        .cyber-grid {
-            position: fixed;
-            inset: 0;
-            background-image: 
-                linear-gradient(to right, rgba(0, 243, 255, 0.04) 1px, transparent 1px),
-                linear-gradient(to bottom, rgba(0, 243, 255, 0.04) 1px, transparent 1px);
-            background-size: 32px 32px;
-            pointer-events: none;
+        /* Dynamic Grid Background */
+        .bg-grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                linear-gradient(transparent 95%, rgba(0, 243, 255, 0.05) 95%),
+                linear-gradient(90deg, transparent 95%, rgba(0, 243, 255, 0.05) 95%);
+            background-size: 30px 30px;
             z-index: 1;
-        }
-
-        /* Combo Heat Edge Vignette Glow */
-        .combo-vignette {
-            position: fixed;
-            inset: 0;
             pointer-events: none;
-            z-index: 5;
-            box-shadow: inset 0 0 0px var(--accent-main);
-            transition: box-shadow 0.2s ease;
         }
 
-        .combo-vignette.active {
-            box-shadow: inset 0 0 60px var(--accent-main), inset 0 0 30px #ff0055;
-            animation: pulseHeat 0.4s infinite alternate ease-in-out;
+        /* Combo Heat Overlay */
+        .combo-heat-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 2;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            box-shadow: inset 0 0 100px var(--secondary-neon);
         }
 
-        @keyframes pulseHeat {
-            0% { opacity: 0.6; }
-            100% { opacity: 1; }
-        }
-
-        /* Premium Glassmorphism Cards */
-        .glass-card {
-            background: var(--glass-bg);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid var(--glass-border);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.7);
+        /* Main Container */
+        .app-container {
             position: relative;
-            overflow: hidden;
+            z-index: 5;
+            width: 100%;
+            max-width: 480px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            padding: 20px 16px;
+            justify-content: space-between;
         }
 
-        /* Holographic Card Glint Effect */
-        .holo-shine::after {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -60%;
-            width: 200%;
-            height: 200%;
-            background: linear-gradient(
-                60deg,
-                transparent 30%,
-                rgba(255, 255, 255, 0.08) 48%,
-                rgba(255, 255, 255, 0.25) 50%,
-                rgba(255, 255, 255, 0.08) 52%,
-                transparent 70%
-            );
-            transform: rotate(25deg);
-            animation: holoSweep 4.5s infinite linear;
-            pointer-events: none;
+        /* Header Info */
+        .header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
         }
 
-        @keyframes holoSweep {
-            0% { transform: translateY(-100%) rotate(25deg); }
-            100% { transform: translateY(100%) rotate(25deg); }
+        .user-rank-badge {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-family: var(--font-title);
+            font-size: 13px;
+            letter-spacing: 1.5px;
+            color: var(--active-glow);
+            text-transform: uppercase;
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.15);
+            backdrop-filter: blur(8px);
         }
 
-        /* 3D Score Typography */
-        .gold-3d-text {
-            background: linear-gradient(180deg, #ffffff 0%, #ffd700 50%, #ff8800 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            filter: drop-shadow(0px 4px 15px rgba(255, 215, 0, 0.6));
+        .balance-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
-        /* Floating Score Vectors (+X popup) */
-        .tap-floating-text {
-            position: absolute;
-            font-family: 'Orbitron', sans-serif;
-            font-size: 32px;
+        .balance-value {
+            font-family: var(--font-title);
+            font-size: 42px;
             font-weight: 900;
-            color: var(--accent-main);
-            text-shadow: 0 0 16px var(--accent-glow), 0 4px 0 #000;
-            pointer-events: none;
-            animation: floatUpFade 0.75s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
-            z-index: 99;
+            color: #ffffff;
+            text-shadow: 0 0 20px var(--active-glow);
+            letter-spacing: 1px;
         }
 
-        @keyframes floatUpFade {
+        /* 3D Canvas Area */
+        .canvas-area {
+            position: relative;
+            width: 100%;
+            height: 320px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        #three-canvas {
+            width: 100%;
+            height: 100%;
+            outline: none;
+        }
+
+        /* Floating Tap Indicator Text */
+        .tap-pop {
+            position: absolute;
+            font-family: var(--font-title);
+            font-weight: 900;
+            font-size: 28px;
+            color: #ffffff;
+            text-shadow: 0 0 10px var(--active-glow);
+            pointer-events: none;
+            animation: popUp 0.8s ease-out forwards;
+            z-index: 100;
+        }
+
+        @keyframes popUp {
             0% {
                 opacity: 1;
-                transform: translateY(0) scale(0.8) rotate(0deg);
-            }
-            50% {
-                transform: translateY(-60px) scale(1.25) rotate(-4deg);
+                transform: translate(-50%, -50%) scale(1);
             }
             100% {
                 opacity: 0;
-                transform: translateY(-110px) scale(1) rotate(4deg);
+                transform: translate(-50%, -120px) scale(1.4);
             }
         }
 
-        /* Cyber Buttons with Glow */
-        .btn-cyber {
-            background: linear-gradient(180deg, rgba(255,255,255,0.15) 0%, rgba(0,0,0,0.5) 100%), var(--glass-bg);
-            border: 1px solid var(--accent-main);
-            box-shadow: 0 4px 15px var(--accent-glow), inset 0 1px 0 rgba(255,255,255,0.25);
-            transition: all 0.12s ease;
+        /* Combo Counter */
+        .combo-badge {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-family: var(--font-title);
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--secondary-neon);
+            text-shadow: 0 0 10px var(--secondary-neon);
+            opacity: 0;
+            transition: opacity 0.2s ease;
         }
 
-        .btn-cyber:active {
-            transform: translateY(2px) scale(0.96);
-            box-shadow: 0 2px 8px var(--accent-glow);
+        /* Energy & Footer Controls */
+        .controls-area {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
         }
 
-        #canvas-viewport {
-            touch-action: none;
+        .energy-wrapper {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 12px 16px;
+            backdrop-filter: blur(10px);
         }
 
-        .tab-btn.active {
-            background: var(--accent-main);
-            color: #000;
-            box-shadow: 0 0 18px var(--accent-main);
-            border-color: var(--accent-main);
+        .energy-header {
+            display: flex;
+            justify-content: space-between;
+            font-family: var(--font-title);
+            font-size: 14px;
+            margin-bottom: 8px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .energy-bar-bg {
+            width: 100%;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .energy-bar-fill {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, var(--primary-neon), var(--secondary-neon));
+            border-radius: 5px;
+            box-shadow: 0 0 12px var(--primary-neon);
+            transition: width 0.2s ease;
+        }
+
+        /* Navigation Menu */
+        .nav-menu {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .nav-btn {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 14px;
+            padding: 12px 0;
+            color: #ffffff;
+            font-family: var(--font-ui);
+            font-weight: 700;
+            font-size: 15px;
+            letter-spacing: 0.5px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.1s ease, border-color 0.2s ease;
+        }
+
+        .nav-btn:active {
+            transform: scale(0.95);
+        }
+
+        .nav-btn::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+            transform: rotate(45deg);
+            animation: cardGlint 4s infinite;
+        }
+
+        @keyframes cardGlint {
+            0% { transform: translateX(-100%) rotate(45deg); }
+            20%, 100% { transform: translateX(100%) rotate(45deg); }
+        }
+
+        /* Modals / Upgrades Panel */
+        .modal-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(5, 5, 8, 0.85);
+            backdrop-filter: blur(15px);
+            z-index: 50;
+            display: flex;
+            flex-direction: column;
+            padding: 24px 16px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-family: var(--font-title);
+            font-size: 20px;
+            color: var(--active-glow);
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .upgrades-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            overflow-y: auto;
+        }
+
+        .upgrade-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 14px;
+            padding: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .upgrade-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .upgrade-title {
+            font-family: var(--font-ui);
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .upgrade-desc {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .upgrade-cost {
+            font-family: var(--font-title);
+            font-size: 14px;
+            color: var(--accent-gold);
+            margin-top: 4px;
+        }
+
+        .buy-btn {
+            background: linear-gradient(135deg, var(--primary-neon), var(--secondary-neon));
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-family: var(--font-title);
+            font-weight: 700;
+            padding: 8px 16px;
+            cursor: pointer;
+        }
+
+        .buy-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
         }
     </style>
 </head>
-<body data-rank="1">
+<body>
 
-    <!-- Cyber Background Overlay -->
-    <div class="cyber-grid"></div>
-    
-    <!-- Combo Heat Vignette Layer -->
-    <div id="comboVignette" class="combo-vignette"></div>
+    <div class="bg-grid"></div>
+    <div class="combo-heat-overlay" id="combo-overlay"></div>
 
-    <header class="relative z-10 p-3 mx-3 mt-3 rounded-2xl glass-card holo-shine flex items-center justify-between">
-        <div class="flex items-center gap-3">
-            <div id="userAvatar" class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-400 to-purple-500 flex items-center justify-center font-bold text-lg text-black font-orbitron shadow-md">
-                U
-            </div>
-            <div>
-                <div id="userName" class="font-bold text-base tracking-wide text-gray-100">O'yinchi</div>
-                <div class="text-[11px] text-cyan-400 font-orbitron tracking-wider flex items-center gap-1">
-                    <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                    <span id="rankTitle">KIBER BRONZA</span>
-                </div>
+    <div class="app-container">
+        <!-- Header Section -->
+        <div class="header">
+            <div class="user-rank-badge" id="rank-badge">BRONZA KIBER</div>
+            <div class="balance-container">
+                <div class="balance-value" id="balance">0</div>
             </div>
         </div>
-        <div id="rankBadge" class="px-3 py-1.5 rounded-xl bg-white/5 border border-cyan-400/30 font-orbitron text-cyan-300 text-xs font-bold uppercase tracking-widest shadow-inner">
-            DARAJA: <span id="rankLevelNum" class="text-amber-400">1</span>
-        </div>
-    </header>
 
-    <section class="relative z-10 text-center my-2 px-4">
-        <div class="text-xs uppercase tracking-widest text-gray-400 font-bold font-orbitron mb-1">Jamlangan Tangalar</div>
-        <div class="flex items-center justify-center gap-2">
-            <!-- Metallic Gold Coin SVG Badge -->
-            <svg class="w-10 h-10 text-amber-400 drop-shadow-[0_0_14px_rgba(255,215,0,0.7)]" fill="currentColor" viewBox="0 0 24 24">
-                <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/>
-                <path d="M12 6v12M15 9.5H10.5a1.5 1.5 0 0 0 0 3h3a1.5 1.5 0 0 1 0 3H9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            </svg>
-            <div id="mainScore" class="text-5xl font-black gold-3d-text font-orbitron tracking-tight">0</div>
-        </div>
-        
-        <div class="mt-2 text-xs text-gray-300 font-orbitron flex justify-center items-center gap-3">
-            <span>TAP KUCHI: <strong id="tapPowerDisplay" class="text-cyan-400">+1</strong></span>
-            <span>•</span>
-            <span>PASSIV: <strong id="passiveIncomeDisplay" class="text-emerald-400">+0/s</strong></span>
-            <span>•</span>
-            <span id="comboCounterText" class="text-amber-400 opacity-0 transition-opacity font-bold">COMBO x1</span>
-        </div>
-    </section>
-
-    <main class="relative flex-1 w-full flex items-center justify-center z-10 overflow-hidden">
-        <div id="canvas-viewport" class="w-full h-full absolute inset-0 cursor-pointer"></div>
-    </main>
-
-    <!-- Shop Panel -->
-    <div id="shopPanel" class="hidden absolute top-20 left-3 right-3 bottom-28 glass-card rounded-2xl z-30 p-4 overflow-y-auto holo-shine">
-        <div class="flex justify-between items-center mb-4 pb-2 border-b border-white/10">
-            <h2 class="text-lg font-bold font-orbitron text-amber-400 tracking-wide">KIBERNETIK DO'KON</h2>
-            <button onclick="toggleTab('tap')" class="text-xs text-gray-300 bg-white/10 px-3 py-1.5 rounded-lg font-orbitron">YOPISH</button>
+        <!-- 3D Interactive Coin Area -->
+        <div class="canvas-area" id="canvas-container">
+            <div class="combo-badge" id="combo-badge">COMBO x1</div>
+            <canvas id="three-canvas"></canvas>
         </div>
 
-        <div class="space-y-3">
-            <!-- Upgrade Tap Power -->
-            <div class="p-3.5 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between">
-                <div>
-                    <div class="font-bold text-base text-gray-100 font-orbitron">Tap Kuchaytirgich (+1)</div>
-                    <div class="text-xs text-gray-400">Har bir tapda ko'proq coin olasiz (Energiya sarfi baribir 1 bo'lib qoladi)</div>
-                    <div class="text-xs text-amber-400 font-bold font-orbitron mt-1">Narxi: <span id="tapUpgradeCost">100</span> Coin</div>
+        <!-- Energy Bar & Footer Controls -->
+        <div class="controls-area">
+            <div class="energy-wrapper">
+                <div class="energy-header">
+                    <span>ENERGIYA</span>
+                    <span id="energy-text">1000 / 1000</span>
                 </div>
-                <button onclick="buyTapUpgrade()" class="btn-cyber px-4 py-2.5 rounded-xl font-bold font-orbitron text-xs text-cyan-300">
-                    OSHIRISH
+                <div class="energy-bar-bg">
+                    <div class="energy-bar-fill" id="energy-fill"></div>
+                </div>
+            </div>
+
+            <div class="nav-menu">
+                <button class="nav-btn" onclick="openModal('upgrades-modal')">
+                    <span>⚡ DO'KON</span>
                 </button>
-            </div>
-
-            <!-- Upgrade Energy Limit -->
-            <div class="p-3.5 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between">
-                <div>
-                    <div class="font-bold text-base text-gray-100 font-orbitron">Energiya Sig'imi (+50)</div>
-                    <div class="text-xs text-gray-400">Maksimal energiya hajmini oshiring</div>
-                    <div class="text-xs text-amber-400 font-bold font-orbitron mt-1">Narxi: <span id="energyUpgradeCost">200</span> Coin</div>
-                </div>
-                <button onclick="buyEnergyUpgrade()" class="btn-cyber px-4 py-2.5 rounded-xl font-bold font-orbitron text-xs text-cyan-300">
-                    KENGAYTIRISH
+                <button class="nav-btn" onclick="openModal('tasks-modal')">
+                    <span>🎯 VAZIFALAR</span>
                 </button>
-            </div>
-
-            <!-- Upgrade Auto Miner -->
-            <div class="p-3.5 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between">
-                <div>
-                    <div class="font-bold text-base text-gray-100 font-orbitron">Kiber Avto-Mayner (+1/s)</div>
-                    <div class="text-xs text-gray-400">Har bir soniyada passiv avtomatik tanga yig'ing</div>
-                    <div class="text-xs text-amber-400 font-bold font-orbitron mt-1">Narxi: <span id="autoMinerCost">300</span> Coin</div>
-                </div>
-                <button onclick="buyAutoMiner()" class="btn-cyber px-4 py-2.5 rounded-xl font-bold font-orbitron text-xs text-emerald-300">
-                    SOTIB OLISH
+                <button class="nav-btn" onclick="openModal('top-modal')">
+                    <span>🏆 REYTING</span>
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- Leaderboard Panel -->
-    <div id="topPanel" class="hidden absolute top-20 left-3 right-3 bottom-28 glass-card rounded-2xl z-30 p-4 overflow-y-auto holo-shine">
-        <div class="flex justify-between items-center mb-4 pb-2 border-b border-white/10">
-            <h2 class="text-lg font-bold font-orbitron text-cyan-400 tracking-wide">PESHQADAMLAR</h2>
-            <button onclick="toggleTab('tap')" class="text-xs text-gray-300 bg-white/10 px-3 py-1.5 rounded-lg font-orbitron">YOPISH</button>
+    <!-- Upgrades Modal -->
+    <div class="modal-overlay" id="upgrades-modal">
+        <div class="modal-header">
+            <div class="modal-title">KIBER DO'KON</div>
+            <button class="close-btn" onclick="closeModal('upgrades-modal')">✕</button>
         </div>
-
-        <div class="space-y-2.5">
-            <div class="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <span class="font-black font-orbitron text-amber-400 text-lg">#1</span>
-                    <div>
-                        <div class="font-bold text-sm text-gray-100">CyberKing_UZ</div>
-                        <div class="text-[11px] text-gray-400 font-orbitron">Kiber Usta</div>
-                    </div>
+        <div class="upgrades-list">
+            <div class="upgrade-card">
+                <div class="upgrade-info">
+                    <div class="upgrade-title">Multi-Tap</div>
+                    <div class="upgrade-desc">Har bir tap uchun +1 Coin beradi</div>
+                    <div class="upgrade-cost" id="multitap-cost">100 Coin</div>
                 </div>
-                <div class="font-orbitron font-bold text-amber-400 text-sm">2,450,000</div>
+                <button class="buy-btn" id="buy-multitap" onclick="buyMultiTap()">OSHIRISH</button>
             </div>
-
-            <div class="p-3 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <span class="font-black font-orbitron text-purple-400 text-lg">#2</span>
-                    <div>
-                        <div class="font-bold text-sm text-gray-100">NeonMaster_Tash</div>
-                        <div class="text-[11px] text-gray-400 font-orbitron">Oltin Daraja</div>
-                    </div>
+            <div class="upgrade-card">
+                <div class="upgrade-info">
+                    <div class="upgrade-title">Energiya Sig'imi</div>
+                    <div class="upgrade-desc">Max energiyani +500 birlikka oshiradi</div>
+                    <div class="upgrade-cost" id="energy-cost">200 Coin</div>
                 </div>
-                <div class="font-orbitron font-bold text-purple-300 text-sm">1,120,000</div>
+                <button class="buy-btn" id="buy-energy" onclick="buyEnergyLimit()">OSHIRISH</button>
+            </div>
+            <div class="upgrade-card">
+                <div class="upgrade-info">
+                    <div class="upgrade-title">Cyber Miner (Auto)</div>
+                    <div class="upgrade-desc">Har soniyada +1 avto-pasiv daromad</div>
+                    <div class="upgrade-cost" id="miner-cost">500 Coin</div>
+                </div>
+                <button class="buy-btn" id="buy-miner" onclick="buyMiner()">SOTIB OLISH</button>
             </div>
         </div>
     </div>
 
-    <!-- Profile Panel -->
-    <div id="profilePanel" class="hidden absolute top-20 left-3 right-3 bottom-28 glass-card rounded-2xl z-30 p-4 overflow-y-auto holo-shine text-center">
-        <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-cyan-400 to-purple-500 mx-auto flex items-center justify-center font-orbitron text-2xl font-black text-black shadow-lg mb-3">
-            U
+    <!-- Simple Info Modals -->
+    <div class="modal-overlay" id="tasks-modal">
+        <div class="modal-header">
+            <div class="modal-title">VAZIFALAR</div>
+            <button class="close-btn" onclick="closeModal('tasks-modal')">✕</button>
         </div>
-        <h2 id="profileName" class="text-xl font-bold font-orbitron text-gray-100">O'yinchi</h2>
-        <div class="text-xs text-cyan-400 font-orbitron mb-4">DAROJMAD STATISTIKASI</div>
-
-        <div class="grid grid-cols-2 gap-3 mb-4">
-            <div class="p-3 rounded-xl bg-white/5 border border-white/10 text-center">
-                <div class="text-[10px] text-gray-400 font-orbitron">UMUMIY TAPLAR</div>
-                <div id="totalTapsText" class="text-lg font-bold font-orbitron text-amber-400">0</div>
-            </div>
-            <div class="p-3 rounded-xl bg-white/5 border border-white/10 text-center">
-                <div class="text-[10px] text-gray-400 font-orbitron">RANG BOSQICHI</div>
-                <div id="profileRankText" class="text-lg font-bold font-orbitron text-cyan-400">BRONZA</div>
-            </div>
-        </div>
+        <p style="color: rgba(255,255,255,0.7); text-align: center; margin-top: 40px;">Barcha topshiriqlar bajarilgan!</p>
     </div>
 
-    <footer class="relative z-10 p-3 mx-3 mb-3 rounded-2xl glass-card holo-shine">
-        <!-- Energy Gauge -->
-        <div class="mb-3">
-            <div class="flex justify-between text-xs font-orbitron mb-1">
-                <span class="text-gray-300 flex items-center gap-1">
-                    <svg class="w-3.5 h-3.5 text-amber-400" fill="currentColor" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-                    ENERGIYA
-                </span>
-                <span class="text-amber-400"><strong id="energyCurrent">100</strong> / <span id="energyMax">100</span></span>
-            </div>
-            <div class="w-full h-2.5 bg-black/50 rounded-full overflow-hidden border border-white/10 p-0.5">
-                <div id="energyFill" class="h-full bg-gradient-to-r from-amber-500 to-cyan-400 rounded-full transition-all duration-200" style="width: 100%;"></div>
-            </div>
+    <div class="modal-overlay" id="top-modal">
+        <div class="modal-header">
+            <div class="modal-title">TOP O'YINCHILAR</div>
+            <button class="close-btn" onclick="closeModal('top-modal')">✕</button>
         </div>
-
-        <!-- Navigation Tabs -->
-        <div class="grid grid-cols-4 gap-2">
-            <button onclick="toggleTab('tap')" id="tabTap" class="tab-btn active py-2.5 rounded-xl border border-white/10 font-orbitron text-xs font-bold flex flex-col items-center justify-center gap-1 transition-all">
-                <span>🕹️</span> TAP
-            </button>
-            <button onclick="toggleTab('shop')" id="tabShop" class="tab-btn py-2.5 rounded-xl border border-white/10 font-orbitron text-xs font-bold flex flex-col items-center justify-center gap-1 transition-all text-gray-300">
-                <span>🛒</span> DO'KON
-            </button>
-            <button onclick="toggleTab('top')" id="tabTop" class="tab-btn py-2.5 rounded-xl border border-white/10 font-orbitron text-xs font-bold flex flex-col items-center justify-center gap-1 transition-all text-gray-300">
-                <span>🏆</span> TOP
-            </button>
-            <button onclick="toggleTab('profile')" id="tabProfile" class="tab-btn py-2.5 rounded-xl border border-white/10 font-orbitron text-xs font-bold flex flex-col items-center justify-center gap-1 transition-all text-gray-300">
-                <span>👤</span> PROFIL
-            </button>
-        </div>
-    </footer>
+        <p style="color: rgba(255,255,255,0.7); text-align: center; margin-top: 40px;">1. User_Cyber #1 - 1,000,000 Coin<br>2. Siz - Yetakchilar safidasiz</p>
+    </div>
 
     <script>
-        // Telegram WebApp Integration
-        const tg = window.Telegram?.WebApp;
-        if(tg) {
-            tg.expand();
-            if(tg.initDataUnsafe?.user) {
-                document.getElementById('userName').innerText = tg.initDataUnsafe.user.first_name;
-                document.getElementById('profileName').innerText = tg.initDataUnsafe.user.first_name;
-                document.getElementById('userAvatar').innerText = tg.initDataUnsafe.user.first_name[0];
-            }
-        }
-
-        // Persistent Game State
-        let state = JSON.parse(localStorage.getItem('cyber_clicker_state_v4')) || {
-            score: 0,
-            energy: 100,
-            maxEnergy: 100,
-            tapPower: 1,
-            autoMiner: 0,
-            totalTaps: 0,
-            rankLevel: 1,
-            lastSavedTime: Date.now()
+        /* State & Logic Storage */
+        let state = {
+            coins: parseInt(localStorage.getItem('coins')) || 0,
+            energy: parseInt(localStorage.getItem('energy')) || 1000,
+            maxEnergy: parseInt(localStorage.getItem('maxEnergy')) || 1000,
+            tapPower: parseInt(localStorage.getItem('tapPower')) || 1,
+            autoIncome: parseInt(localStorage.getItem('autoIncome')) || 0,
+            multitapCost: parseInt(localStorage.getItem('multitapCost')) || 100,
+            energyCost: parseInt(localStorage.getItem('energyCost')) || 200,
+            minerCost: parseInt(localStorage.getItem('minerCost')) || 500
         };
 
-        // Offline Passive & Energy Regen Calculation
-        const now = Date.now();
-        const elapsedSecs = Math.floor((now - (state.lastSavedTime || now)) / 1000);
-        if (elapsedSecs > 0) {
-            if (state.energy < state.maxEnergy) {
-                state.energy = Math.min(state.maxEnergy, state.energy + elapsedSecs);
-            }
-            if (state.autoMiner > 0) {
-                state.score += state.autoMiner * elapsedSecs;
-            }
-        }
+        let comboCount = 0;
+        let comboTimer = null;
 
-        function saveState() {
-            state.lastSavedTime = Date.now();
-            localStorage.setItem('cyber_clicker_state_v4', JSON.stringify(state));
-        }
-
-        // Dynamic Level & Theme Shifting
-        function updateRankTheme() {
-            let newRank = 1;
-            let rankName = "KIBER BRONZA";
-
-            if (state.score >= 5000) {
-                newRank = 4;
-                rankName = "KIBER USTA";
-            } else if (state.score >= 1000) {
-                newRank = 3;
-                rankName = "KIBER OLTIN";
-            } else if (state.score >= 250) {
-                newRank = 2;
-                rankName = "KIBER BINAFSHA";
-            }
-
-            state.rankLevel = newRank;
-            document.body.setAttribute('data-rank', newRank);
-            document.getElementById('rankLevelNum').innerText = newRank;
-            document.getElementById('rankTitle').innerText = rankName;
-            document.getElementById('profileRankText').innerText = rankName;
-        }
-
-        function updateUI() {
-            updateRankTheme();
-            document.getElementById('mainScore').innerText = Math.floor(state.score).toLocaleString();
-            document.getElementById('energyCurrent').innerText = state.energy;
-            document.getElementById('energyMax').innerText = state.maxEnergy;
-            document.getElementById('tapPowerDisplay').innerText = '+' + state.tapPower;
-            document.getElementById('passiveIncomeDisplay').innerText = '+' + state.autoMiner + '/s';
-            document.getElementById('tapUpgradeCost').innerText = state.tapPower * 100;
-            document.getElementById('energyUpgradeCost').innerText = (state.maxEnergy / 50) * 100;
-            document.getElementById('autoMinerCost').innerText = (state.autoMiner + 1) * 300;
-            document.getElementById('totalTapsText').innerText = state.totalTaps.toLocaleString();
-            
-            const pct = (state.energy / state.maxEnergy) * 100;
-            document.getElementById('energyFill').style.width = pct + '%';
-            
-            saveState();
-        }
-
-        // Web Audio Synthesizer
+        /* Audio Synth Effects */
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        function playSynthesizedSound(freq = 600, duration = 0.05) {
+        function playSound(freq, duration) {
             try {
-                if(audioCtx.state === 'suspended') audioCtx.resume();
                 const osc = audioCtx.createOscillator();
                 const gain = audioCtx.createGain();
                 osc.type = 'sine';
                 osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(120, audioCtx.currentTime + duration);
-                gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-                gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
                 osc.connect(gain);
                 gain.connect(audioCtx.destination);
                 osc.start();
                 osc.stop(audioCtx.currentTime + duration);
-            } catch(e) {}
+            } catch (e) {}
         }
 
-        // Three.js 3D Scene Initialization
-        const container = document.getElementById('canvas-viewport');
+        /* WebGL Three.js Setup */
+        const container = document.getElementById('canvas-container');
+        const canvas = document.getElementById('three-canvas');
         const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
 
+        const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
+        camera.position.z = 5;
+
+        const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
         renderer.setSize(container.clientWidth, container.clientHeight);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        container.appendChild(renderer.domElement);
 
-        // Metallic Gold 3D Coin Mesh
-        const coinGeometry = new THREE.CylinderGeometry(2.2, 2.2, 0.35, 60);
-        const coinMaterial = new THREE.MeshPhysicalMaterial({
-            color: 0xffd700,
-            metalness: 0.95,
-            roughness: 0.1,
-            clearcoat: 0.9,
-            clearcoatRoughness: 0.1
+        /* 3D Coin Creation */
+        const geometry = new THREE.CylinderGeometry(1.4, 1.4, 0.2, 32);
+        const material = new THREE.MeshStandardMaterial({
+            color: 0x00f3ff,
+            metalness: 0.8,
+            roughness: 0.2,
+            wireframe: false
         });
-        const coin = new THREE.Mesh(coinGeometry, coinMaterial);
-        coin.rotation.x = Math.PI / 3.2;
+        const coin = new THREE.Mesh(geometry, material);
+        coin.rotation.x = Math.PI / 3;
         scene.add(coin);
 
-        // Lighting System
-        const goldLight = new THREE.PointLight(0xffd700, 2.5, 50);
-        goldLight.position.set(5, 5, 5);
-        scene.add(goldLight);
-
-        const cyanLight = new THREE.PointLight(0x00f3ff, 2.5, 50);
-        cyanLight.position.set(-5, -5, 5);
-        scene.add(cyanLight);
-
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.9);
+        /* Lighting */
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
         scene.add(ambientLight);
 
-        camera.position.z = 7.5;
+        const pointLight = new THREE.PointLight(0x00f3ff, 2, 10);
+        pointLight.position.set(2, 3, 4);
+        scene.add(pointLight);
 
-        // 3D Particle Explosion System
-        const particleCount = 25;
-        const particleGeo = new THREE.BufferGeometry();
-        const particlePos = new Float32Array(particleCount * 3);
-        const particleVel = [];
-
-        for(let i=0; i<particleCount; i++) {
-            particlePos[i*3] = 0;
-            particlePos[i*3+1] = 0;
-            particlePos[i*3+2] = 0;
-            particleVel.push({
-                x: (Math.random() - 0.5) * 0.2,
-                y: (Math.random() - 0.5) * 0.2,
-                z: (Math.random() - 0.5) * 0.2
-            });
-        }
-        particleGeo.setAttribute('position', new THREE.BufferAttribute(particlePos, 3));
-        const particleMat = new THREE.PointsMaterial({
-            color: 0x00f3ff,
-            size: 0.14,
-            transparent: true,
-            opacity: 0
-        });
-        const particles = new THREE.Points(particleGeo, particleMat);
-        scene.add(particles);
-
-        function triggerSparks() {
-            const positions = particles.geometry.attributes.position.array;
-            for(let i=0; i<particleCount; i++) {
-                positions[i*3] = (Math.random() - 0.5) * 0.4;
-                positions[i*3+1] = (Math.random() - 0.5) * 0.4;
-                positions[i*3+2] = (Math.random() - 0.5) * 0.4;
-            }
-            particles.geometry.attributes.position.needsUpdate = true;
-            particleMat.opacity = 1;
-        }
-
-        let tapCombo = 0;
-        let comboResetTimer = null;
-
-        function registerTap(clientX, clientY) {
-            // STRICT RULE: 1 TAP = EXACTLY 1 ENERGY REDUCTION ALWAYS
-            if (state.energy >= 1) {
-                state.score += state.tapPower;
-                state.energy -= 1; // EXACTLY 1 ENERGY DEPLOYED
-                state.totalTaps += 1;
-
-                // Combo Streak & Heat Vignette
-                tapCombo++;
-                const comboElem = document.getElementById('comboCounterText');
-                comboElem.innerText = 'COMBO x' + tapCombo;
-                comboElem.style.opacity = '1';
-
-                const vignette = document.getElementById('comboVignette');
-                if (tapCombo > 4) {
-                    vignette.classList.add('active');
-                }
-
-                clearTimeout(comboResetTimer);
-                comboResetTimer = setTimeout(() => {
-                    tapCombo = 0;
-                    comboElem.style.opacity = '0';
-                    vignette.classList.remove('active');
-                }, 800);
-
-                // Sound & Haptic
-                playSynthesizedSound(550 + Math.min(tapCombo * 35, 450));
-                if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
-
-                // 3D Coin Tilt & Spark Effects
-                coin.rotation.y += 0.35;
-                coin.rotation.x += 0.12;
-                triggerSparks();
-
-                // Floating Score Vector Popup
-                const floatText = document.createElement('div');
-                floatText.className = 'tap-floating-text';
-                floatText.innerText = '+' + state.tapPower;
-                floatText.style.left = (clientX - 20) + 'px';
-                floatText.style.top = (clientY - 30) + 'px';
-                document.body.appendChild(floatText);
-                setTimeout(() => floatText.remove(), 750);
-
-                updateUI();
-            }
-        }
-
-        // Interactive Pointer Listener
-        container.addEventListener('pointerdown', (e) => {
-            registerTap(e.clientX, e.clientY);
-        });
-
-        // Auto Miner & Energy Regeneration Timer
-        setInterval(() => {
-            let changed = false;
-            if (state.energy < state.maxEnergy) {
-                state.energy = Math.min(state.maxEnergy, state.energy + 1);
-                changed = true;
-            }
-            if (state.autoMiner > 0) {
-                state.score += state.autoMiner;
-                changed = true;
-            }
-            if (changed) updateUI();
-        }, 1000);
-
-        // Upgrades Logic
-        function buyTapUpgrade() {
-            const cost = state.tapPower * 100;
-            if (state.score >= cost) {
-                state.score -= cost;
-                state.tapPower += 1;
-                updateUI();
-            }
-        }
-
-        function buyEnergyUpgrade() {
-            const cost = (state.maxEnergy / 50) * 100;
-            if (state.score >= cost) {
-                state.score -= cost;
-                state.maxEnergy += 50;
-                state.energy = state.maxEnergy;
-                updateUI();
-            }
-        }
-
-        function buyAutoMiner() {
-            const cost = (state.autoMiner + 1) * 300;
-            if (state.score >= cost) {
-                state.score -= cost;
-                state.autoMiner += 1;
-                updateUI();
-            }
-        }
-
-        // Navigation Tabs Toggle
-        function toggleTab(tabName) {
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            document.getElementById('shopPanel').classList.add('hidden');
-            document.getElementById('topPanel').classList.add('hidden');
-            document.getElementById('profilePanel').classList.add('hidden');
-
-            if (tabName === 'tap') {
-                document.getElementById('tabTap').classList.add('active');
-            } else if (tabName === 'shop') {
-                document.getElementById('tabShop').classList.add('active');
-                document.getElementById('shopPanel').classList.remove('hidden');
-            } else if (tabName === 'top') {
-                document.getElementById('tabTop').classList.add('active');
-                document.getElementById('topPanel').classList.remove('hidden');
-            } else if (tabName === 'profile') {
-                document.getElementById('tabProfile').classList.add('active');
-                document.getElementById('profilePanel').classList.remove('hidden');
-            }
-        }
-
-        // Main Animation Loop
+        /* Render Loop */
         function animate() {
             requestAnimationFrame(animate);
-            coin.rotation.y += 0.008;
-
-            if (particleMat.opacity > 0) {
-                particleMat.opacity -= 0.03;
-                const positions = particles.geometry.attributes.position.array;
-                for(let i=0; i<particleCount; i++) {
-                    positions[i*3] += particleVel[i].x;
-                    positions[i*3+1] += particleVel[i].y;
-                    positions[i*3+2] += particleVel[i].z;
-                }
-                particles.geometry.attributes.position.needsUpdate = true;
-            }
-
+            coin.rotation.z += 0.01;
             renderer.render(scene, camera);
         }
         animate();
 
-        // Responsive Resizing
-        window.addEventListener('resize', () => {
-            camera.aspect = container.clientWidth / container.clientHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(container.clientWidth, container.clientHeight);
+        /* UI Update Function */
+        function updateUI() {
+            document.getElementById('balance').innerText = state.coins.toLocaleString();
+            document.getElementById('energy-text').innerText = `${state.energy} / ${state.maxEnergy}`;
+            document.getElementById('energy-fill').style.width = `${(state.energy / state.maxEnergy) * 100}%`;
+
+            document.getElementById('multitap-cost').innerText = `${state.multitapCost} Coin`;
+            document.getElementById('energy-cost').innerText = `${state.energyCost} Coin`;
+            document.getElementById('miner-cost').innerText = `${state.minerCost} Coin`;
+
+            document.getElementById('buy-multitap').disabled = state.coins < state.multitapCost;
+            document.getElementById('buy-energy').disabled = state.coins < state.energyCost;
+            document.getElementById('buy-miner').disabled = state.coins < state.minerCost;
+
+            // Dynamic Rank & Color Theme
+            const rankBadge = document.getElementById('rank-badge');
+            const root = document.documentElement;
+
+            if (state.coins >= 10000) {
+                rankBadge.innerText = "KIBER USTA";
+                root.style.setProperty('--active-glow', '#ffd700');
+                material.color.setHex(0xffd700);
+            } else if (state.coins >= 2500) {
+                rankBadge.innerText = "OLTIN KIBER";
+                root.style.setProperty('--active-glow', '#ff0055');
+                material.color.setHex(0xff0055);
+            } else {
+                rankBadge.innerText = "BRONZA KIBER";
+                root.style.setProperty('--active-glow', '#00f3ff');
+                material.color.setHex(0x00f3ff);
+            }
+
+            // Save State
+            Object.keys(state).forEach(key => localStorage.setItem(key, state[key]));
+        }
+
+        /* Multi-Touch Tap Logic: Exactly 1 Energy per Tap */
+        function handleTap(e) {
+            e.preventDefault();
+            const touches = e.changedTouches ? e.changedTouches : [e];
+
+            for (let i = 0; i < touches.length; i++) {
+                if (state.energy < 1) break; // Strict 1 energy check
+
+                state.energy -= 1; // Exactly 1 energy deducted per tap
+                state.coins += state.tapPower;
+
+                // Visual Tap Effect
+                const touch = touches[i];
+                showFloatingText(touch.clientX || touch.pageX, touch.clientY || touch.pageY, `+${state.tapPower}`);
+                
+                // 3D Coin Animation Effect
+                coin.scale.set(0.95, 0.95, 0.95);
+                setTimeout(() => coin.scale.set(1, 1, 1), 50);
+
+                // Sound & Combo
+                playSound(400 + (comboCount * 20), 0.05);
+                triggerCombo();
+            }
+            updateUI();
+        }
+
+        const canvasArea = document.getElementById('canvas-container');
+        canvasArea.addEventListener('touchstart', handleTap, { passive: false });
+        canvasArea.addEventListener('mousedown', (e) => {
+            if (e.pointerType !== 'touch') handleTap(e);
         });
 
-        // Initialize UI State
+        /* Combo Heat Mechanics */
+        function triggerCombo() {
+            comboCount++;
+            const comboBadge = document.getElementById('combo-badge');
+            const overlay = document.getElementById('combo-overlay');
+
+            comboBadge.innerText = `COMBO x${comboCount}`;
+            comboBadge.style.opacity = '1';
+
+            if (comboCount > 5) {
+                overlay.style.opacity = Math.min((comboCount - 5) * 0.1, 0.6);
+            }
+
+            clearTimeout(comboTimer);
+            comboTimer = setTimeout(() => {
+                comboCount = 0;
+                comboBadge.style.opacity = '0';
+                overlay.style.opacity = '0';
+            }, 1000);
+        }
+
+        /* Floating +1 Numbers */
+        function showFloatingText(x, y, text) {
+            const el = document.createElement('div');
+            el.className = 'tap-pop';
+            el.innerText = text;
+            el.style.left = `${x}px`;
+            el.style.top = `${y}px`;
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 800);
+        }
+
+        /* Upgrades Functions */
+        function buyMultiTap() {
+            if (state.coins >= state.multitapCost) {
+                state.coins -= state.multitapCost;
+                state.tapPower += 1;
+                state.multitapCost = Math.floor(state.multitapCost * 1.8);
+                updateUI();
+            }
+        }
+
+        function buyEnergyLimit() {
+            if (state.coins >= state.energyCost) {
+                state.coins -= state.energyCost;
+                state.maxEnergy += 500;
+                state.energy += 500;
+                state.energyCost = Math.floor(state.energyCost * 1.8);
+                updateUI();
+            }
+        }
+
+        function buyMiner() {
+            if (state.coins >= state.minerCost) {
+                state.coins -= state.minerCost;
+                state.autoIncome += 1;
+                state.minerCost = Math.floor(state.minerCost * 2);
+                updateUI();
+            }
+        }
+
+        /* Modals Control */
+        function openModal(id) { document.getElementById(id).classList.add('active'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+        /* Timers: Energy Regeneration & Auto-Miner */
+        setInterval(() => {
+            if (state.energy < state.maxEnergy) {
+                state.energy = Math.min(state.energy + 2, state.maxEnergy);
+                updateUI();
+            }
+        }, 1000);
+
+        setInterval(() => {
+            if (state.autoIncome > 0) {
+                state.coins += state.autoIncome;
+                updateUI();
+            }
+        }, 1000);
+
+        // Initial UI Render
         updateUI();
     </script>
 </body>
