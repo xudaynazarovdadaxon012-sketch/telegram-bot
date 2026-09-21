@@ -3,34 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Cyber VIP App</title>
+    <title>Telegram Tap Mini App</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
             --bg: #070a12;
             --card-bg: rgba(20, 27, 44, 0.75);
             --gold: #f59e0b;
-            --gold-glow: rgba(245, 158, 11, 0.4);
             --blue: #3b82f6;
             --text: #ffffff;
             --sub: #94a3b8;
         }
 
-        /* Dark Neon Theme */
         body.theme-neon {
             --bg: #0d0221;
             --card-bg: rgba(26, 11, 46, 0.8);
             --gold: #00f0ff;
-            --gold-glow: rgba(0, 240, 255, 0.5);
             --blue: #ff007f;
         }
 
-        /* Gold Lux Theme */
         body.theme-gold {
             --bg: #140d02;
             --card-bg: rgba(38, 26, 8, 0.8);
             --gold: #ffd700;
-            --gold-glow: rgba(255, 215, 0, 0.6);
             --blue: #d4af37;
         }
 
@@ -50,21 +45,18 @@
             flex-direction: column;
             height: 100vh;
             overflow: hidden;
-            transition: background 0.4s ease;
         }
 
         .header {
             padding: 16px;
             text-align: center;
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
         }
 
         .balance-box {
             font-size: 38px;
             font-weight: 900;
             color: var(--gold);
-            text-shadow: 0 0 20px var(--gold-glow);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -77,7 +69,6 @@
             margin: 8px 12px;
             padding: 4px;
             border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.08);
         }
 
         .tab-btn {
@@ -86,17 +77,15 @@
             background: none;
             border: none;
             color: var(--sub);
-            font-size: 10px;
+            font-size: 11px;
             font-weight: 800;
             cursor: pointer;
             border-radius: 8px;
-            transition: all 0.2s;
         }
 
         .tab-btn.active {
             color: #fff;
             background: var(--blue);
-            box-shadow: 0 2px 10px rgba(59, 130, 246, 0.4);
         }
 
         .content {
@@ -104,20 +93,18 @@
             display: none;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
             padding: 14px;
             overflow-y: auto;
         }
 
         .content.active { display: flex; }
 
-        /* Multi-Tap Interactive Coin */
         .coin-wrapper {
             position: relative;
             display: flex;
             justify-content: center;
             align-items: center;
-            margin: 20px 0;
+            margin: 25px 0;
             touch-action: manipulation;
         }
 
@@ -131,7 +118,7 @@
             justify-content: center;
             font-size: 85px;
             border: 6px solid #fde047;
-            box-shadow: 0 0 40px var(--gold-glow);
+            box-shadow: 0 0 30px rgba(245, 158, 11, 0.3);
             cursor: pointer;
             transition: transform 0.05s ease;
         }
@@ -144,13 +131,12 @@
             font-weight: 900;
             font-size: 26px;
             pointer-events: none;
-            animation: floatUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+            animation: floatUp 0.6s ease-out forwards;
         }
 
         @keyframes floatUp {
-            0% { opacity: 1; transform: translateY(0) scale(1); }
-            100% { opacity: 0; transform: translateY(-70px) scale(1.2); }
+            0% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-70px); }
         }
 
         .card {
@@ -161,7 +147,6 @@
             padding: 14px;
             margin-bottom: 10px;
             border: 1px solid rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(10px);
         }
 
         .btn {
@@ -177,9 +162,7 @@
             margin-top: 6px;
         }
 
-        .btn-gold {
-            background: linear-gradient(135deg, #f59e0b, #d97706);
-        }
+        .btn-gold { background: linear-gradient(135deg, #f59e0b, #d97706); }
 
         .footer {
             padding: 14px;
@@ -202,18 +185,42 @@
             background: var(--blue);
             transition: width 0.2s;
         }
+
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #10b981;
+            box-shadow: 0 0 10px #10b981;
+            animation: pulseGlow 1.5s infinite alternate;
+        }
+
+        @keyframes pulseGlow {
+            0% { transform: scale(0.8); opacity: 0.5; }
+            100% { transform: scale(1.3); opacity: 1; }
+        }
+
+        .stat-bar-bg {
+            width: 100%; height: 5px; background: rgba(255, 255, 255, 0.08);
+            border-radius: 4px; overflow: hidden; margin-top: 6px;
+        }
+
+        .stat-bar-fill {
+            height: 100%; width: 0%;
+            background: linear-gradient(90deg, #3b82f6, #00f0ff);
+            transition: width 0.4s ease-in-out;
+        }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <div style="font-size:11px; color:var(--sub);">O'YINCHI: <b id="uName" style="color:#fff;">...</b> <span id="vipBadge" style="color:var(--gold); display:none;">⭐ VIP</span></div>
+        <div style="font-size:11px; color:var(--sub);">O'YINCHI: <b id="uName" style="color:#fff;">...</b></div>
         <div class="balance-box">🪙 <span id="score">0</span></div>
     </div>
 
     <div class="tabs">
         <button class="tab-btn active" onclick="setTab('tap', event)">⚡ TAP</button>
-        <button class="tab-btn" onclick="setTab('tasks', event)">🎯 VAZIFALAR</button>
         <button class="tab-btn" onclick="setTab('boost', event)">🚀 DO'KON</button>
         <button class="tab-btn" onclick="setTab('top', event); loadTop();">🏆 TOP</button>
         <button class="tab-btn" onclick="setTab('profile', event)">👤 PROFIL</button>
@@ -222,7 +229,7 @@
     <!-- TAP -->
     <div id="tap" class="content active">
         <div style="width:100%; max-width:340px; margin-bottom:10px;">
-            <button class="btn btn-gold" onclick="claimDaily()">🎁 Kunlik Bonus (+1,500 🪙)</button>
+            <button class="btn btn-gold" onclick="claimDaily()">🎁 Kunlik Bonus (+100 🪙)</button>
         </div>
         <div class="coin-wrapper">
             <div class="coin" id="tapBtn">🪙</div>
@@ -230,51 +237,70 @@
         <div style="font-size:12px; color:var(--sub);">1 Bosish: <b style="color:var(--gold);">+<span id="powerText">1</span> 🪙</b></div>
     </div>
 
-    <!-- TASKS (Sponsor Vazifalar) -->
-    <div id="tasks" class="content">
-        <div class="card">
-            <h4>📢 Rasmiy Kanalga A'zo Bo'ling</h4>
-            <p style="font-size:10px; color:var(--sub); margin-top:2px;">Mukofot: +2,000 Coin</p>
-            <button class="btn" onclick="window.open('https://t.me/telegram'); completeTask('task_channel');">A'zo bo'lish va Olish</button>
-        </div>
-    </div>
-
     <!-- DO'KON -->
     <div id="boost" class="content">
-        <div class="card">
-            <h4>🤖 Auto-Bot (Passiv Daromad)</h4>
-            <button class="btn btn-gold" onclick="buyBoost('auto_bot')">Sotib Olish (3,000 🪙)</button>
+        <div class="card" style="border: 1px solid var(--gold);">
+            <h4>⭐ Telegram Stars'ga almashtirish</h4>
+            <p style="font-size:11px; color:var(--sub); margin-top:4px;">5,000 Coin = 5 Stars</p>
+            <button class="btn btn-gold" onclick="exchangeStars(5)">⭐ 5 Stars (5,000 🪙)</button>
         </div>
+
         <div class="card">
-            <h4>⚡ Energiya +500</h4>
+            <h4>⚡ Energiya +50</h4>
             <button class="btn" onclick="buyBoost('energy_500')">Sotib Olish (50 🪙)</button>
         </div>
+
         <div class="card">
             <h4>🚀 Tap+ (Kuchaytirgich)</h4>
-            <button class="btn btn-gold" onclick="buyBoost('tap_power')">Kuchaytirish (<span id="tapCost">200</span> 🪙)</button>
+            <button class="btn btn-gold" onclick="buyBoost('tap_power')">Kuchaytirish (<span id="tapCost">100</span> 🪙)</button>
         </div>
+
         <div class="card">
-            <h4>⭐ VIP Status (Naqd Pul)</h4>
-            <button class="btn btn-gold" onclick="buyVipReal()">VIP Olish (30,000 so'm)</button>
+            <h4>🤖 Auto-Bot (Passiv)</h4>
+            <button class="btn btn-gold" onclick="buyBoost('auto_bot')">Sotib Olish (300 🪙)</button>
         </div>
     </div>
 
     <!-- TOP -->
     <div id="top" class="content">
-        <h3 style="margin-bottom:10px; font-size:14px; color:var(--gold);">🏆 Eng Kuchli O'yinchilar</h3>
+        <h3 style="margin-bottom:10px; font-size:14px; color:var(--gold);">🏆 Top 10 O'yinchilar</h3>
         <div id="topList" style="width:100%; max-width:340px;"></div>
     </div>
 
-    <!-- PROFIL & MAVZULAR -->
+    <!-- PROFIL & HARDWARE SPECS -->
     <div id="profile" class="content">
-        <div class="card">
-            <h3>👤 Profil</h3>
-            <p style="font-size:11px; color:var(--sub); margin-top:6px;">ID: <b id="profId" style="color:#fff;">0</b></p>
-            <p style="font-size:11px; color:var(--sub); margin-top:2px;">Jami Bosishlar: <b id="profTaps" style="color:#fff;">0</b></p>
-            <p style="font-size:11px; color:var(--sub); margin-top:2px;">Auto-Bot: <b id="profBot" style="color:#fff;">O'chirilgan</b></p>
+        <div class="card" style="border: 1px solid var(--gold); background: rgba(13, 2, 33, 0.85);">
+            <h3 style="color: var(--gold); font-size: 12px; display: flex; align-items: center; justify-content: space-between;">
+                <span style="display:flex; align-items:center; gap:6px;">
+                    <span class="pulse-dot"></span> 📊 TIZIM MONITORINGI (LIVE)
+                </span>
+                <span id="pingStatus" style="font-size: 10px; color: #10b981;">🟢 0 ms</span>
+            </h3>
+            
+            <div style="margin-top: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                <div style="background: rgba(255,255,255,0.03); padding: 8px; border-radius: 8px;">
+                    <div style="font-size: 9px; color: var(--sub);">FPS TEZLIGI</div>
+                    <div style="font-size: 16px; font-weight: 900; color: #00f0ff;" id="valFPS">60 FPS</div>
+                    <div class="stat-bar-bg"><div class="stat-bar-fill" id="fpsBar" style="width: 100%;"></div></div>
+                </div>
+
+                <div style="background: rgba(255,255,255,0.03); padding: 8px; border-radius: 8px;">
+                    <div style="font-size: 9px; color: var(--sub);">PING ALOQA</div>
+                    <div style="font-size: 16px; font-weight: 900; color: var(--gold);" id="valPing">-- ms</div>
+                    <div class="stat-bar-bg"><div class="stat-bar-fill" id="pingBar" style="width: 85%; background: #f59e0b;"></div></div>
+                </div>
+            </div>
+
+            <div id="deviceSpecs" style="margin-top: 10px; font-size: 11px; color: var(--sub); display: flex; flex-direction: column; gap: 4px;">
+                <div style="display:flex; justify-content:space-between;"><span>📱 Tizim:</span> <b id="specOS" style="color:#fff;">...</b></div>
+                <div style="display:flex; justify-content:space-between;"><span>🧠 Protsessor:</span> <b id="specCPU" style="color:#fff;">...</b></div>
+                <div style="display:flex; justify-content:space-between;"><span>📐 Ekran:</span> <b id="specScreen" style="color:#fff;">...</b></div>
+                <div style="display:flex; justify-content:space-between;"><span>🔋 Batareya:</span> <b id="specBattery" style="color:#fff;">...</b></div>
+            </div>
         </div>
+
         <div class="card">
-            <h3>🎨 Mavzuni O'zgartirish</h3>
+            <h3>🎨 Mavzu (Theme)</h3>
             <div style="display:flex; gap:6px; margin-top:8px;">
                 <button class="btn" style="background:#070a12;" onclick="changeTheme('default')">Dark</button>
                 <button class="btn" style="background:#0d0221;" onclick="changeTheme('neon')">Neon</button>
@@ -299,11 +325,10 @@
         let AppState = {
             userId: tg?.initDataUnsafe?.user?.id || Math.floor(Math.random()*1000000),
             username: tg?.initDataUnsafe?.user?.first_name || "O'yinchi",
-            score: 0, energy: 100, maxEnergy: 100, tapPower: 1, isVip: false, autoBot: false, totalTaps: 0
+            score: 0, energy: 100, maxEnergy: 100, tapPower: 1
         };
 
         document.getElementById('uName').innerText = AppState.username;
-        document.getElementById('profId').innerText = AppState.userId;
 
         function setTab(name, e) {
             document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
@@ -323,13 +348,7 @@
                     let u = data.user;
                     AppState.score = u.score; AppState.energy = u.energy;
                     AppState.maxEnergy = u.max_energy; AppState.tapPower = u.tap_power;
-                    AppState.isVip = u.is_vip; AppState.autoBot = u.auto_bot;
-                    AppState.totalTaps = u.total_taps || 0;
-                    
                     if(u.theme) changeTheme(u.theme, false);
-                    if(AppState.isVip) document.getElementById('vipBadge').style.display = 'inline';
-                    if(AppState.autoBot) document.getElementById('profBot').innerText = "Yoqilgan ✅";
-                    document.getElementById('profTaps').innerText = AppState.totalTaps.toLocaleString();
                     updateUI();
                 }
             } catch(e) {}
@@ -340,23 +359,21 @@
             document.getElementById('energy').innerText = AppState.energy;
             document.getElementById('maxEnergy').innerText = AppState.maxEnergy;
             document.getElementById('powerText').innerText = AppState.tapPower;
-            document.getElementById('tapCost').innerText = AppState.tapPower * 200;
+            document.getElementById('tapCost').innerText = AppState.tapPower * 100;
             document.getElementById('energyFill').style.width = (AppState.energy / AppState.maxEnergy * 100) + '%';
         }
 
-        // Multi-Touch (Bir nechta barmoq bilan bosish)
+        // Tap
         const tapBtn = document.getElementById('tapBtn');
         tapBtn.addEventListener('touchstart', (e) => {
             e.preventDefault();
             let touches = e.changedTouches.length;
-            
             if(tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
 
             let cost = AppState.tapPower * touches;
             if(AppState.energy >= cost) {
                 AppState.score += cost;
                 AppState.energy -= cost;
-                AppState.totalTaps += touches;
                 updateUI();
 
                 for(let i=0; i<touches; i++) {
@@ -387,16 +404,6 @@
             if(data.success) syncData();
         }
 
-        async function completeTask(taskId) {
-            let res = await fetch(`${API_URL}/task`, {
-                method: 'POST', headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ userId: AppState.userId, taskId: taskId })
-            });
-            let data = await res.json();
-            alert(data.message);
-            if(data.success) syncData();
-        }
-
         async function buyBoost(type) {
             let res = await fetch(`${API_URL}/buy-boost`, {
                 method: 'POST', headers: {'Content-Type': 'application/json'},
@@ -407,12 +414,17 @@
             if(data.success) syncData();
         }
 
-        function buyVipReal() {
-            let card = "8600 1234 5678 9012";
-            alert(`VIP Status narxi: 30,000 so'm\n\nTo'lov uchun karta:\n💳 ${card}\n\nTo'lovdan so'ng chekni adminga yuboring!`);
+        async function exchangeStars(starsAmount) {
+            let res = await fetch(`${API_URL}/exchange-stars`, {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ userId: AppState.userId, stars: starsAmount })
+            });
+            let data = await res.json();
+            alert(data.message);
+            if(data.success) syncData();
         }
 
-        async function changeTheme(themeName, save = true) {
+        function changeTheme(themeName, save = true) {
             document.body.className = themeName === 'default' ? '' : 'theme-' + themeName;
             if(save) {
                 fetch(`${API_URL}/theme`, {
@@ -436,6 +448,55 @@
                 document.getElementById('topList').innerHTML = html;
             }
         }
+
+        // Live Hardware & Performance Tracker
+        let frameCount = 0;
+        let lastTime = performance.now();
+
+        function updateFPSVisuals() {
+            let now = performance.now();
+            frameCount++;
+            if (now >= lastTime + 1000) {
+                let currentFPS = Math.round((frameCount * 1000) / (now - lastTime));
+                let fpsRatio = Math.min(Math.round((currentFPS / 60) * 100), 100);
+                document.getElementById('valFPS').innerText = currentFPS + " FPS";
+                document.getElementById('fpsBar').style.width = fpsRatio + "%";
+                frameCount = 0;
+                lastTime = now;
+            }
+            requestAnimationFrame(updateFPSVisuals);
+        }
+        requestAnimationFrame(updateFPSVisuals);
+
+        async function measurePing() {
+            let start = performance.now();
+            try {
+                let res = await fetch(`${API_URL}/leaderboard`, { method: 'GET', cache: 'no-store' });
+                if(res.ok) {
+                    let duration = Math.round(performance.now() - start);
+                    document.getElementById('valPing').innerText = duration + " ms";
+                    document.getElementById('pingStatus').innerText = "🟢 " + duration + " ms";
+                }
+            } catch (e) {
+                document.getElementById('valPing').innerText = "Offline";
+                document.getElementById('pingStatus').innerText = "🔴 Uzildi";
+            }
+        }
+        setInterval(measurePing, 4000);
+        measurePing();
+
+        function detectDeviceSpecs() {
+            let ua = navigator.userAgent;
+            let os = "Noma'lum";
+            if (ua.indexOf("Win") !== -1) os = "💻 Windows PC";
+            else if (ua.indexOf("Android") !== -1) os = "📱 Android";
+            else if (ua.indexOf("like Mac") !== -1) os = "📱 iOS";
+            else if (ua.indexOf("Mac") !== -1) os = "💻 macOS";
+            document.getElementById("specOS").innerText = os;
+            document.getElementById("specCPU").innerText = (navigator.hardwareConcurrency || "4") + " Yadro";
+            document.getElementById("specScreen").innerText = `${window.screen.width}x${window.screen.height}`;
+        }
+        detectDeviceSpecs();
 
         syncData();
     </script>
