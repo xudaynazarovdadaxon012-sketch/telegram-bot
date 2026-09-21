@@ -19,26 +19,34 @@
     
     <style>
         :root {
-            --bg-dark: #06080e;
-            --accent-main: #00f0ff;
-            --accent-glow: rgba(0, 240, 255, 0.4);
-            --gold-main: #ffb700;
-            --glass-bg: rgba(14, 20, 32, 0.75);
-            --glass-border: rgba(255, 255, 255, 0.15);
+            --bg-dark: #05070f;
+            --accent-main: #00f3ff;
+            --accent-glow: rgba(0, 243, 255, 0.4);
+            --gold-main: #ffd700;
+            --glass-bg: rgba(12, 18, 30, 0.75);
+            --glass-border: rgba(0, 243, 255, 0.2);
         }
 
         /* Dynamic Rank Theme Overrides */
         body[data-rank="1"] {
-            --accent-main: #00f0ff;
-            --accent-glow: rgba(0, 240, 255, 0.4);
+            --accent-main: #00f3ff;
+            --accent-glow: rgba(0, 243, 255, 0.4);
+            --glass-border: rgba(0, 243, 255, 0.25);
         }
         body[data-rank="2"] {
-            --accent-main: #a855f7;
-            --accent-glow: rgba(168, 85, 247, 0.4);
+            --accent-main: #9d4edd;
+            --accent-glow: rgba(157, 78, 221, 0.4);
+            --glass-border: rgba(157, 78, 221, 0.3);
         }
         body[data-rank="3"] {
-            --accent-main: #ffb700;
-            --accent-glow: rgba(255, 183, 0, 0.4);
+            --accent-main: #ffd700;
+            --accent-glow: rgba(255, 215, 0, 0.4);
+            --glass-border: rgba(255, 215, 0, 0.35);
+        }
+        body[data-rank="4"] {
+            --accent-main: #ff0055;
+            --accent-glow: rgba(255, 0, 85, 0.5);
+            --glass-border: rgba(255, 0, 85, 0.4);
         }
 
         * {
@@ -46,7 +54,7 @@
             user-select: none;
             -webkit-user-select: none;
             -webkit-touch-callout: none;
-            font-family: 'Rajdhani', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Segoe UI Emoji", sans-serif;
+            font-family: 'Rajdhani', -apple-system, sans-serif;
         }
 
         .font-orbitron {
@@ -69,9 +77,9 @@
             position: fixed;
             inset: 0;
             background-image: 
-                linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-                linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-            background-size: 35px 35px;
+                linear-gradient(to right, rgba(0, 243, 255, 0.04) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(0, 243, 255, 0.04) 1px, transparent 1px);
+            background-size: 32px 32px;
             pointer-events: none;
             z-index: 1;
         }
@@ -87,22 +95,22 @@
         }
 
         .combo-vignette.active {
-            box-shadow: inset 0 0 50px var(--accent-main), inset 0 0 20px #ff0055;
-            animation: pulseHeat 0.5s infinite alternate ease-in-out;
+            box-shadow: inset 0 0 60px var(--accent-main), inset 0 0 30px #ff0055;
+            animation: pulseHeat 0.4s infinite alternate ease-in-out;
         }
 
         @keyframes pulseHeat {
-            0% { opacity: 0.7; }
+            0% { opacity: 0.6; }
             100% { opacity: 1; }
         }
 
         /* Premium Glassmorphism Cards */
         .glass-card {
             background: var(--glass-bg);
-            backdrop-filter: blur(18px);
-            -webkit-backdrop-filter: blur(18px);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
             border: 1px solid var(--glass-border);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.6);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.7);
             position: relative;
             overflow: hidden;
         }
@@ -118,13 +126,13 @@
             background: linear-gradient(
                 60deg,
                 transparent 30%,
-                rgba(255, 255, 255, 0.1) 48%,
+                rgba(255, 255, 255, 0.08) 48%,
                 rgba(255, 255, 255, 0.25) 50%,
-                rgba(255, 255, 255, 0.1) 52%,
+                rgba(255, 255, 255, 0.08) 52%,
                 transparent 70%
             );
             transform: rotate(25deg);
-            animation: holoSweep 5s infinite linear;
+            animation: holoSweep 4.5s infinite linear;
             pointer-events: none;
         }
 
@@ -135,20 +143,20 @@
 
         /* 3D Score Typography */
         .gold-3d-text {
-            background: linear-gradient(180deg, #ffffff 0%, #ffe600 45%, #ff8800 100%);
+            background: linear-gradient(180deg, #ffffff 0%, #ffd700 50%, #ff8800 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            filter: drop-shadow(0px 4px 15px rgba(255, 183, 0, 0.6));
+            filter: drop-shadow(0px 4px 15px rgba(255, 215, 0, 0.6));
         }
 
-        /* Floating Score Vectors (+1, +2, etc.) */
+        /* Floating Score Vectors (+X popup) */
         .tap-floating-text {
             position: absolute;
             font-family: 'Orbitron', sans-serif;
-            font-size: 34px;
+            font-size: 32px;
             font-weight: 900;
-            color: var(--gold-main);
-            text-shadow: 0 0 14px var(--accent-glow), 0 4px 0 #000;
+            color: var(--accent-main);
+            text-shadow: 0 0 16px var(--accent-glow), 0 4px 0 #000;
             pointer-events: none;
             animation: floatUpFade 0.75s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
             z-index: 99;
@@ -160,24 +168,24 @@
                 transform: translateY(0) scale(0.8) rotate(0deg);
             }
             50% {
-                transform: translateY(-70px) scale(1.3) rotate(-6deg);
+                transform: translateY(-60px) scale(1.25) rotate(-4deg);
             }
             100% {
                 opacity: 0;
-                transform: translateY(-120px) scale(1) rotate(6deg);
+                transform: translateY(-110px) scale(1) rotate(4deg);
             }
         }
 
         /* Cyber Buttons with Glow */
         .btn-cyber {
-            background: linear-gradient(180deg, rgba(255,255,255,0.12) 0%, rgba(0,0,0,0.4) 100%), var(--glass-bg);
+            background: linear-gradient(180deg, rgba(255,255,255,0.15) 0%, rgba(0,0,0,0.5) 100%), var(--glass-bg);
             border: 1px solid var(--accent-main);
             box-shadow: 0 4px 15px var(--accent-glow), inset 0 1px 0 rgba(255,255,255,0.25);
             transition: all 0.12s ease;
         }
 
         .btn-cyber:active {
-            transform: translateY(2px) scale(0.97);
+            transform: translateY(2px) scale(0.96);
             box-shadow: 0 2px 8px var(--accent-glow);
         }
 
@@ -203,7 +211,7 @@
 
     <header class="relative z-10 p-3 mx-3 mt-3 rounded-2xl glass-card holo-shine flex items-center justify-between">
         <div class="flex items-center gap-3">
-            <div id="userAvatar" class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-400 to-amber-400 flex items-center justify-center font-bold text-lg text-black font-orbitron shadow-md">
+            <div id="userAvatar" class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-400 to-purple-500 flex items-center justify-center font-bold text-lg text-black font-orbitron shadow-md">
                 U
             </div>
             <div>
@@ -215,15 +223,15 @@
             </div>
         </div>
         <div id="rankBadge" class="px-3 py-1.5 rounded-xl bg-white/5 border border-cyan-400/30 font-orbitron text-cyan-300 text-xs font-bold uppercase tracking-widest shadow-inner">
-            BOSQICH: <span id="rankLevelNum" class="text-amber-400">1</span>
+            DARAJA: <span id="rankLevelNum" class="text-amber-400">1</span>
         </div>
     </header>
 
-    <section class="relative z-10 text-center my-3 px-4">
-        <div class="text-xs uppercase tracking-widest text-gray-400 font-bold font-orbitron mb-1">Jamlangan Balans</div>
+    <section class="relative z-10 text-center my-2 px-4">
+        <div class="text-xs uppercase tracking-widest text-gray-400 font-bold font-orbitron mb-1">Jamlangan Tangalar</div>
         <div class="flex items-center justify-center gap-2">
             <!-- Metallic Gold Coin SVG Badge -->
-            <svg class="w-10 h-10 text-amber-400 drop-shadow-[0_0_14px_rgba(255,183,0,0.7)]" fill="currentColor" viewBox="0 0 24 24">
+            <svg class="w-10 h-10 text-amber-400 drop-shadow-[0_0_14px_rgba(255,215,0,0.7)]" fill="currentColor" viewBox="0 0 24 24">
                 <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/>
                 <path d="M12 6v12M15 9.5H10.5a1.5 1.5 0 0 0 0 3h3a1.5 1.5 0 0 1 0 3H9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
             </svg>
@@ -233,6 +241,8 @@
         <div class="mt-2 text-xs text-gray-300 font-orbitron flex justify-center items-center gap-3">
             <span>TAP KUCHI: <strong id="tapPowerDisplay" class="text-cyan-400">+1</strong></span>
             <span>•</span>
+            <span>PASSIV: <strong id="passiveIncomeDisplay" class="text-emerald-400">+0/s</strong></span>
+            <span>•</span>
             <span id="comboCounterText" class="text-amber-400 opacity-0 transition-opacity font-bold">COMBO x1</span>
         </div>
     </section>
@@ -241,6 +251,7 @@
         <div id="canvas-viewport" class="w-full h-full absolute inset-0 cursor-pointer"></div>
     </main>
 
+    <!-- Shop Panel -->
     <div id="shopPanel" class="hidden absolute top-20 left-3 right-3 bottom-28 glass-card rounded-2xl z-30 p-4 overflow-y-auto holo-shine">
         <div class="flex justify-between items-center mb-4 pb-2 border-b border-white/10">
             <h2 class="text-lg font-bold font-orbitron text-amber-400 tracking-wide">KIBERNETIK DO'KON</h2>
@@ -252,7 +263,7 @@
             <div class="p-3.5 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between">
                 <div>
                     <div class="font-bold text-base text-gray-100 font-orbitron">Tap Kuchaytirgich (+1)</div>
-                    <div class="text-xs text-gray-400">Har bir bosganda ko'proq coin oling</div>
+                    <div class="text-xs text-gray-400">Har bir tapda ko'proq coin olasiz (Energiya sarfi baribir 1 bo'lib qoladi)</div>
                     <div class="text-xs text-amber-400 font-bold font-orbitron mt-1">Narxi: <span id="tapUpgradeCost">100</span> Coin</div>
                 </div>
                 <button onclick="buyTapUpgrade()" class="btn-cyber px-4 py-2.5 rounded-xl font-bold font-orbitron text-xs text-cyan-300">
@@ -264,16 +275,29 @@
             <div class="p-3.5 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between">
                 <div>
                     <div class="font-bold text-base text-gray-100 font-orbitron">Energiya Sig'imi (+50)</div>
-                    <div class="text-xs text-gray-400">Maksimal energiya miqdorini oshiring</div>
+                    <div class="text-xs text-gray-400">Maksimal energiya hajmini oshiring</div>
                     <div class="text-xs text-amber-400 font-bold font-orbitron mt-1">Narxi: <span id="energyUpgradeCost">200</span> Coin</div>
                 </div>
                 <button onclick="buyEnergyUpgrade()" class="btn-cyber px-4 py-2.5 rounded-xl font-bold font-orbitron text-xs text-cyan-300">
                     KENGAYTIRISH
                 </button>
             </div>
+
+            <!-- Upgrade Auto Miner -->
+            <div class="p-3.5 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between">
+                <div>
+                    <div class="font-bold text-base text-gray-100 font-orbitron">Kiber Avto-Mayner (+1/s)</div>
+                    <div class="text-xs text-gray-400">Har bir soniyada passiv avtomatik tanga yig'ing</div>
+                    <div class="text-xs text-amber-400 font-bold font-orbitron mt-1">Narxi: <span id="autoMinerCost">300</span> Coin</div>
+                </div>
+                <button onclick="buyAutoMiner()" class="btn-cyber px-4 py-2.5 rounded-xl font-bold font-orbitron text-xs text-emerald-300">
+                    SOTIB OLISH
+                </button>
+            </div>
         </div>
     </div>
 
+    <!-- Leaderboard Panel -->
     <div id="topPanel" class="hidden absolute top-20 left-3 right-3 bottom-28 glass-card rounded-2xl z-30 p-4 overflow-y-auto holo-shine">
         <div class="flex justify-between items-center mb-4 pb-2 border-b border-white/10">
             <h2 class="text-lg font-bold font-orbitron text-cyan-400 tracking-wide">PESHQADAMLAR</h2>
@@ -286,10 +310,10 @@
                     <span class="font-black font-orbitron text-amber-400 text-lg">#1</span>
                     <div>
                         <div class="font-bold text-sm text-gray-100">CyberKing_UZ</div>
-                        <div class="text-[11px] text-gray-400 font-orbitron">Oltin Lord</div>
+                        <div class="text-[11px] text-gray-400 font-orbitron">Kiber Usta</div>
                     </div>
                 </div>
-                <div class="font-orbitron font-bold text-amber-400 text-sm">1,450,000</div>
+                <div class="font-orbitron font-bold text-amber-400 text-sm">2,450,000</div>
             </div>
 
             <div class="p-3 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-between">
@@ -297,14 +321,15 @@
                     <span class="font-black font-orbitron text-purple-400 text-lg">#2</span>
                     <div>
                         <div class="font-bold text-sm text-gray-100">NeonMaster_Tash</div>
-                        <div class="text-[11px] text-gray-400 font-orbitron">Binafsha Kiber</div>
+                        <div class="text-[11px] text-gray-400 font-orbitron">Oltin Daraja</div>
                     </div>
                 </div>
-                <div class="font-orbitron font-bold text-purple-300 text-sm">820,000</div>
+                <div class="font-orbitron font-bold text-purple-300 text-sm">1,120,000</div>
             </div>
         </div>
     </div>
 
+    <!-- Profile Panel -->
     <div id="profilePanel" class="hidden absolute top-20 left-3 right-3 bottom-28 glass-card rounded-2xl z-30 p-4 overflow-y-auto holo-shine text-center">
         <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-cyan-400 to-purple-500 mx-auto flex items-center justify-center font-orbitron text-2xl font-black text-black shadow-lg mb-3">
             U
@@ -357,7 +382,7 @@
     </footer>
 
     <script>
-        // Telegram WebApp Initialization
+        // Telegram WebApp Integration
         const tg = window.Telegram?.WebApp;
         if(tg) {
             tg.expand();
@@ -368,35 +393,44 @@
             }
         }
 
-        // Persistent State Storage
-        let state = JSON.parse(localStorage.getItem('cyber_clicker_state_v3')) || {
+        // Persistent Game State
+        let state = JSON.parse(localStorage.getItem('cyber_clicker_state_v4')) || {
             score: 0,
             energy: 100,
             maxEnergy: 100,
             tapPower: 1,
+            autoMiner: 0,
             totalTaps: 0,
             rankLevel: 1,
             lastSavedTime: Date.now()
         };
 
-        // Offline Energy Regeneration Calculation
+        // Offline Passive & Energy Regen Calculation
         const now = Date.now();
         const elapsedSecs = Math.floor((now - (state.lastSavedTime || now)) / 1000);
-        if (elapsedSecs > 0 && state.energy < state.maxEnergy) {
-            state.energy = Math.min(state.maxEnergy, state.energy + elapsedSecs);
+        if (elapsedSecs > 0) {
+            if (state.energy < state.maxEnergy) {
+                state.energy = Math.min(state.maxEnergy, state.energy + elapsedSecs);
+            }
+            if (state.autoMiner > 0) {
+                state.score += state.autoMiner * elapsedSecs;
+            }
         }
 
         function saveState() {
             state.lastSavedTime = Date.now();
-            localStorage.setItem('cyber_clicker_state_v3', JSON.stringify(state));
+            localStorage.setItem('cyber_clicker_state_v4', JSON.stringify(state));
         }
 
-        // Dynamic Rank Themes
+        // Dynamic Level & Theme Shifting
         function updateRankTheme() {
             let newRank = 1;
             let rankName = "KIBER BRONZA";
 
-            if (state.score >= 1000) {
+            if (state.score >= 5000) {
+                newRank = 4;
+                rankName = "KIBER USTA";
+            } else if (state.score >= 1000) {
                 newRank = 3;
                 rankName = "KIBER OLTIN";
             } else if (state.score >= 250) {
@@ -417,8 +451,10 @@
             document.getElementById('energyCurrent').innerText = state.energy;
             document.getElementById('energyMax').innerText = state.maxEnergy;
             document.getElementById('tapPowerDisplay').innerText = '+' + state.tapPower;
+            document.getElementById('passiveIncomeDisplay').innerText = '+' + state.autoMiner + '/s';
             document.getElementById('tapUpgradeCost').innerText = state.tapPower * 100;
             document.getElementById('energyUpgradeCost').innerText = (state.maxEnergy / 50) * 100;
+            document.getElementById('autoMinerCost').innerText = (state.autoMiner + 1) * 300;
             document.getElementById('totalTapsText').innerText = state.totalTaps.toLocaleString();
             
             const pct = (state.energy / state.maxEnergy) * 100;
@@ -427,6 +463,7 @@
             saveState();
         }
 
+        // Web Audio Synthesizer
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function playSynthesizedSound(freq = 600, duration = 0.05) {
             try {
@@ -435,8 +472,8 @@
                 const gain = audioCtx.createGain();
                 osc.type = 'sine';
                 osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(150, audioCtx.currentTime + duration);
-                gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(120, audioCtx.currentTime + duration);
+                gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
                 gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + duration);
                 osc.connect(gain);
                 gain.connect(audioCtx.destination);
@@ -445,6 +482,7 @@
             } catch(e) {}
         }
 
+        // Three.js 3D Scene Initialization
         const container = document.getElementById('canvas-viewport');
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
@@ -457,10 +495,10 @@
         // Metallic Gold 3D Coin Mesh
         const coinGeometry = new THREE.CylinderGeometry(2.2, 2.2, 0.35, 60);
         const coinMaterial = new THREE.MeshPhysicalMaterial({
-            color: 0xffb700,
-            metalness: 0.9,
-            roughness: 0.15,
-            clearcoat: 0.8,
+            color: 0xffd700,
+            metalness: 0.95,
+            roughness: 0.1,
+            clearcoat: 0.9,
             clearcoatRoughness: 0.1
         });
         const coin = new THREE.Mesh(coinGeometry, coinMaterial);
@@ -468,11 +506,11 @@
         scene.add(coin);
 
         // Lighting System
-        const goldLight = new THREE.PointLight(0xffb700, 2.5, 50);
+        const goldLight = new THREE.PointLight(0xffd700, 2.5, 50);
         goldLight.position.set(5, 5, 5);
         scene.add(goldLight);
 
-        const cyanLight = new THREE.PointLight(0x00f0ff, 2.5, 50);
+        const cyanLight = new THREE.PointLight(0x00f3ff, 2.5, 50);
         cyanLight.position.set(-5, -5, 5);
         scene.add(cyanLight);
 
@@ -481,7 +519,8 @@
 
         camera.position.z = 7.5;
 
-        const particleCount = 30;
+        // 3D Particle Explosion System
+        const particleCount = 25;
         const particleGeo = new THREE.BufferGeometry();
         const particlePos = new Float32Array(particleCount * 3);
         const particleVel = [];
@@ -491,15 +530,15 @@
             particlePos[i*3+1] = 0;
             particlePos[i*3+2] = 0;
             particleVel.push({
-                x: (Math.random() - 0.5) * 0.18,
-                y: (Math.random() - 0.5) * 0.18,
-                z: (Math.random() - 0.5) * 0.18
+                x: (Math.random() - 0.5) * 0.2,
+                y: (Math.random() - 0.5) * 0.2,
+                z: (Math.random() - 0.5) * 0.2
             });
         }
         particleGeo.setAttribute('position', new THREE.BufferAttribute(particlePos, 3));
         const particleMat = new THREE.PointsMaterial({
-            color: 0x00f0ff,
-            size: 0.12,
+            color: 0x00f3ff,
+            size: 0.14,
             transparent: true,
             opacity: 0
         });
@@ -509,9 +548,9 @@
         function triggerSparks() {
             const positions = particles.geometry.attributes.position.array;
             for(let i=0; i<particleCount; i++) {
-                positions[i*3] = (Math.random() - 0.5) * 0.5;
-                positions[i*3+1] = (Math.random() - 0.5) * 0.5;
-                positions[i*3+2] = (Math.random() - 0.5) * 0.5;
+                positions[i*3] = (Math.random() - 0.5) * 0.4;
+                positions[i*3+1] = (Math.random() - 0.5) * 0.4;
+                positions[i*3+2] = (Math.random() - 0.5) * 0.4;
             }
             particles.geometry.attributes.position.needsUpdate = true;
             particleMat.opacity = 1;
@@ -521,20 +560,20 @@
         let comboResetTimer = null;
 
         function registerTap(clientX, clientY) {
-            // STRICT RULE: 1 TAP = EXACTLY 1 ENERGY REDUCTION
+            // STRICT RULE: 1 TAP = EXACTLY 1 ENERGY REDUCTION ALWAYS
             if (state.energy >= 1) {
                 state.score += state.tapPower;
-                state.energy -= 1; // Exactly 1 energy consumed
+                state.energy -= 1; // EXACTLY 1 ENERGY DEPLOYED
                 state.totalTaps += 1;
 
-                // Combo Streak
+                // Combo Streak & Heat Vignette
                 tapCombo++;
                 const comboElem = document.getElementById('comboCounterText');
                 comboElem.innerText = 'COMBO x' + tapCombo;
                 comboElem.style.opacity = '1';
 
                 const vignette = document.getElementById('comboVignette');
-                if (tapCombo > 5) {
+                if (tapCombo > 4) {
                     vignette.classList.add('active');
                 }
 
@@ -545,16 +584,16 @@
                     vignette.classList.remove('active');
                 }, 800);
 
-                // Sound & Haptic Feedback
-                playSynthesizedSound(600 + Math.min(tapCombo * 30, 400));
+                // Sound & Haptic
+                playSynthesizedSound(550 + Math.min(tapCombo * 35, 450));
                 if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
 
-                // 3D Coin Dynamics & Particles
+                // 3D Coin Tilt & Spark Effects
                 coin.rotation.y += 0.35;
-                coin.rotation.x += 0.15;
+                coin.rotation.x += 0.12;
                 triggerSparks();
 
-                // Floating Text Vectors
+                // Floating Score Vector Popup
                 const floatText = document.createElement('div');
                 floatText.className = 'tap-floating-text';
                 floatText.innerText = '+' + state.tapPower;
@@ -567,20 +606,26 @@
             }
         }
 
-        // Pointer Listener
+        // Interactive Pointer Listener
         container.addEventListener('pointerdown', (e) => {
             registerTap(e.clientX, e.clientY);
         });
 
-        // Continuous Auto Energy Recovery (+1 per second)
+        // Auto Miner & Energy Regeneration Timer
         setInterval(() => {
+            let changed = false;
             if (state.energy < state.maxEnergy) {
                 state.energy = Math.min(state.maxEnergy, state.energy + 1);
-                updateUI();
+                changed = true;
             }
+            if (state.autoMiner > 0) {
+                state.score += state.autoMiner;
+                changed = true;
+            }
+            if (changed) updateUI();
         }, 1000);
 
-        // Shop Upgrades Handlers
+        // Upgrades Logic
         function buyTapUpgrade() {
             const cost = state.tapPower * 100;
             if (state.score >= cost) {
@@ -596,6 +641,15 @@
                 state.score -= cost;
                 state.maxEnergy += 50;
                 state.energy = state.maxEnergy;
+                updateUI();
+            }
+        }
+
+        function buyAutoMiner() {
+            const cost = (state.autoMiner + 1) * 300;
+            if (state.score >= cost) {
+                state.score -= cost;
+                state.autoMiner += 1;
                 updateUI();
             }
         }
@@ -621,11 +675,11 @@
             }
         }
 
+        // Main Animation Loop
         function animate() {
             requestAnimationFrame(animate);
             coin.rotation.y += 0.008;
 
-            // Particles Fade & Motion
             if (particleMat.opacity > 0) {
                 particleMat.opacity -= 0.03;
                 const positions = particles.geometry.attributes.position.array;
@@ -641,14 +695,14 @@
         }
         animate();
 
-        // Responsive Canvas Resize
+        // Responsive Resizing
         window.addEventListener('resize', () => {
             camera.aspect = container.clientWidth / container.clientHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(container.clientWidth, container.clientHeight);
         });
 
-        // Initial Load
+        // Initialize UI State
         updateUI();
     </script>
 </body>
