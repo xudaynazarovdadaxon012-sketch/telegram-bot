@@ -4,11 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Telegram Tap Mini App</title>
+    <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
             --bg: #070a12;
-            --card-bg: rgba(20, 27, 44, 0.75);
+            --card-bg: rgba(20, 27, 44, 0.85);
             --gold: #f59e0b;
             --blue: #3b82f6;
             --text: #ffffff;
@@ -17,14 +18,14 @@
 
         body.theme-neon {
             --bg: #0d0221;
-            --card-bg: rgba(26, 11, 46, 0.8);
+            --card-bg: rgba(26, 11, 46, 0.9);
             --gold: #00f0ff;
             --blue: #ff007f;
         }
 
         body.theme-gold {
             --bg: #140d02;
-            --card-bg: rgba(38, 26, 8, 0.8);
+            --card-bg: rgba(38, 26, 8, 0.9);
             --gold: #ffd700;
             --blue: #d4af37;
         }
@@ -35,6 +36,7 @@
             padding: 0;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             user-select: none;
+            -webkit-user-select: none;
             -webkit-tap-highlight-color: transparent;
         }
 
@@ -61,6 +63,7 @@
             align-items: center;
             justify-content: center;
             gap: 8px;
+            margin-top: 4px;
         }
 
         .tabs {
@@ -73,7 +76,7 @@
 
         .tab-btn {
             flex: 1;
-            padding: 8px 0;
+            padding: 10px 0;
             background: none;
             border: none;
             color: var(--sub);
@@ -81,6 +84,7 @@
             font-weight: 800;
             cursor: pointer;
             border-radius: 8px;
+            transition: all 0.2s;
         }
 
         .tab-btn.active {
@@ -104,34 +108,35 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            margin: 25px 0;
+            margin: 20px 0;
             touch-action: manipulation;
         }
 
         .coin {
-            width: 190px;
-            height: 190px;
+            width: 200px;
+            height: 200px;
             border-radius: 50%;
             background: radial-gradient(circle at 35% 35%, #fef08a, var(--gold) 60%, #78350f);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 85px;
+            font-size: 90px;
             border: 6px solid #fde047;
-            box-shadow: 0 0 30px rgba(245, 158, 11, 0.3);
+            box-shadow: 0 0 35px rgba(245, 158, 11, 0.4);
             cursor: pointer;
             transition: transform 0.05s ease;
         }
 
-        .coin:active { transform: scale(0.93); }
+        .coin:active { transform: scale(0.92); }
 
         .floating-text {
             position: absolute;
             color: #fef08a;
             font-weight: 900;
-            font-size: 26px;
+            font-size: 28px;
             pointer-events: none;
             animation: floatUp 0.6s ease-out forwards;
+            z-index: 999;
         }
 
         @keyframes floatUp {
@@ -151,18 +156,19 @@
 
         .btn {
             width: 100%;
-            padding: 10px;
+            padding: 12px;
             background: var(--blue);
             border: none;
             border-radius: 8px;
             color: #fff;
             font-weight: 700;
             cursor: pointer;
-            font-size: 12px;
-            margin-top: 6px;
+            font-size: 13px;
+            margin-top: 8px;
         }
 
         .btn-gold { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .btn:active { opacity: 0.8; }
 
         .footer {
             padding: 14px;
@@ -172,18 +178,18 @@
 
         .bar {
             width: 100%;
-            height: 8px;
+            height: 10px;
             background: rgba(255, 255, 255, 0.08);
             border-radius: 6px;
             overflow: hidden;
-            margin-top: 4px;
+            margin-top: 6px;
         }
 
         .fill {
             width: 100%;
             height: 100%;
             background: var(--blue);
-            transition: width 0.2s;
+            transition: width 0.1s linear;
         }
 
         .pulse-dot {
@@ -226,7 +232,7 @@
         <button class="tab-btn" onclick="setTab('profile', event)">👤 PROFIL</button>
     </div>
 
-    <!-- TAP -->
+    <!-- TAP PAGE -->
     <div id="tap" class="content active">
         <div style="width:100%; max-width:340px; margin-bottom:10px;">
             <button class="btn btn-gold" onclick="claimDaily()">🎁 Kunlik Bonus (+100 🪙)</button>
@@ -237,44 +243,47 @@
         <div style="font-size:12px; color:var(--sub);">1 Bosish: <b style="color:var(--gold);">+<span id="powerText">1</span> 🪙</b></div>
     </div>
 
-    <!-- DO'KON -->
+    <!-- STORE PAGE -->
     <div id="boost" class="content">
         <div class="card" style="border: 1px solid var(--gold);">
-            <h4>⭐ Telegram Stars'ga almashtirish</h4>
+            <h4>⭐ Telegram Stars Exchange</h4>
             <p style="font-size:11px; color:var(--sub); margin-top:4px;">5,000 Coin = 5 Stars</p>
-            <button class="btn btn-gold" onclick="exchangeStars(5)">⭐ 5 Stars (5,000 🪙)</button>
+            <button class="btn btn-gold" onclick="exchangeStars(5)">⭐ 5 Stars Almashtirish</button>
         </div>
 
         <div class="card">
             <h4>⚡ Energiya +50</h4>
+            <p style="font-size:11px; color:var(--sub); margin-top:4px;">Maksimal energiyani oshirish</p>
             <button class="btn" onclick="buyBoost('energy_500')">Sotib Olish (50 🪙)</button>
         </div>
 
         <div class="card">
             <h4>🚀 Tap+ (Kuchaytirgich)</h4>
+            <p style="font-size:11px; color:var(--sub); margin-top:4px;">Har bir tap kuchi +1 ga oshadi</p>
             <button class="btn btn-gold" onclick="buyBoost('tap_power')">Kuchaytirish (<span id="tapCost">100</span> 🪙)</button>
         </div>
 
         <div class="card">
-            <h4>🤖 Auto-Bot (Passiv)</h4>
-            <button class="btn btn-gold" onclick="buyBoost('auto_bot')">Sotib Olish (300 🪙)</button>
+            <h4>🤖 Auto-Bot (Passiv Mintaqa)</h4>
+            <p style="font-size:11px; color:var(--sub); margin-top:4px;">Siz yo'qingizda ham coin yig'adi</p>
+            <button class="btn btn-gold" id="autoBotBtn" onclick="buyBoost('auto_bot')">Sotib Olish (300 🪙)</button>
         </div>
     </div>
 
-    <!-- TOP -->
+    <!-- LEADERBOARD PAGE -->
     <div id="top" class="content">
         <h3 style="margin-bottom:10px; font-size:14px; color:var(--gold);">🏆 Top 10 O'yinchilar</h3>
         <div id="topList" style="width:100%; max-width:340px;"></div>
     </div>
 
-    <!-- PROFIL & HARDWARE SPECS -->
+    <!-- PROFILE & HARDWARE SPECS -->
     <div id="profile" class="content">
         <div class="card" style="border: 1px solid var(--gold); background: rgba(13, 2, 33, 0.85);">
             <h3 style="color: var(--gold); font-size: 12px; display: flex; align-items: center; justify-content: space-between;">
                 <span style="display:flex; align-items:center; gap:6px;">
-                    <span class="pulse-dot"></span> 📊 TIZIM MONITORINGI (LIVE)
+                    <span class="pulse-dot"></span> 📊 TIZIM MONITORINGI
                 </span>
-                <span id="pingStatus" style="font-size: 10px; color: #10b981;">🟢 0 ms</span>
+                <span id="pingStatus" style="font-size: 10px; color: #10b981;">🟢 Online</span>
             </h3>
             
             <div style="margin-top: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
@@ -285,9 +294,9 @@
                 </div>
 
                 <div style="background: rgba(255,255,255,0.03); padding: 8px; border-radius: 8px;">
-                    <div style="font-size: 9px; color: var(--sub);">PING ALOQA</div>
-                    <div style="font-size: 16px; font-weight: 900; color: var(--gold);" id="valPing">-- ms</div>
-                    <div class="stat-bar-bg"><div class="stat-bar-fill" id="pingBar" style="width: 85%; background: #f59e0b;"></div></div>
+                    <div style="font-size: 9px; color: var(--sub);">XOTIRA REJIMI</div>
+                    <div style="font-size: 14px; font-weight: 900; color: var(--gold);">LocalStorage</div>
+                    <div class="stat-bar-bg"><div class="stat-bar-fill" style="width: 100%; background: #f59e0b;"></div></div>
                 </div>
             </div>
 
@@ -295,7 +304,6 @@
                 <div style="display:flex; justify-content:space-between;"><span>📱 Tizim:</span> <b id="specOS" style="color:#fff;">...</b></div>
                 <div style="display:flex; justify-content:space-between;"><span>🧠 Protsessor:</span> <b id="specCPU" style="color:#fff;">...</b></div>
                 <div style="display:flex; justify-content:space-between;"><span>📐 Ekran:</span> <b id="specScreen" style="color:#fff;">...</b></div>
-                <div style="display:flex; justify-content:space-between;"><span>🔋 Batareya:</span> <b id="specBattery" style="color:#fff;">...</b></div>
             </div>
         </div>
 
@@ -318,17 +326,65 @@
     </div>
 
     <script>
-        const API_URL = "http://localhost:5000/api";
+        // Telegram WebApp Intialization
         let tg = window.Telegram?.WebApp;
-        if(tg) tg.expand();
+        if(tg) {
+            tg.expand();
+            tg.ready();
+        }
 
-        let AppState = {
+        // Default state fallback
+        const defaultState = {
             userId: tg?.initDataUnsafe?.user?.id || Math.floor(Math.random()*1000000),
             username: tg?.initDataUnsafe?.user?.first_name || "O'yinchi",
-            score: 0, energy: 100, maxEnergy: 100, tapPower: 1
+            score: 0,
+            energy: 100,
+            maxEnergy: 100,
+            tapPower: 1,
+            autoBot: false,
+            lastDailyClaim: 0,
+            lastAutoBotTime: Date.now(),
+            theme: 'default'
         };
 
+        // Load or create User Data
+        function loadUserData() {
+            try {
+                let saved = localStorage.getItem("clicker_user_data");
+                if (saved) {
+                    return Object.assign({}, defaultState, JSON.parse(saved));
+                }
+            } catch(e) {}
+            return defaultState;
+        }
+
+        let AppState = loadUserData();
+
+        function saveUserData() {
+            try {
+                localStorage.setItem("clicker_user_data", JSON.stringify(AppState));
+            } catch(e) {}
+        }
+
         document.getElementById('uName').innerText = AppState.username;
+
+        // Auto Bot Offline Earnings Calculation
+        function checkAutoBotEarnings() {
+            if (AppState.autoBot) {
+                let now = Date.now();
+                let diffSec = Math.floor((now - (AppState.lastAutoBotTime || now)) / 1000);
+                if (diffSec > 5) {
+                    let earned = Math.min(diffSec, 10800); // Max 3 hours
+                    if (earned > 0) {
+                        AppState.score += earned;
+                        alert("🤖 Auto-bot siz yo'qligingizda +" + earned + " Coin yig'di!");
+                    }
+                }
+                AppState.lastAutoBotTime = now;
+                saveUserData();
+            }
+        }
+        checkAutoBotEarnings();
 
         function setTab(name, e) {
             document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
@@ -337,119 +393,175 @@
             if(e) e.currentTarget.classList.add('active');
         }
 
-        async function syncData() {
-            try {
-                let res = await fetch(`${API_URL}/sync`, {
-                    method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ userId: AppState.userId, username: AppState.username })
-                });
-                let data = await res.json();
-                if(data.success) {
-                    let u = data.user;
-                    AppState.score = u.score; AppState.energy = u.energy;
-                    AppState.maxEnergy = u.max_energy; AppState.tapPower = u.tap_power;
-                    if(u.theme) changeTheme(u.theme, false);
-                    updateUI();
-                }
-            } catch(e) {}
-        }
-
         function updateUI() {
             document.getElementById('score').innerText = AppState.score.toLocaleString();
             document.getElementById('energy').innerText = AppState.energy;
             document.getElementById('maxEnergy').innerText = AppState.maxEnergy;
             document.getElementById('powerText').innerText = AppState.tapPower;
             document.getElementById('tapCost').innerText = AppState.tapPower * 100;
-            document.getElementById('energyFill').style.width = (AppState.energy / AppState.maxEnergy * 100) + '%';
+            
+            let fillPercent = (AppState.energy / AppState.maxEnergy) * 100;
+            document.getElementById('energyFill').style.width = Math.max(0, Math.min(100, fillPercent)) + '%';
+            
+            if (AppState.autoBot) {
+                document.getElementById('autoBotBtn').innerText = "✅ Faollashtirilgan";
+                document.getElementById('autoBotBtn').disabled = true;
+                document.getElementById('autoBotBtn').style.opacity = "0.6";
+            }
+
+            saveUserData();
         }
 
-        // Tap
+        // Tap Mechanics (Supports Touch & Mouse Click)
         const tapBtn = document.getElementById('tapBtn');
-        tapBtn.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            let touches = e.changedTouches.length;
-            if(tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
 
-            let cost = AppState.tapPower * touches;
-            if(AppState.energy >= cost) {
-                AppState.score += cost;
-                AppState.energy -= cost;
+        function handleTap(event) {
+            if (event.type === 'touchstart') {
+                event.preventDefault();
+            }
+
+            let touches = event.changedTouches ? event.changedTouches.length : 1;
+            if (tg?.HapticFeedback) {
+                tg.HapticFeedback.impactOccurred('light');
+            }
+
+            let totalCost = AppState.tapPower * touches;
+
+            if (AppState.energy >= totalCost) {
+                AppState.score += totalCost;
+                AppState.energy -= totalCost;
                 updateUI();
 
-                for(let i=0; i<touches; i++) {
-                    let t = e.changedTouches[i];
-                    let ft = document.createElement('div');
-                    ft.className = 'floating-text';
-                    ft.innerText = '+' + AppState.tapPower;
-                    ft.style.left = t.clientX + 'px';
-                    ft.style.top = (t.clientY - 20) + 'px';
-                    document.body.appendChild(ft);
-                    setTimeout(() => ft.remove(), 600);
-                }
+                // Render floating animation
+                let clientX = event.clientX || (event.changedTouches && event.changedTouches[0].clientX) || window.innerWidth / 2;
+                let clientY = event.clientY || (event.changedTouches && event.changedTouches[0].clientY) || window.innerHeight / 2;
 
-                fetch(`${API_URL}/tap`, {
-                    method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ userId: AppState.userId, count: touches })
-                });
+                let ft = document.createElement('div');
+                ft.className = 'floating-text';
+                ft.innerText = '+' + totalCost;
+                ft.style.left = (clientX - 15) + 'px';
+                ft.style.top = (clientY - 30) + 'px';
+                document.body.appendChild(ft);
+
+                setTimeout(() => ft.remove(), 600);
+            }
+        }
+
+        tapBtn.addEventListener('touchstart', handleTap, { passive: false });
+        tapBtn.addEventListener('click', (e) => {
+            // Prevent double triggers on touch devices
+            if (!('ontouchstart' in window)) {
+                handleTap(e);
             }
         });
 
-        async function claimDaily() {
-            let res = await fetch(`${API_URL}/daily`, {
-                method: 'POST', headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ userId: AppState.userId })
-            });
-            let data = await res.json();
-            alert(data.message);
-            if(data.success) syncData();
+        // Automatic Energy Regeneration (Every 1 second)
+        setInterval(() => {
+            if (AppState.energy < AppState.maxEnergy) {
+                AppState.energy = Math.min(AppState.maxEnergy, AppState.energy + 1);
+                updateUI();
+            }
+            if (AppState.autoBot) {
+                AppState.lastAutoBotTime = Date.now();
+                saveUserData();
+            }
+        }, 1000);
+
+        // Daily Bonus Claim
+        function claimDaily() {
+            let now = Date.now();
+            let dayMs = 86400000;
+            if (now - (AppState.lastDailyClaim || 0) >= dayMs) {
+                AppState.score += 100;
+                AppState.lastDailyClaim = now;
+                alert("🎁 Tabriklaymiz! +100 Kunlik Coin berildi!");
+                updateUI();
+            } else {
+                let leftHours = Math.ceil((dayMs - (now - AppState.lastDailyClaim)) / (1000 * 3600));
+                alert("Kuting! Keyingi bonusga " + leftHours + " soat qoldi.");
+            }
         }
 
-        async function buyBoost(type) {
-            let res = await fetch(`${API_URL}/buy-boost`, {
-                method: 'POST', headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ userId: AppState.userId, type: type })
-            });
-            let data = await res.json();
-            alert(data.message);
-            if(data.success) syncData();
+        // Shop / Boost logic
+        function buyBoost(type) {
+            if (type === 'energy_500') {
+                if (AppState.score >= 50) {
+                    AppState.score -= 50;
+                    AppState.maxEnergy += 50;
+                    AppState.energy = AppState.maxEnergy;
+                    alert("⚡ Energiya +50 ga oshirildi!");
+                } else {
+                    alert("Tangalar yetarli emas! (50 🪙 kerak)");
+                }
+            } else if (type === 'tap_power') {
+                let cost = AppState.tapPower * 100;
+                if (AppState.score >= cost) {
+                    AppState.score -= cost;
+                    AppState.tapPower += 1;
+                    alert("🚀 Tap kuchi oshirildi!");
+                } else {
+                    alert("Tangalar yetarli emas! (" + cost + " 🪙 kerak)");
+                }
+            } else if (type === 'auto_bot') {
+                if (AppState.autoBot) {
+                    alert("Auto-bot allaqachon sotib olingan!");
+                    return;
+                }
+                if (AppState.score >= 300) {
+                    AppState.score -= 300;
+                    AppState.autoBot = true;
+                    AppState.lastAutoBotTime = Date.now();
+                    alert("🤖 Auto-bot muvaffaqiyatli yoqildi!");
+                } else {
+                    alert("Auto-bot uchun 300 Coin kerak!");
+                }
+            }
+            updateUI();
         }
 
-        async function exchangeStars(starsAmount) {
-            let res = await fetch(`${API_URL}/exchange-stars`, {
-                method: 'POST', headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ userId: AppState.userId, stars: starsAmount })
-            });
-            let data = await res.json();
-            alert(data.message);
-            if(data.success) syncData();
+        // Stars Exchange
+        function exchangeStars(stars) {
+            let cost = stars * 1000;
+            if (AppState.score >= cost) {
+                AppState.score -= cost;
+                alert("✅ Ariza qabul qilindi! " + stars + " Telegram Stars tez orada o'tkaziladi.");
+                updateUI();
+            } else {
+                alert("Tangalar yetarli emas! " + stars + " Stars uchun " + cost + " 🪙 kerak.");
+            }
         }
 
-        function changeTheme(themeName, save = true) {
+        // Theme Switcher
+        function changeTheme(themeName) {
+            AppState.theme = themeName;
             document.body.className = themeName === 'default' ? '' : 'theme-' + themeName;
-            if(save) {
-                fetch(`${API_URL}/theme`, {
-                    method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ userId: AppState.userId, theme: themeName })
-                });
-            }
+            saveUserData();
         }
 
-        async function loadTop() {
-            let res = await fetch(`${API_URL}/leaderboard`);
-            let data = await res.json();
-            if(data.success) {
-                let html = "";
-                data.leaderboard.forEach((u, index) => {
-                    html += `<div style="display:flex; justify-content:space-between; padding:8px; background:var(--card-bg); margin-bottom:4px; border-radius:8px; font-size:11px;">
-                        <span>${index+1}. ${u.username}</span>
-                        <span style="color:var(--gold); font-weight:bold;">${u.score.toLocaleString()} 🪙</span>
-                    </div>`;
-                });
-                document.getElementById('topList').innerHTML = html;
-            }
+        // Leaderboard Generation
+        function loadTop() {
+            let topListHtml = "";
+            let dummyTop = [
+                { name: AppState.username + " (Siz)", score: AppState.score },
+                { name: "Sardor_PRO", score: 15400 },
+                { name: "Jasur_Crypto", score: 12100 },
+                { name: "Telegram_King", score: 9800 },
+                { name: "Ali_99", score: 5400 }
+            ];
+
+            dummyTop.sort((a, b) => b.score - a.score);
+
+            dummyTop.forEach((u, index) => {
+                topListHtml += `<div style="display:flex; justify-content:space-between; padding:10px; background:var(--card-bg); margin-bottom:6px; border-radius:8px; font-size:12px;">
+                    <span>${index+1}. ${u.name}</span>
+                    <span style="color:var(--gold); font-weight:bold;">${u.score.toLocaleString()} 🪙</span>
+                </div>`;
+            });
+
+            document.getElementById('topList').innerHTML = topListHtml;
         }
 
-        // Live Hardware & Performance Tracker
+        // Performance & Specs Tracking
         let frameCount = 0;
         let lastTime = performance.now();
 
@@ -458,9 +570,8 @@
             frameCount++;
             if (now >= lastTime + 1000) {
                 let currentFPS = Math.round((frameCount * 1000) / (now - lastTime));
-                let fpsRatio = Math.min(Math.round((currentFPS / 60) * 100), 100);
                 document.getElementById('valFPS').innerText = currentFPS + " FPS";
-                document.getElementById('fpsBar').style.width = fpsRatio + "%";
+                document.getElementById('fpsBar').style.width = Math.min(100, Math.round((currentFPS / 60) * 100)) + "%";
                 frameCount = 0;
                 lastTime = now;
             }
@@ -468,37 +579,25 @@
         }
         requestAnimationFrame(updateFPSVisuals);
 
-        async function measurePing() {
-            let start = performance.now();
-            try {
-                let res = await fetch(`${API_URL}/leaderboard`, { method: 'GET', cache: 'no-store' });
-                if(res.ok) {
-                    let duration = Math.round(performance.now() - start);
-                    document.getElementById('valPing').innerText = duration + " ms";
-                    document.getElementById('pingStatus').innerText = "🟢 " + duration + " ms";
-                }
-            } catch (e) {
-                document.getElementById('valPing').innerText = "Offline";
-                document.getElementById('pingStatus').innerText = "🔴 Uzildi";
-            }
-        }
-        setInterval(measurePing, 4000);
-        measurePing();
-
         function detectDeviceSpecs() {
             let ua = navigator.userAgent;
             let os = "Noma'lum";
-            if (ua.indexOf("Win") !== -1) os = "💻 Windows PC";
+            if (ua.indexOf("Win") !== -1) os = "💻 Windows";
             else if (ua.indexOf("Android") !== -1) os = "📱 Android";
             else if (ua.indexOf("like Mac") !== -1) os = "📱 iOS";
             else if (ua.indexOf("Mac") !== -1) os = "💻 macOS";
+
             document.getElementById("specOS").innerText = os;
             document.getElementById("specCPU").innerText = (navigator.hardwareConcurrency || "4") + " Yadro";
             document.getElementById("specScreen").innerText = `${window.screen.width}x${window.screen.height}`;
         }
         detectDeviceSpecs();
 
-        syncData();
+        // Initial Theme & UI Restoration
+        if(AppState.theme && AppState.theme !== 'default') {
+            changeTheme(AppState.theme);
+        }
+        updateUI();
     </script>
 </body>
 </html>
