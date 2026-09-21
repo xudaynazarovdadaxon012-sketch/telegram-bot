@@ -154,7 +154,7 @@
         .canvas-area {
             position: relative;
             width: 100%;
-            height: 300px;
+            height: 280px;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -205,46 +205,44 @@
             transition: opacity 0.2s ease;
         }
 
-        /* Energy & Footer Controls */
+        /* Energy & Footer Controls (Old Structured Clean Style) */
         .controls-area {
             display: flex;
             flex-direction: column;
-            gap: 14px;
+            gap: 12px;
+            width: 100%;
         }
 
-        .energy-wrapper {
+        .energy-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: var(--font-title);
+            font-size: 14px;
+            color: #a0a0c0;
             background: var(--glass-bg);
             border: 1px solid var(--glass-border);
-            border-radius: 16px;
             padding: 10px 16px;
+            border-radius: 14px;
             backdrop-filter: blur(10px);
         }
 
-        .energy-header {
-            display: flex;
-            justify-content: space-between;
-            font-family: var(--font-title);
-            font-size: 13px;
-            margin-bottom: 6px;
-            color: rgba(255, 255, 255, 0.8);
-        }
-
-        .energy-bar-bg {
-            width: 100%;
-            height: 8px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 4px;
+        .energy-bar {
+            flex-grow: 1;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 5px;
             overflow: hidden;
             position: relative;
         }
 
-        .energy-bar-fill {
+        .energy-fill {
             height: 100%;
             width: 100%;
             background: linear-gradient(90deg, var(--primary-neon), var(--secondary-neon));
-            border-radius: 4px;
-            box-shadow: 0 0 12px var(--primary-neon);
-            transition: width 0.2s ease;
+            border-radius: 5px;
+            box-shadow: 0 0 10px var(--primary-neon);
+            transition: width 0.15s ease;
         }
 
         /* Navigation Menu */
@@ -277,23 +275,6 @@
 
         .nav-btn:active {
             transform: scale(0.95);
-        }
-
-        .nav-btn::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
-            transform: rotate(45deg);
-            animation: cardGlint 4s infinite;
-        }
-
-        @keyframes cardGlint {
-            0% { transform: translateX(-100%) rotate(45deg); }
-            20%, 100% { transform: translateX(100%) rotate(45deg); }
         }
 
         /* Modals / Upgrades Panel */
@@ -435,15 +416,12 @@
             <canvas id="three-canvas"></canvas>
         </div>
 
-        <!-- Energy Bar & Footer Controls -->
+        <!-- Energy & Footer Controls (Old Structured Layout) -->
         <div class="controls-area">
-            <div class="energy-wrapper">
-                <div class="energy-header">
-                    <span>ENERGIYA</span>
-                    <span id="energy-text">1000 / 1000</span>
-                </div>
-                <div class="energy-bar-bg">
-                    <div class="energy-bar-fill" id="energy-fill"></div>
+            <div class="energy-container">
+                <span id="energy-text">⚡ 1000/1000</span>
+                <div class="energy-bar">
+                    <div class="energy-fill" id="energy-fill"></div>
                 </div>
             </div>
 
@@ -601,7 +579,7 @@
         function updateUI() {
             document.getElementById('balance').innerText = state.coins.toLocaleString();
             document.getElementById('stars-count').innerText = `${state.stars} STARS`;
-            document.getElementById('energy-text').innerText = `${state.energy} / ${state.maxEnergy}`;
+            document.getElementById('energy-text').innerText = `⚡ ${state.energy}/${state.maxEnergy}`;
             document.getElementById('energy-fill').style.width = `${(state.energy / state.maxEnergy) * 100}%`;
 
             document.getElementById('multitap-cost').innerText = `${state.multitapCost} Coin`;
@@ -613,14 +591,14 @@
             document.getElementById('buy-energy').disabled = state.coins < state.energyCost;
             document.getElementById('buy-miner').disabled = state.coins < state.minerCost;
 
-            // Infinite Level Formula: Level = 1 + Math.floor(coins / 2000)
+            // Infinite Level Formula
             const currentLevel = 1 + Math.floor(state.coins / 2000);
             const rankBadge = document.getElementById('rank-badge');
             rankBadge.innerText = `KIBER LVL ${currentLevel}`;
 
             // Dynamic Infinite Color Shifting based on Level
             const root = document.documentElement;
-            const hue = (currentLevel * 45) % 360; // Har bir levelda neon rangi aylanib turadi
+            const hue = (currentLevel * 45) % 360;
             const dynamicColor = `hsl(${hue}, 100%, 50%)`;
             
             root.style.setProperty('--active-glow', dynamicColor);
@@ -638,7 +616,7 @@
             for (let i = 0; i < touches.length; i++) {
                 if (state.energy < 1) break;
 
-                state.energy -= 1; // 1 tap = 1 energy
+                state.energy -= 1; // Strict 1 energy deducted per tap
                 state.coins += state.tapPower;
 
                 const touch = touches[i];
