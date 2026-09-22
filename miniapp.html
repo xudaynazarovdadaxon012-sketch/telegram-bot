@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Cyber Tap 3D - Telegram Mini App</title>
+    <title>CyberPulse Pro - Telegram Mini App</title>
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
-    <!-- Three.js Library for 3D WebGL Rendering -->
+    <!-- Three.js Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         :root {
@@ -16,9 +16,9 @@
             --secondary-neon: #ff0055;
             --accent-gold: #ffd700;
             --star-yellow: #ffaa00;
-            --bg-dark: #050508;
-            --glass-bg: rgba(15, 20, 35, 0.65);
-            --glass-border: rgba(0, 243, 255, 0.25);
+            --bg-dark: #030305;
+            --glass-bg: rgba(12, 17, 30, 0.75);
+            --glass-border: rgba(0, 243, 255, 0.3);
             --font-title: 'Orbitron', sans-serif;
             --font-ui: 'Rajdhani', sans-serif;
             --active-glow: var(--primary-neon);
@@ -47,36 +47,28 @@
             position: relative;
         }
 
-        /* Dynamic Grid Background */
+        /* Cyberpunk Grid & Vignette */
         .bg-grid {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0; width: 100%; height: 100%;
             background: 
-                linear-gradient(transparent 95%, rgba(0, 243, 255, 0.05) 95%),
-                linear-gradient(90deg, transparent 95%, rgba(0, 243, 255, 0.05) 95%);
-            background-size: 30px 30px;
+                linear-gradient(transparent 95%, rgba(0, 243, 255, 0.04) 95%),
+                linear-gradient(90deg, transparent 95%, rgba(0, 243, 255, 0.04) 95%);
+            background-size: 35px 35px;
             z-index: 1;
             pointer-events: none;
         }
 
-        /* Combo Heat Overlay */
         .combo-heat-overlay {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0; width: 100%; height: 100%;
             pointer-events: none;
             z-index: 2;
             opacity: 0;
             transition: opacity 0.3s ease;
-            box-shadow: inset 0 0 100px var(--secondary-neon);
+            box-shadow: inset 0 0 120px var(--secondary-neon);
         }
 
-        /* Main Container */
         .app-container {
             position: relative;
             z-index: 5;
@@ -85,16 +77,16 @@
             height: 100%;
             display: flex;
             flex-direction: column;
-            padding: 16px 16px;
+            padding: 14px 16px;
             justify-content: space-between;
         }
 
-        /* Header Info */
+        /* Header UI */
         .header {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
         }
 
         .top-row {
@@ -114,47 +106,57 @@
             letter-spacing: 1px;
             color: var(--active-glow);
             text-transform: uppercase;
-            box-shadow: 0 0 10px rgba(0, 243, 255, 0.15);
-            backdrop-filter: blur(8px);
+            box-shadow: 0 0 12px rgba(0, 243, 255, 0.2);
+            backdrop-filter: blur(10px);
         }
 
-        .stars-badge {
-            background: rgba(255, 170, 0, 0.15);
+        .badges-right {
+            display: flex;
+            gap: 6px;
+        }
+
+        .stars-badge, .league-badge {
+            background: rgba(255, 170, 0, 0.12);
             border: 1px solid var(--star-yellow);
-            padding: 4px 12px;
+            padding: 4px 10px;
             border-radius: 20px;
             font-family: var(--font-title);
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 700;
             color: var(--star-yellow);
             display: flex;
             align-items: center;
             gap: 4px;
-            box-shadow: 0 0 12px rgba(255, 170, 0, 0.25);
-            backdrop-filter: blur(8px);
+            backdrop-filter: blur(10px);
+        }
+
+        .league-badge {
+            background: rgba(0, 243, 255, 0.12);
+            border-color: var(--primary-neon);
+            color: var(--primary-neon);
         }
 
         .balance-container {
             display: flex;
             align-items: center;
             gap: 8px;
-            margin-top: 4px;
+            margin-top: 2px;
         }
 
         .balance-value {
             font-family: var(--font-title);
-            font-size: 38px;
+            font-size: 36px;
             font-weight: 900;
             color: #ffffff;
             text-shadow: 0 0 20px var(--active-glow);
             letter-spacing: 1px;
         }
 
-        /* 3D Canvas Area */
+        /* 3D Render Area */
         .canvas-area {
             position: relative;
             width: 100%;
-            height: 280px;
+            height: 250px;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -167,37 +169,29 @@
             outline: none;
         }
 
-        /* Floating Tap Indicator Text */
         .tap-pop {
             position: absolute;
             font-family: var(--font-title);
             font-weight: 900;
-            font-size: 26px;
+            font-size: 28px;
             color: #ffffff;
-            text-shadow: 0 0 10px var(--active-glow);
+            text-shadow: 0 0 12px var(--active-glow);
             pointer-events: none;
-            animation: popUp 0.8s ease-out forwards;
+            animation: popUp 0.75s ease-out forwards;
             z-index: 100;
         }
 
         @keyframes popUp {
-            0% {
-                opacity: 1;
-                transform: translate(-50%, -50%) scale(1);
-            }
-            100% {
-                opacity: 0;
-                transform: translate(-50%, -120px) scale(1.4);
-            }
+            0% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            100% { opacity: 0; transform: translate(-50%, -130px) scale(1.4); }
         }
 
-        /* Combo Counter */
         .combo-badge {
             position: absolute;
-            top: 10px;
-            right: 20px;
+            top: 5px;
+            right: 15px;
             font-family: var(--font-title);
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 700;
             color: var(--secondary-neon);
             text-shadow: 0 0 10px var(--secondary-neon);
@@ -205,87 +199,86 @@
             transition: opacity 0.2s ease;
         }
 
-        /* Energy & Footer Controls (Old Structured Clean Style) */
+        /* Controls & Energy */
         .controls-area {
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 10px;
             width: 100%;
         }
 
         .energy-container {
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            gap: 8px;
             font-family: var(--font-title);
-            font-size: 14px;
+            font-size: 13px;
             color: #a0a0c0;
             background: var(--glass-bg);
             border: 1px solid var(--glass-border);
-            padding: 10px 16px;
+            padding: 8px 14px;
             border-radius: 14px;
             backdrop-filter: blur(10px);
         }
 
-        .energy-bar {
+        .energy-bar-wrapper {
             flex-grow: 1;
-            height: 10px;
+            margin-left: 12px;
+            height: 8px;
             background: rgba(255, 255, 255, 0.08);
-            border-radius: 5px;
+            border-radius: 4px;
             overflow: hidden;
-            position: relative;
         }
 
         .energy-fill {
             height: 100%;
             width: 100%;
             background: linear-gradient(90deg, var(--primary-neon), var(--secondary-neon));
-            border-radius: 5px;
+            border-radius: 4px;
             box-shadow: 0 0 10px var(--primary-neon);
             transition: width 0.15s ease;
         }
 
-        /* Navigation Menu */
+        /* 5-Item Navigation Menu */
         .nav-menu {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 6px;
         }
 
         .nav-btn {
             background: var(--glass-bg);
             border: 1px solid var(--glass-border);
-            border-radius: 14px;
-            padding: 12px 0;
+            border-radius: 12px;
+            padding: 8px 0;
             color: #ffffff;
             font-family: var(--font-ui);
             font-weight: 700;
-            font-size: 15px;
-            letter-spacing: 0.5px;
+            font-size: 11px;
+            letter-spacing: 0.3px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 4px;
+            gap: 3px;
             cursor: pointer;
             backdrop-filter: blur(10px);
-            position: relative;
-            overflow: hidden;
             transition: transform 0.1s ease, border-color 0.2s ease;
         }
 
-        .nav-btn:active {
-            transform: scale(0.95);
+        .nav-btn span {
+            font-size: 15px;
         }
 
-        /* Modals / Upgrades Panel */
+        .nav-btn:active {
+            transform: scale(0.93);
+        }
+
+        /* Modals (Professional Design) */
         .modal-overlay {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(5, 5, 8, 0.88);
-            backdrop-filter: blur(15px);
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(3, 3, 5, 0.9);
+            backdrop-filter: blur(20px);
             z-index: 50;
             display: flex;
             flex-direction: column;
@@ -305,11 +298,13 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            padding-bottom: 10px;
         }
 
         .modal-title {
             font-family: var(--font-title);
-            font-size: 18px;
+            font-size: 17px;
             color: var(--active-glow);
         }
 
@@ -317,76 +312,80 @@
             background: none;
             border: none;
             color: #fff;
-            font-size: 22px;
+            font-size: 20px;
             cursor: pointer;
         }
 
-        .upgrades-list {
+        .modal-body {
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 10px;
             overflow-y: auto;
+            max-height: calc(100vh - 100px);
+            padding-right: 2px;
         }
 
-        .upgrade-card {
+        .card-item {
             background: var(--glass-bg);
             border: 1px solid var(--glass-border);
-            border-radius: 14px;
-            padding: 14px;
+            border-radius: 12px;
+            padding: 12px;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
-        .upgrade-card.star-card {
+        .card-item.star-card {
             border-color: var(--star-yellow);
-            background: rgba(255, 170, 0, 0.08);
+            background: rgba(255, 170, 0, 0.06);
         }
 
-        .upgrade-info {
+        .card-info {
             display: flex;
             flex-direction: column;
             gap: 2px;
         }
 
-        .upgrade-title {
+        .card-name {
             font-family: var(--font-ui);
             font-weight: 700;
-            font-size: 16px;
+            font-size: 15px;
         }
 
-        .upgrade-desc {
-            font-size: 12px;
-            color: rgba(255, 255, 255, 0.65);
+        .card-desc {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.6);
         }
 
-        .upgrade-cost {
+        .card-price {
             font-family: var(--font-title);
-            font-size: 13px;
+            font-size: 12px;
             color: var(--accent-gold);
-            margin-top: 4px;
+            margin-top: 3px;
         }
 
-        .buy-btn {
+        .action-btn {
             background: linear-gradient(135deg, var(--primary-neon), var(--secondary-neon));
             border: none;
             border-radius: 8px;
             color: #fff;
             font-family: var(--font-title);
             font-weight: 700;
-            font-size: 12px;
-            padding: 8px 14px;
+            font-size: 11px;
+            padding: 7px 12px;
             cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 243, 255, 0.25);
         }
 
-        .buy-btn.star-btn {
+        .action-btn.star-btn {
             background: linear-gradient(135deg, var(--star-yellow), #ff5500);
             color: #000;
         }
 
-        .buy-btn:disabled {
+        .action-btn:disabled {
             opacity: 0.35;
             cursor: not-allowed;
+            box-shadow: none;
         }
     </style>
 </head>
@@ -396,13 +395,16 @@
     <div class="combo-heat-overlay" id="combo-overlay"></div>
 
     <div class="app-container">
-        <!-- Header Section -->
+        <!-- Header -->
         <div class="header">
             <div class="top-row">
-                <div class="user-rank-badge" id="rank-badge">KIBER LVL 1</div>
-                <div class="stars-badge">
-                    <span>⭐</span>
-                    <span id="stars-count">0 STARS</span>
+                <div class="user-rank-badge" id="rank-badge">CYBER LVL 1</div>
+                <div class="badges-right">
+                    <div class="league-badge" id="league-name">SILVER</div>
+                    <div class="stars-badge">
+                        <span>⭐</span>
+                        <span id="stars-count">0</span>
+                    </div>
                 </div>
             </div>
             <div class="balance-container">
@@ -410,100 +412,174 @@
             </div>
         </div>
 
-        <!-- 3D Interactive Coin Area -->
+        <!-- 3D Canvas Area -->
         <div class="canvas-area" id="canvas-container">
             <div class="combo-badge" id="combo-badge">COMBO x1</div>
             <canvas id="three-canvas"></canvas>
         </div>
 
-        <!-- Energy & Footer Controls (Old Structured Layout) -->
+        <!-- Controls & Navigation -->
         <div class="controls-area">
             <div class="energy-container">
                 <span id="energy-text">⚡ 1000/1000</span>
-                <div class="energy-bar">
+                <div class="energy-bar-wrapper">
                     <div class="energy-fill" id="energy-fill"></div>
                 </div>
             </div>
 
             <div class="nav-menu">
-                <button class="nav-btn" onclick="openModal('upgrades-modal')">
-                    <span>⚡ DO'KON</span>
+                <button class="nav-btn" onclick="openModal('earn-modal')">
+                    <span>🎯</span>VAZIFA
                 </button>
-                <button class="nav-btn" onclick="openModal('tasks-modal')">
-                    <span>🎯 VAZIFALAR</span>
+                <button class="nav-btn" onclick="openModal('boost-modal')">
+                    <span>🚀</span>BOOST
+                </button>
+                <button class="nav-btn" onclick="openModal('friends-modal')">
+                    <span>👥</span>DO'ST
+                </button>
+                <button class="nav-btn" onclick="openModal('shop-modal')">
+                    <span>⭐</span>STARS
                 </button>
                 <button class="nav-btn" onclick="openModal('top-modal')">
-                    <span>🏆 REYTING</span>
+                    <span>🏆</span>TOP
                 </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Upgrades & Stars Exchange Modal -->
-    <div class="modal-overlay" id="upgrades-modal">
-        <div class="modal-header">
-            <div class="modal-title">KIBER DO'KON & STARS</div>
-            <button class="close-btn" onclick="closeModal('upgrades-modal')">✕</button>
-        </div>
-        <div class="upgrades-list">
-            <!-- Telegram Star Exchange -->
-            <div class="upgrade-card star-card">
-                <div class="upgrade-info">
-                    <div class="upgrade-title" style="color: var(--star-yellow);">⭐ 1 Telegram Star</div>
-                    <div class="upgrade-desc">5,000 Coin evaziga 1 Star oling</div>
-                    <div class="upgrade-cost" style="color: var(--star-yellow);">5,000 Coin</div>
-                </div>
-                <button class="buy-btn star-btn" id="buy-star" onclick="buyTelegramStar()">ALMASHTIRISH</button>
-            </div>
-
-            <div class="upgrade-card">
-                <div class="upgrade-info">
-                    <div class="upgrade-title">Multi-Tap</div>
-                    <div class="upgrade-desc">Har bir tap uchun +1 Coin beradi</div>
-                    <div class="upgrade-cost" id="multitap-cost">100 Coin</div>
-                </div>
-                <button class="buy-btn" id="buy-multitap" onclick="buyMultiTap()">OSHIRISH</button>
-            </div>
-
-            <div class="upgrade-card">
-                <div class="upgrade-info">
-                    <div class="upgrade-title">Energiya Sig'imi</div>
-                    <div class="upgrade-desc">Max energiyani +500 ga oshiradi</div>
-                    <div class="upgrade-cost" id="energy-cost">200 Coin</div>
-                </div>
-                <button class="buy-btn" id="buy-energy" onclick="buyEnergyLimit()">OSHIRISH</button>
-            </div>
-
-            <div class="upgrade-card">
-                <div class="upgrade-info">
-                    <div class="upgrade-title">Cyber Miner (Auto)</div>
-                    <div class="upgrade-desc">Har soniyada +1 avto-pasiv daromad</div>
-                    <div class="upgrade-cost" id="miner-cost">500 Coin</div>
-                </div>
-                <button class="buy-btn" id="buy-miner" onclick="buyMiner()">SOTIB OLISH</button>
             </div>
         </div>
     </div>
 
     <!-- Modals -->
-    <div class="modal-overlay" id="tasks-modal">
+    <!-- 1. Tasks / Earn Modal -->
+    <div class="modal-overlay" id="earn-modal">
         <div class="modal-header">
-            <div class="modal-title">VAZIFALAR</div>
-            <button class="close-btn" onclick="closeModal('tasks-modal')">✕</button>
+            <div class="modal-title">KIBER VAZIFALAR (AIRDROP)</div>
+            <button class="close-btn" onclick="closeModal('earn-modal')">✕</button>
         </div>
-        <p style="color: rgba(255,255,255,0.7); text-align: center; margin-top: 40px;">Barcha kiber-topshiriqlar bajarildi!</p>
+        <div class="modal-body">
+            <div class="card-item">
+                <div class="card-info">
+                    <div class="card-name">Telegram Kanalga Obuna</div>
+                    <div class="card-desc">Rasmiy kanalimizga qo'shiling</div>
+                    <div class="card-price">+5,000 Coin</div>
+                </div>
+                <button class="action-btn" id="task-1" onclick="completeTask(1, 5000)">BAJARISH</button>
+            </div>
+            <div class="card-item">
+                <div class="card-info">
+                    <div class="card-name">X (Twitter) Sahifamiz</div>
+                    <div class="card-desc">Postimizga like bosing</div>
+                    <div class="card-price">+3,000 Coin</div>
+                </div>
+                <button class="action-btn" id="task-2" onclick="completeTask(2, 3000)">BAJARISH</button>
+            </div>
+            <div class="card-item">
+                <div class="card-info">
+                    <div class="card-name">Kunlik Kirish Bonusi</div>
+                    <div class="card-desc">Har 24 soatda mukofot oling</div>
+                    <div class="card-price">+2,500 Coin</div>
+                </div>
+                <button class="action-btn" id="task-3" onclick="claimDailyBonus()">OLISH</button>
+            </div>
+        </div>
     </div>
 
+    <!-- 2. Boost / Upgrades Modal -->
+    <div class="modal-overlay" id="boost-modal">
+        <div class="modal-header">
+            <div class="modal-title">O'YIN KUYCHAITGICHLARI</div>
+            <button class="close-btn" onclick="closeModal('boost-modal')">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="card-item">
+                <div class="card-info">
+                    <div class="card-name">Multi-Tap</div>
+                    <div class="card-desc">Har bir bosishda +1 coin qo'shadi</div>
+                    <div class="card-price" id="multitap-cost">100 Coin</div>
+                </div>
+                <button class="action-btn" id="buy-multitap" onclick="buyMultiTap()">OSHIRISH</button>
+            </div>
+            <div class="card-item">
+                <div class="card-info">
+                    <div class="card-name">Energiya Sig'imi</div>
+                    <div class="card-desc">Maksimal energiyani +500 ga oshiradi</div>
+                    <div class="card-price" id="energy-cost">200 Coin</div>
+                </div>
+                <button class="action-btn" id="buy-energy" onclick="buyEnergyLimit()">OSHIRISH</button>
+            </div>
+            <div class="card-item">
+                <div class="card-info">
+                    <div class="card-name">Cyber Miner (Auto)</div>
+                    <div class="card-desc">Har soniyada +1 avtomatik daromad</div>
+                    <div class="card-price" id="miner-cost">500 Coin</div>
+                </div>
+                <button class="action-btn" id="buy-miner" onclick="buyMiner()">SOTIB OLISH</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. Friends / Referral Modal -->
+    <div class="modal-overlay" id="friends-modal">
+        <div class="modal-header">
+            <div class="modal-title">REFERRAL TIZIMI</div>
+            <button class="close-btn" onclick="closeModal('friends-modal')">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="card-item" style="flex-direction: column; align-items: stretch; gap: 8px;">
+                <div class="card-name">Taklif havolangiz</div>
+                <div class="card-desc" id="ref-link-display">t.me/CyberPulseBot?start=ref_9921</div>
+                <button class="action-btn" onclick="copyRefLink()" style="width: 100%; padding: 10px;">HAVOLANI NUSXALASH</button>
+            </div>
+            <div class="card-item">
+                <div class="card-info">
+                    <div class="card-name">Taklif qilingan do'stlar</div>
+                    <div class="card-desc">Har bir do'st uchun +2,000 Coin</div>
+                </div>
+                <div class="card-price" id="ref-count">0 ta do'st</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. Telegram Stars Shop Modal -->
+    <div class="modal-overlay" id="shop-modal">
+        <div class="modal-header">
+            <div class="modal-title">TELEGRAM STARS DO'KONI</div>
+            <button class="close-btn" onclick="closeModal('shop-modal')">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="card-item star-card">
+                <div class="card-info">
+                    <div class="card-name" style="color: var(--star-yellow);">⭐ 1 Telegram Star</div>
+                    <div class="card-desc">5,000 Coin evaziga 1 Star oling</div>
+                    <div class="card-price" style="color: var(--star-yellow);">5,000 Coin</div>
+                </div>
+                <button class="action-btn star-btn" id="buy-star" onclick="buyTelegramStar()">ALMASHTIRISH</button>
+            </div>
+            <div class="card-item star-card">
+                <div class="card-info">
+                    <div class="card-name" style="color: var(--star-yellow);">⭐ 10 Telegram Stars</div>
+                    <div class="card-desc">Maxsus aksiya paketi</div>
+                    <div class="card-price" style="color: var(--star-yellow);">45,000 Coin</div>
+                </div>
+                <button class="action-btn star-btn" id="buy-star-10" onclick="buyTelegramStars10()">ALMASHTIRISH</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. Top Leaderboard Modal -->
     <div class="modal-overlay" id="top-modal">
         <div class="modal-header">
-            <div class="modal-title">TOP O'YINCHILAR</div>
+            <div class="modal-title">GLOBAL LIDERLAR</div>
             <button class="close-btn" onclick="closeModal('top-modal')">✕</button>
         </div>
-        <p style="color: rgba(255,255,255,0.7); text-align: center; margin-top: 40px;">1. User_Cyber #1 - 1,000,000 Coin<br>2. Siz - Yetakchilar safidasiz</p>
+        <div class="modal-body">
+            <div class="card-item"><div class="card-info"><div class="card-name">1. 👑 CyberKing</div><div class="card-desc">2,450,000 Coin</div></div></div>
+            <div class="card-item"><div class="card-info"><div class="card-name">2. 🥈 NeonLord</div><div class="card-desc">1,820,000 Coin</div></div></div>
+            <div class="card-item"><div class="card-info"><div class="card-name">3. 🥉 ByteMaster</div><div class="card-desc">950,000 Coin</div></div></div>
+            <div class="card-item star-card"><div class="card-info"><div class="card-name">👤 Sizning O'rningiz</div><div class="card-desc" id="user-rank-pos">Yetakchilar safidasiz</div></div></div>
+        </div>
     </div>
 
     <script>
-        /* State & Storage */
+        /* State Configuration */
         let state = {
             coins: parseInt(localStorage.getItem('coins')) || 0,
             stars: parseInt(localStorage.getItem('stars')) || 0,
@@ -513,7 +589,10 @@
             autoIncome: parseInt(localStorage.getItem('autoIncome')) || 0,
             multitapCost: parseInt(localStorage.getItem('multitapCost')) || 100,
             energyCost: parseInt(localStorage.getItem('energyCost')) || 200,
-            minerCost: parseInt(localStorage.getItem('minerCost')) || 500
+            minerCost: parseInt(localStorage.getItem('minerCost')) || 500,
+            friendsCount: parseInt(localStorage.getItem('friendsCount')) || 0,
+            completedTasks: JSON.parse(localStorage.getItem('completedTasks')) || [],
+            lastBonusTime: parseInt(localStorage.getItem('lastBonusTime')) || 0
         };
 
         let comboCount = 0;
@@ -527,8 +606,8 @@
                 const gain = audioCtx.createGain();
                 osc.type = 'sine';
                 osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+                gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
                 osc.connect(gain);
                 gain.connect(audioCtx.destination);
                 osc.start();
@@ -536,7 +615,7 @@
             } catch (e) {}
         }
 
-        /* WebGL Three.js Setup */
+        /* Three.js 3D Setup */
         const container = document.getElementById('canvas-container');
         const canvas = document.getElementById('three-canvas');
         const scene = new THREE.Scene();
@@ -548,67 +627,85 @@
         renderer.setSize(container.clientWidth, container.clientHeight);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-        /* 3D Coin Creation */
-        const geometry = new THREE.CylinderGeometry(1.4, 1.4, 0.2, 32);
+        const geometry = new THREE.CylinderGeometry(1.3, 1.3, 0.2, 32);
         const material = new THREE.MeshStandardMaterial({
             color: 0x00f3ff,
-            metalness: 0.8,
-            roughness: 0.2
+            metalness: 0.85,
+            roughness: 0.15
         });
         const coin = new THREE.Mesh(geometry, material);
         coin.rotation.x = Math.PI / 3;
         scene.add(coin);
 
-        /* Lighting */
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.9);
         scene.add(ambientLight);
 
-        const pointLight = new THREE.PointLight(0x00f3ff, 2, 10);
+        const pointLight = new THREE.PointLight(0x00f3ff, 2.5, 10);
         pointLight.position.set(2, 3, 4);
         scene.add(pointLight);
 
-        /* Render Loop */
         function animate() {
             requestAnimationFrame(animate);
-            coin.rotation.z += 0.01;
+            coin.rotation.z += 0.012;
             renderer.render(scene, camera);
         }
         animate();
 
-        /* UI Update Function with Infinite Level System */
+        /* UI Synchronization */
         function updateUI() {
             document.getElementById('balance').innerText = state.coins.toLocaleString();
-            document.getElementById('stars-count').innerText = `${state.stars} STARS`;
+            document.getElementById('stars-count').innerText = state.stars;
             document.getElementById('energy-text').innerText = `⚡ ${state.energy}/${state.maxEnergy}`;
             document.getElementById('energy-fill').style.width = `${(state.energy / state.maxEnergy) * 100}%`;
 
             document.getElementById('multitap-cost').innerText = `${state.multitapCost} Coin`;
             document.getElementById('energy-cost').innerText = `${state.energyCost} Coin`;
             document.getElementById('miner-cost').innerText = `${state.minerCost} Coin`;
+            document.getElementById('ref-count').innerText = `${state.friendsCount} ta do'st`;
 
-            document.getElementById('buy-star').disabled = state.coins < 5000;
             document.getElementById('buy-multitap').disabled = state.coins < state.multitapCost;
             document.getElementById('buy-energy').disabled = state.coins < state.energyCost;
             document.getElementById('buy-miner').disabled = state.coins < state.minerCost;
+            document.getElementById('buy-star').disabled = state.coins < 5000;
+            document.getElementById('buy-star-10').disabled = state.coins < 45000;
 
-            // Infinite Level Formula
-            const currentLevel = 1 + Math.floor(state.coins / 2000);
-            const rankBadge = document.getElementById('rank-badge');
-            rankBadge.innerText = `KIBER LVL ${currentLevel}`;
+            // Task buttons sync
+            state.completedTasks.forEach(taskId => {
+                const btn = document.getElementById(`task-${taskId}`);
+                if (btn) {
+                    btn.innerText = "BAJARILDI";
+                    btn.disabled = true;
+                }
+            });
 
-            // Dynamic Infinite Color Shifting based on Level
+            // Level & Leagues Formula
+            const currentLevel = 1 + Math.floor(state.coins / 3000);
+            document.getElementById('rank-badge').innerText = `CYBER LVL ${currentLevel}`;
+
+            let league = "SILVER";
+            if (state.coins > 100000) league = "GOLD";
+            if (state.coins > 500000) league = "PLATINUM";
+            if (state.coins > 1500000) league = "DIAMOND";
+            document.getElementById('league-name').innerText = league;
+
+            // Dynamic Color Shifting
             const root = document.documentElement;
-            const hue = (currentLevel * 45) % 360;
+            const hue = (currentLevel * 35) % 360;
             const dynamicColor = `hsl(${hue}, 100%, 50%)`;
-            
             root.style.setProperty('--active-glow', dynamicColor);
             material.color.setHSL(hue / 360, 1.0, 0.5);
 
             // Persistence
-            Object.keys(state).forEach(key => localStorage.setItem(key, state[key]));
+            Object.keys(state).forEach(key => {
+                if (key === 'completedTasks') {
+                    localStorage.setItem('completedTasks', JSON.stringify(state.completedTasks));
+                } else {
+                    localStorage.setItem(key, state[key]);
+                }
+            });
         }
 
-        /* Tap Logic: Exactly 1 Energy per Tap */
+        /* Tap Handler */
         function handleTap(e) {
             e.preventDefault();
             const touches = e.changedTouches ? e.changedTouches : [e];
@@ -616,16 +713,16 @@
             for (let i = 0; i < touches.length; i++) {
                 if (state.energy < 1) break;
 
-                state.energy -= 1; // Strict 1 energy deducted per tap
+                state.energy -= 1;
                 state.coins += state.tapPower;
 
                 const touch = touches[i];
                 showFloatingText(touch.clientX || touch.pageX, touch.clientY || touch.pageY, `+${state.tapPower}`);
                 
-                coin.scale.set(0.95, 0.95, 0.95);
-                setTimeout(() => coin.scale.set(1, 1, 1), 50);
+                coin.scale.set(0.92, 0.92, 0.92);
+                setTimeout(() => coin.scale.set(1, 1, 1), 60);
 
-                playSound(400 + (comboCount * 20), 0.05);
+                playSound(420 + (comboCount * 18), 0.04);
                 triggerCombo();
             }
             updateUI();
@@ -637,7 +734,7 @@
             if (e.pointerType !== 'touch') handleTap(e);
         });
 
-        /* Combo Heat Mechanics */
+        /* Combo Mechanics */
         function triggerCombo() {
             comboCount++;
             const comboBadge = document.getElementById('combo-badge');
@@ -646,8 +743,8 @@
             comboBadge.innerText = `COMBO x${comboCount}`;
             comboBadge.style.opacity = '1';
 
-            if (comboCount > 5) {
-                overlay.style.opacity = Math.min((comboCount - 5) * 0.1, 0.6);
+            if (comboCount > 4) {
+                overlay.style.opacity = Math.min((comboCount - 4) * 0.12, 0.5);
             }
 
             clearTimeout(comboTimer);
@@ -658,7 +755,6 @@
             }, 1000);
         }
 
-        /* Floating Numbers */
         function showFloatingText(x, y, text) {
             const el = document.createElement('div');
             el.className = 'tap-pop';
@@ -666,16 +762,30 @@
             el.style.left = `${x}px`;
             el.style.top = `${y}px`;
             document.body.appendChild(el);
-            setTimeout(() => el.remove(), 800);
+            setTimeout(() => el.remove(), 750);
         }
 
-        /* Upgrades & Stars Purchase Functions */
-        function buyTelegramStar() {
-            if (state.coins >= 5000) {
-                state.coins -= 5000;
-                state.stars += 1;
-                playSound(800, 0.2);
+        /* Actions & Purchases */
+        function completeTask(id, reward) {
+            if (!state.completedTasks.includes(id)) {
+                state.completedTasks.push(id);
+                state.coins += reward;
+                playSound(750, 0.2);
                 updateUI();
+            }
+        }
+
+        function claimDailyBonus() {
+            const now = Date.now();
+            const cooldown = 24 * 60 * 60 * 1000;
+            if (now - state.lastBonusTime >= cooldown) {
+                state.coins += 2500;
+                state.lastBonusTime = now;
+                playSound(850, 0.25);
+                alert("Tabriklaymiz! Kunlik bonus +2,500 Coin qo'shildi.");
+                updateUI();
+            } else {
+                alert("Kunlik bonus allaqachon olingan! 24 soatdan keyin qaytib keling.");
             }
         }
 
@@ -683,7 +793,7 @@
             if (state.coins >= state.multitapCost) {
                 state.coins -= state.multitapCost;
                 state.tapPower += 1;
-                state.multitapCost = Math.floor(state.multitapCost * 1.8);
+                state.multitapCost = Math.floor(state.multitapCost * 1.75);
                 updateUI();
             }
         }
@@ -693,7 +803,7 @@
                 state.coins -= state.energyCost;
                 state.maxEnergy += 500;
                 state.energy += 500;
-                state.energyCost = Math.floor(state.energyCost * 1.8);
+                state.energyCost = Math.floor(state.energyCost * 1.75);
                 updateUI();
             }
         }
@@ -702,16 +812,41 @@
             if (state.coins >= state.minerCost) {
                 state.coins -= state.minerCost;
                 state.autoIncome += 1;
-                state.minerCost = Math.floor(state.minerCost * 2);
+                state.minerCost = Math.floor(state.minerCost * 1.9);
                 updateUI();
             }
         }
 
-        /* Modals Control */
+        function buyTelegramStar() {
+            if (state.coins >= 5000) {
+                state.coins -= 5000;
+                state.stars += 1;
+                playSound(900, 0.3);
+                updateUI();
+            }
+        }
+
+        function buyTelegramStars10() {
+            if (state.coins >= 45000) {
+                state.coins -= 45000;
+                state.stars += 10;
+                playSound(950, 0.4);
+                updateUI();
+            }
+        }
+
+        function copyRefLink() {
+            const link = "https://t.me/CyberPulseBot?start=ref_" + Math.floor(Math.random() * 90000 + 10000);
+            navigator.clipboard.writeText(link).then(() => {
+                alert("Taklif havolasi nusxalandi! Do'stlaringizga tarqating.");
+            });
+        }
+
+        /* Modal Controllers */
         function openModal(id) { document.getElementById(id).classList.add('active'); }
         function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
-        /* Energy & Auto-Miner Timers */
+        /* Timers (Energy Regeneration & Passive Income) */
         setInterval(() => {
             if (state.energy < state.maxEnergy) {
                 state.energy = Math.min(state.energy + 2, state.maxEnergy);
@@ -726,7 +861,6 @@
             }
         }, 1000);
 
-        // Initial Render
         updateUI();
     </script>
 </body>
