@@ -1,11 +1,11 @@
 import os
+import threading
+from http.server import HTTPServer, BaseHTTPRequestHandler
 import telebot
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 
-# Token Render Environment Variables'dan olinadi
 TOKEN = os.environ.get("BOT_TOKEN")
-
-# WebApp havolasi (Netlify/Vercel/GitHub Pages bergan https linkni shu yerga yozasiz)
+# Shu yerga Netlify/Vercel'dagi HTML saytingiz linkini yozing:
 WEBAPP_URL = "https://telegram-bot-7n6t.onrender.com/miniapp.html"
 
 bot = telebot.TeleBot(TOKEN)
@@ -25,6 +25,19 @@ def start_command(message):
         reply_markup=markup
     )
 
+# Render port so'rab xato bermasligi uchun kichik server
+class SimpleHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b"Bot active")
+
+def run_server():
+    port = int(os.environ.get("PORT", 8080))
+    server = HTTPServer(('0.0.0.0', port), SimpleHandler)
+    server.serve_forever()
+
 if __name__ == "__main__":
-    print("Bot Render'da muvaffaqiyatli ishga tushdi...")
+    threading.Thread(target=run_server, daemon=True).start()
+    print("Bot va server ishga tushdi...")
     bot.infinity_polling()
