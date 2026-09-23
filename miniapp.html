@@ -2,890 +2,802 @@
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>CyberPulse Pro - Telegram Mini App</title>
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
-    <!-- Three.js Library -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CyberPulse - Premium 3D Clicker Mini App</title>
+    <!-- Three.js 3D kutubxonasi -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;700&display=swap');
+        
         :root {
-            --primary-neon: #00f3ff;
-            --secondary-neon: #ff0055;
-            --accent-gold: #ffd700;
-            --star-yellow: #ffaa00;
-            --bg-dark: #030305;
-            --glass-bg: rgba(12, 17, 30, 0.75);
-            --glass-border: rgba(0, 243, 255, 0.3);
-            --font-title: 'Orbitron', sans-serif;
-            --font-ui: 'Rajdhani', sans-serif;
-            --active-glow: var(--primary-neon);
+            --bg-color: #050505;
+            --primary: #00f3ff;
+            --secondary: #bc13fe;
+            --glass: rgba(20, 20, 25, 0.85);
+            --border: rgba(0, 243, 255, 0.2);
+            --active-glow: #00f3ff;
         }
 
         * {
-            box-sizing: border-box;
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
             user-select: none;
-            -webkit-user-select: none;
-            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
-            background-color: var(--bg-dark);
-            color: #ffffff;
-            font-family: var(--font-ui);
-            overflow: hidden;
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(0, 243, 255, 0.08), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(188, 19, 254, 0.08), transparent 25%);
+            color: #fff;
+            font-family: 'Rajdhani', sans-serif;
             height: 100vh;
-            width: 100vw;
+            overflow: hidden;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
-            align-items: center;
-            position: relative;
         }
 
-        /* Cyberpunk Grid & Vignette */
-        .bg-grid {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: 
-                linear-gradient(transparent 95%, rgba(0, 243, 255, 0.04) 95%),
-                linear-gradient(90deg, transparent 95%, rgba(0, 243, 255, 0.04) 95%);
-            background-size: 35px 35px;
-            z-index: 1;
-            pointer-events: none;
-        }
-
-        .combo-heat-overlay {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none;
-            z-index: 2;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            box-shadow: inset 0 0 120px var(--secondary-neon);
-        }
-
-        .app-container {
-            position: relative;
-            z-index: 5;
-            width: 100%;
-            max-width: 480px;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            padding: 14px 16px;
-            justify-content: space-between;
-        }
-
-        /* Header UI */
+        /* HEADER EKRAN */
         .header {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .top-row {
-            display: flex;
-            justify-content: space-between;
-            width: 100%;
-            align-items: center;
-        }
-
-        .user-rank-badge {
-            background: var(--glass-bg);
-            border: 1px solid var(--glass-border);
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-family: var(--font-title);
-            font-size: 11px;
-            letter-spacing: 1px;
-            color: var(--active-glow);
-            text-transform: uppercase;
-            box-shadow: 0 0 12px rgba(0, 243, 255, 0.2);
-            backdrop-filter: blur(10px);
-        }
-
-        .badges-right {
-            display: flex;
-            gap: 6px;
-        }
-
-        .stars-badge, .league-badge {
-            background: rgba(255, 170, 0, 0.12);
-            border: 1px solid var(--star-yellow);
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-family: var(--font-title);
-            font-size: 11px;
-            font-weight: 700;
-            color: var(--star-yellow);
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            backdrop-filter: blur(10px);
-        }
-
-        .league-badge {
-            background: rgba(0, 243, 255, 0.12);
-            border-color: var(--primary-neon);
-            color: var(--primary-neon);
+            padding: 20px;
+            text-align: center;
+            z-index: 10;
         }
 
         .balance-container {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3.5rem;
+            font-weight: 900;
+            text-shadow: 0 0 20px var(--primary);
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .league-badge {
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            display: inline-block;
+            box-shadow: 0 0 15px rgba(188, 19, 254, 0.4);
+        }
+
+        .stats-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0 20px;
+            margin-top: 15px;
+            z-index: 10;
+        }
+
+        .stat-box {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            padding: 10px 15px;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
             display: flex;
             align-items: center;
             gap: 8px;
-            margin-top: 2px;
-        }
-
-        .balance-value {
-            font-family: var(--font-title);
-            font-size: 36px;
-            font-weight: 900;
-            color: #ffffff;
-            text-shadow: 0 0 20px var(--active-glow);
-            letter-spacing: 1px;
-        }
-
-        /* 3D Render Area */
-        .canvas-area {
-            position: relative;
-            width: 100%;
-            height: 250px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            font-weight: bold;
             cursor: pointer;
         }
 
+        /* 3D KANVAS EKRANI */
+        #canvas-container {
+            flex-grow: 1;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            touch-action: none;
+        }
+
         #three-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
-            outline: none;
+            z-index: 1;
         }
 
-        .tap-pop {
+        /* COMBO VA ENERGIYA */
+        .combo-text {
             position: absolute;
-            font-family: var(--font-title);
-            font-weight: 900;
-            font-size: 28px;
-            color: #ffffff;
-            text-shadow: 0 0 12px var(--active-glow);
-            pointer-events: none;
-            animation: popUp 0.75s ease-out forwards;
-            z-index: 100;
-        }
-
-        @keyframes popUp {
-            0% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-            100% { opacity: 0; transform: translate(-50%, -130px) scale(1.4); }
-        }
-
-        .combo-badge {
-            position: absolute;
-            top: 5px;
-            right: 15px;
-            font-family: var(--font-title);
-            font-size: 15px;
-            font-weight: 700;
-            color: var(--secondary-neon);
-            text-shadow: 0 0 10px var(--secondary-neon);
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2rem;
+            color: #fff;
+            text-shadow: 0 0 20px #ff003c;
             opacity: 0;
-            transition: opacity 0.2s ease;
+            transition: opacity 0.2s;
+            z-index: 5;
+            pointer-events: none;
         }
 
-        /* Controls & Energy */
-        .controls-area {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            width: 100%;
+        .energy-bar-container {
+            padding: 15px 25px;
+            z-index: 10;
         }
 
-        .energy-container {
+        .energy-info {
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            font-family: var(--font-title);
-            font-size: 13px;
-            color: #a0a0c0;
-            background: var(--glass-bg);
-            border: 1px solid var(--glass-border);
-            padding: 8px 14px;
-            border-radius: 14px;
-            backdrop-filter: blur(10px);
+            margin-bottom: 5px;
+            font-weight: bold;
         }
 
-        .energy-bar-wrapper {
-            flex-grow: 1;
-            margin-left: 12px;
-            height: 8px;
-            background: rgba(255, 255, 255, 0.08);
-            border-radius: 4px;
+        .energy-track {
+            height: 12px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
             overflow: hidden;
+            border: 1px solid var(--border);
         }
 
         .energy-fill {
             height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
             width: 100%;
-            background: linear-gradient(90deg, var(--primary-neon), var(--secondary-neon));
-            border-radius: 4px;
-            box-shadow: 0 0 10px var(--primary-neon);
-            transition: width 0.15s ease;
+            transition: width 0.1s linear;
+            box-shadow: 0 0 10px var(--primary);
         }
 
-        /* 5-Item Navigation Menu */
-        .nav-menu {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 6px;
-        }
-
-        .nav-btn {
-            background: var(--glass-bg);
-            border: 1px solid var(--glass-border);
-            border-radius: 12px;
-            padding: 8px 0;
-            color: #ffffff;
-            font-family: var(--font-ui);
-            font-weight: 700;
-            font-size: 11px;
-            letter-spacing: 0.3px;
+        /* PASTKI MENYU */
+        .nav-bar {
+            background: var(--glass);
+            border-top: 1px solid var(--border);
+            padding: 15px 20px;
             display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 3px;
+            justify-content: space-around;
+            backdrop-filter: blur(15px);
+            padding-bottom: env(safe-area-inset-bottom, 20px);
+            z-index: 10;
+        }
+
+        .nav-item {
+            text-align: center;
+            color: rgba(255,255,255,0.6);
             cursor: pointer;
-            backdrop-filter: blur(10px);
-            transition: transform 0.1s ease, border-color 0.2s ease;
+            transition: 0.3s;
+            font-weight: bold;
         }
 
-        .nav-btn span {
-            font-size: 15px;
+        .nav-item.active, .nav-item:hover {
+            color: var(--primary);
+            text-shadow: 0 0 10px var(--primary);
         }
 
-        .nav-btn:active {
-            transform: scale(0.93);
+        .nav-icon {
+            font-size: 1.5rem;
+            margin-bottom: 3px;
         }
 
-        /* Modals (Professional Design) */
-        .modal-overlay {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(3, 3, 5, 0.9);
+        /* MODAL OYNALAR */
+        .modal {
+            position: fixed;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            height: 85vh;
+            background: rgba(10, 10, 15, 0.95);
             backdrop-filter: blur(20px);
-            z-index: 50;
+            border-top: 2px solid var(--primary);
+            border-radius: 25px 25px 0 0;
+            transition: top 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 100;
             display: flex;
             flex-direction: column;
-            padding: 20px 16px;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease;
+            padding: 20px;
         }
 
-        .modal-overlay.active {
-            opacity: 1;
-            pointer-events: auto;
+        .modal.active {
+            top: 15vh;
         }
 
         .modal-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 16px;
-            border-bottom: 1px solid rgba(255,255,255,0.08);
-            padding-bottom: 10px;
-        }
-
-        .modal-title {
-            font-family: var(--font-title);
-            font-size: 17px;
-            color: var(--active-glow);
+            margin-bottom: 20px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
         }
 
         .close-btn {
-            background: none;
+            background: rgba(255,255,255,0.1);
             border: none;
-            color: #fff;
-            font-size: 20px;
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            font-size: 1.2rem;
             cursor: pointer;
         }
 
-        .modal-body {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
+        .modal-content {
             overflow-y: auto;
-            max-height: calc(100vh - 100px);
-            padding-right: 2px;
+            flex-grow: 1;
+            padding-bottom: 30px;
         }
 
-        .card-item {
-            background: var(--glass-bg);
-            border: 1px solid var(--glass-border);
-            border-radius: 12px;
-            padding: 12px;
+        .shop-item {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 15px;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
-        .card-item.star-card {
-            border-color: var(--star-yellow);
-            background: rgba(255, 170, 0, 0.06);
+        .shop-info h3 {
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+            color: var(--primary);
         }
 
-        .card-info {
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
+        .shop-info p {
+            font-size: 0.9rem;
+            color: #aaa;
         }
 
-        .card-name {
-            font-family: var(--font-ui);
-            font-weight: 700;
-            font-size: 15px;
-        }
-
-        .card-desc {
-            font-size: 11px;
-            color: rgba(255, 255, 255, 0.6);
-        }
-
-        .card-price {
-            font-family: var(--font-title);
-            font-size: 12px;
-            color: var(--accent-gold);
-            margin-top: 3px;
-        }
-
-        .action-btn {
-            background: linear-gradient(135deg, var(--primary-neon), var(--secondary-neon));
+        .buy-btn {
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
             border: none;
-            border-radius: 8px;
-            color: #fff;
-            font-family: var(--font-title);
-            font-weight: 700;
-            font-size: 11px;
-            padding: 7px 12px;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: bold;
+            font-family: 'Rajdhani', sans-serif;
             cursor: pointer;
-            box-shadow: 0 0 10px rgba(0, 243, 255, 0.25);
+            box-shadow: 0 0 10px rgba(0, 243, 255, 0.3);
         }
 
-        .action-btn.star-btn {
-            background: linear-gradient(135deg, var(--star-yellow), #ff5500);
-            color: #000;
-        }
-
-        .action-btn:disabled {
-            opacity: 0.35;
-            cursor: not-allowed;
+        .buy-btn:disabled {
+            background: #333;
+            color: #777;
             box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        .ref-box {
+            background: rgba(0, 243, 255, 0.1);
+            border: 1px dashed var(--primary);
+            padding: 15px;
+            text-align: center;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            word-break: break-all;
+        }
+
+        /* UCHIB CHIQUVCHI MATN */
+        .tap-pop {
+            position: absolute;
+            font-size: 2rem;
+            font-weight: 900;
+            color: #fff;
+            text-shadow: 0 0 10px var(--primary);
+            pointer-events: none;
+            animation: floatUp 0.8s ease-out forwards;
+            z-index: 50;
+            transform: translate(-50%, -50%);
+        }
+
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            100% { opacity: 0; transform: translate(-50%, -150px) scale(1.5); }
+        }
+
+        .screen-flash {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 60%);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 2;
+            transition: opacity 0.1s;
         }
     </style>
 </head>
 <body>
 
-    <div class="bg-grid"></div>
-    <div class="combo-heat-overlay" id="combo-overlay"></div>
-
-    <div class="app-container">
-        <!-- Header -->
-        <div class="header">
-            <div class="top-row">
-                <div class="user-rank-badge" id="rank-badge">CYBER LVL 1</div>
-                <div class="badges-right">
-                    <div class="league-badge" id="league-name">SILVER</div>
-                    <div class="stars-badge">
-                        <span>⭐</span>
-                        <span id="stars-count">0</span>
-                    </div>
-                </div>
-            </div>
-            <div class="balance-container">
-                <div class="balance-value" id="balance">0</div>
-            </div>
+    <div class="header">
+        <div class="balance-container">
+            <span id="balance">0</span>
         </div>
+        <div class="league-badge" id="rank-badge">CYBER LVL 1</div>
+        <div style="font-size: 0.8rem; margin-top:5px; color:#aaa;">Liga: <span id="league-name" style="color:var(--primary);">SILVER</span></div>
+    </div>
 
-        <!-- 3D Canvas Area -->
-        <div class="canvas-area" id="canvas-container">
-            <div class="combo-badge" id="combo-badge">COMBO x1</div>
-            <canvas id="three-canvas"></canvas>
+    <div class="stats-row">
+        <div class="stat-box">
+            <span>⭐</span>
+            <span id="stars-count">0</span>
         </div>
-
-        <!-- Controls & Navigation -->
-        <div class="controls-area">
-            <div class="energy-container">
-                <span id="energy-text">⚡ 1000/1000</span>
-                <div class="energy-bar-wrapper">
-                    <div class="energy-fill" id="energy-fill"></div>
-                </div>
-            </div>
-
-            <div class="nav-menu">
-                <button class="nav-btn" onclick="openModal('earn-modal')">
-                    <span>🎯</span>VAZIFA
-                </button>
-                <button class="nav-btn" onclick="openModal('boost-modal')">
-                    <span>🚀</span>BOOST
-                </button>
-                <button class="nav-btn" onclick="openModal('friends-modal')">
-                    <span>👥</span>DO'ST
-                </button>
-                <button class="nav-btn" onclick="openModal('shop-modal')">
-                    <span>⭐</span>STARS
-                </button>
-                <button class="nav-btn" onclick="openModal('top-modal')">
-                    <span>🏆</span>TOP
-                </button>
-            </div>
+        <div class="stat-box" onclick="openModal('shop-modal')">
+            <span>🚀</span>
+            <span>Boosters</span>
         </div>
     </div>
 
-    <!-- Modals -->
-    <!-- 1. Tasks / Earn Modal -->
-    <div class="modal-overlay" id="earn-modal">
-        <div class="modal-header">
-            <div class="modal-title">KIBER VAZIFALAR (AIRDROP)</div>
-            <button class="close-btn" onclick="closeModal('earn-modal')">✕</button>
+    <div id="canvas-container">
+        <div class="screen-flash" id="combo-overlay"></div>
+        <div class="combo-text" id="combo-badge">COMBO x2</div>
+        <canvas id="three-canvas"></canvas>
+    </div>
+
+    <div class="energy-bar-container">
+        <div class="energy-info">
+            <span id="energy-text">⚡ 1000/1000</span>
         </div>
-        <div class="modal-body">
-            <div class="card-item">
-                <div class="card-info">
-                    <div class="card-name">Telegram Kanalga Obuna</div>
-                    <div class="card-desc">Rasmiy kanalimizga qo'shiling</div>
-                    <div class="card-price">+5,000 Coin</div>
-                </div>
-                <button class="action-btn" id="task-1" onclick="completeTask(1, 5000)">BAJARISH</button>
-            </div>
-            <div class="card-item">
-                <div class="card-info">
-                    <div class="card-name">X (Twitter) Sahifamiz</div>
-                    <div class="card-desc">Postimizga like bosing</div>
-                    <div class="card-price">+3,000 Coin</div>
-                </div>
-                <button class="action-btn" id="task-2" onclick="completeTask(2, 3000)">BAJARISH</button>
-            </div>
-            <div class="card-item">
-                <div class="card-info">
-                    <div class="card-name">Kunlik Kirish Bonusi</div>
-                    <div class="card-desc">Har 24 soatda mukofot oling</div>
-                    <div class="card-price">+2,500 Coin</div>
-                </div>
-                <button class="action-btn" id="task-3" onclick="claimDailyBonus()">OLISH</button>
-            </div>
+        <div class="energy-track">
+            <div class="energy-fill" id="energy-fill"></div>
         </div>
     </div>
 
-    <!-- 2. Boost / Upgrades Modal -->
-    <div class="modal-overlay" id="boost-modal">
-        <div class="modal-header">
-            <div class="modal-title">O'YIN KUYCHAITGICHLARI</div>
-            <button class="close-btn" onclick="closeModal('boost-modal')">✕</button>
+    <div class="nav-bar">
+        <div class="nav-item active" onclick="closeAllModals()">
+            <div class="nav-icon">⛏️</div>
+            <div>Mine</div>
         </div>
-        <div class="modal-body">
-            <div class="card-item">
-                <div class="card-info">
-                    <div class="card-name">Multi-Tap</div>
-                    <div class="card-desc">Har bir bosishda +1 coin qo'shadi</div>
-                    <div class="card-price" id="multitap-cost">100 Coin</div>
-                </div>
-                <button class="action-btn" id="buy-multitap" onclick="buyMultiTap()">OSHIRISH</button>
-            </div>
-            <div class="card-item">
-                <div class="card-info">
-                    <div class="card-name">Energiya Sig'imi</div>
-                    <div class="card-desc">Maksimal energiyani +500 ga oshiradi</div>
-                    <div class="card-price" id="energy-cost">200 Coin</div>
-                </div>
-                <button class="action-btn" id="buy-energy" onclick="buyEnergyLimit()">OSHIRISH</button>
-            </div>
-            <div class="card-item">
-                <div class="card-info">
-                    <div class="card-name">Cyber Miner (Auto)</div>
-                    <div class="card-desc">Har soniyada +1 avtomatik daromad</div>
-                    <div class="card-price" id="miner-cost">500 Coin</div>
-                </div>
-                <button class="action-btn" id="buy-miner" onclick="buyMiner()">SOTIB OLISH</button>
-            </div>
+        <div class="nav-item" onclick="openModal('tasks-modal')">
+            <div class="nav-icon">📋</div>
+            <div>Tasks</div>
+        </div>
+        <div class="nav-item" onclick="openModal('friends-modal')">
+            <div class="nav-icon">🤝</div>
+            <div>Friends</div>
+        </div>
+        <div class="nav-item" onclick="openModal('shop-modal')">
+            <div class="nav-icon">🛒</div>
+            <div>Store</div>
         </div>
     </div>
 
-    <!-- 3. Friends / Referral Modal -->
-    <div class="modal-overlay" id="friends-modal">
+    <!-- STORE MODAL -->
+    <div class="modal" id="shop-modal">
         <div class="modal-header">
-            <div class="modal-title">REFERRAL TIZIMI</div>
-            <button class="close-btn" onclick="closeModal('friends-modal')">✕</button>
-        </div>
-        <div class="modal-body">
-            <div class="card-item" style="flex-direction: column; align-items: stretch; gap: 8px;">
-                <div class="card-name">Taklif havolangiz</div>
-                <div class="card-desc" id="ref-link-display">t.me/CyberPulseBot?start=ref_9921</div>
-                <button class="action-btn" onclick="copyRefLink()" style="width: 100%; padding: 10px;">HAVOLANI NUSXALASH</button>
-            </div>
-            <div class="card-item">
-                <div class="card-info">
-                    <div class="card-name">Taklif qilingan do'stlar</div>
-                    <div class="card-desc">Har bir do'st uchun +2,000 Coin</div>
-                </div>
-                <div class="card-price" id="ref-count">0 ta do'st</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 4. Telegram Stars Shop Modal -->
-    <div class="modal-overlay" id="shop-modal">
-        <div class="modal-header">
-            <div class="modal-title">TELEGRAM STARS DO'KONI</div>
+            <div>🚀 Upgrade Store</div>
             <button class="close-btn" onclick="closeModal('shop-modal')">✕</button>
         </div>
-        <div class="modal-body">
-            <div class="card-item star-card">
-                <div class="card-info">
-                    <div class="card-name" style="color: var(--star-yellow);">⭐ 1 Telegram Star</div>
-                    <div class="card-desc">5,000 Coin evaziga 1 Star oling</div>
-                    <div class="card-price" style="color: var(--star-yellow);">5,000 Coin</div>
+        <div class="modal-content">
+            <div class="shop-item">
+                <div class="shop-info">
+                    <h3>👆 Multi-Tap</h3>
+                    <p>Bitta bosish kuchini +1 ga oshirish</p>
                 </div>
-                <button class="action-btn star-btn" id="buy-star" onclick="buyTelegramStar()">ALMASHTIRISH</button>
+                <button class="buy-btn" id="buy-multitap" onclick="buyMultiTap()">
+                    <span id="multitap-cost">100</span> Coin
+                </button>
             </div>
-            <div class="card-item star-card">
-                <div class="card-info">
-                    <div class="card-name" style="color: var(--star-yellow);">⭐ 10 Telegram Stars</div>
-                    <div class="card-desc">Maxsus aksiya paketi</div>
-                    <div class="card-price" style="color: var(--star-yellow);">45,000 Coin</div>
+            <div class="shop-item">
+                <div class="shop-info">
+                    <h3>🔋 Energy Limit</h3>
+                    <p>Maksimal energiyani +500 oshirish</p>
                 </div>
-                <button class="action-btn star-btn" id="buy-star-10" onclick="buyTelegramStars10()">ALMASHTIRISH</button>
+                <button class="buy-btn" id="buy-energy" onclick="buyEnergyLimit()">
+                    <span id="energy-cost">200</span> Coin
+                </button>
+            </div>
+            <div class="shop-item">
+                <div class="shop-info">
+                    <h3>🤖 Auto Miner</h3>
+                    <p>Sekundiga +1 coin avtomat ishlash</p>
+                </div>
+                <button class="buy-btn" id="buy-miner" onclick="buyMiner()">
+                    <span id="miner-cost">500</span> Coin
+                </button>
+            </div>
+            <div class="shop-item">
+                <div class="shop-info">
+                    <h3>⭐ 1 Telegram Star</h3>
+                    <p>Premium yulduzcha xarid qilish</p>
+                </div>
+                <button class="buy-btn" id="buy-star" onclick="buyTelegramStar()">5,000 Coin</button>
             </div>
         </div>
     </div>
 
-    <!-- 5. Top Leaderboard Modal -->
-    <div class="modal-overlay" id="top-modal">
+    <!-- TASKS MODAL -->
+    <div class="modal" id="tasks-modal">
         <div class="modal-header">
-            <div class="modal-title">GLOBAL LIDERLAR</div>
-            <button class="close-btn" onclick="closeModal('top-modal')">✕</button>
+            <div>📋 Earn More</div>
+            <button class="close-btn" onclick="closeModal('tasks-modal')">✕</button>
         </div>
-        <div class="modal-body">
-            <div class="card-item"><div class="card-info"><div class="card-name">1. 👑 CyberKing</div><div class="card-desc">2,450,000 Coin</div></div></div>
-            <div class="card-item"><div class="card-info"><div class="card-name">2. 🥈 NeonLord</div><div class="card-desc">1,820,000 Coin</div></div></div>
-            <div class="card-item"><div class="card-info"><div class="card-name">3. 🥉 ByteMaster</div><div class="card-desc">950,000 Coin</div></div></div>
-            <div class="card-item star-card"><div class="card-info"><div class="card-name">👤 Sizning O'rningiz</div><div class="card-desc" id="user-rank-pos">Yetakchilar safidasiz</div></div></div>
+        <div class="modal-content">
+            <div class="shop-item">
+                <div class="shop-info">
+                    <h3>🎁 Kunlik Bonus</h3>
+                    <p>Har 24 soatda +2500 Coin oling</p>
+                </div>
+                <button class="buy-btn" onclick="claimDailyBonus()">Olish</button>
+            </div>
+            <div class="shop-item">
+                <div class="shop-info">
+                    <h3>📢 Telegram Kanal</h3>
+                    <p>Rasmiy kanalimizga obuna bo'ling</p>
+                    <p style="color:var(--primary)">+5,000 Coin</p>
+                </div>
+                <button class="buy-btn" id="task-tg" onclick="completeTask('tg', 5000)">Bajarish</button>
+            </div>
+            <div class="shop-item">
+                <div class="shop-info">
+                    <h3>▶️ YouTube Kanal</h3>
+                    <p>Videolarimizni tomosha qiling</p>
+                    <p style="color:var(--primary)">+10,000 Coin</p>
+                </div>
+                <button class="buy-btn" id="task-yt" onclick="completeTask('yt', 10000)">Bajarish</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- FRIENDS MODAL -->
+    <div class="modal" id="friends-modal">
+        <div class="modal-header">
+            <div>🤝 Invite Friends</div>
+            <button class="close-btn" onclick="closeModal('friends-modal')">✕</button>
+        </div>
+        <div class="modal-content">
+            <center>
+                <p style="margin-bottom: 15px; color:#aaa;">Do'stlaringizni taklif qiling va har bir do'stingiz uchun <b>+25,000 Coin</b> oling!</p>
+            </center>
+            <div class="ref-box">
+                <h4 style="margin-bottom: 10px; color: white;">Sizning shaxsiy havolangiz:</h4>
+                <p id="ref-link-display" style="color: var(--primary); font-weight: bold;"></p>
+            </div>
+            <button class="buy-btn" style="width: 100%; padding: 15px; font-size:1.1rem;" onclick="copyRefLink()">
+                📋 Havoladan nusxa olish
+            </button>
+            
+            <div style="margin-top: 30px;">
+                <h3>Sizning jamoangiz:</h3>
+                <div class="shop-item" style="margin-top: 10px;">
+                    <div>Taklif qilinganlar:</div>
+                    <div style="font-size: 1.2rem; font-weight: bold; color: var(--primary);" id="ref-count">0 ta do'st</div>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
-    /* State Configuration (refCode qo'shildi) */
-    let state = {
-        coins: parseInt(localStorage.getItem('coins')) || 0,
-        stars: parseInt(localStorage.getItem('stars')) || 0,
-        energy: parseInt(localStorage.getItem('energy')) || 1000,
-        maxEnergy: parseInt(localStorage.getItem('maxEnergy')) || 1000,
-        tapPower: parseInt(localStorage.getItem('tapPower')) || 1,
-        autoIncome: parseInt(localStorage.getItem('autoIncome')) || 0,
-        multitapCost: parseInt(localStorage.getItem('multitapCost')) || 100,
-        energyCost: parseInt(localStorage.getItem('energyCost')) || 200,
-        minerCost: parseInt(localStorage.getItem('minerCost')) || 500,
-        friendsCount: parseInt(localStorage.getItem('friendsCount')) || 0,
-        completedTasks: JSON.parse(localStorage.getItem('completedTasks')) || [],
-        lastBonusTime: parseInt(localStorage.getItem('lastBonusTime')) || 0,
-        // Foydalanuvchining o'zgarmas shaxsiy ID si:
-        refCode: localStorage.getItem('refCode') || Math.floor(Math.random() * 900000 + 100000).toString() 
-    };
+        // ==========================================
+        // BOTINGIZ USERNAME'INI SHU YERGA YOZASIZ:
+        // (@ belgisiz yozing, masalan: MeningBotim)
+        // ==========================================
+        const BOT_USERNAME = "CyberPulseBot"; 
+        // ==========================================
 
-    let comboCount = 0;
-    let comboTimer = null;
+        /* State Configuration (Local Storage Persistence) */
+        let state = {
+            coins: parseInt(localStorage.getItem('coins')) || 0,
+            stars: parseInt(localStorage.getItem('stars')) || 0,
+            energy: parseInt(localStorage.getItem('energy')) || 1000,
+            maxEnergy: parseInt(localStorage.getItem('maxEnergy')) || 1000,
+            tapPower: parseInt(localStorage.getItem('tapPower')) || 1,
+            autoIncome: parseInt(localStorage.getItem('autoIncome')) || 0,
+            multitapCost: parseInt(localStorage.getItem('multitapCost')) || 100,
+            energyCost: parseInt(localStorage.getItem('energyCost')) || 200,
+            minerCost: parseInt(localStorage.getItem('minerCost')) || 500,
+            friendsCount: parseInt(localStorage.getItem('friendsCount')) || 0,
+            completedTasks: JSON.parse(localStorage.getItem('completedTasks')) || [],
+            lastBonusTime: parseInt(localStorage.getItem('lastBonusTime')) || 0,
+            refCode: localStorage.getItem('refCode') || Math.floor(Math.random() * 900000 + 100000).toString() 
+        };
 
-    /* Audio Synth Effects */
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    function playSound(freq, duration) {
-        try {
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-            gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start();
-            osc.stop(audioCtx.currentTime + duration);
-        } catch (e) {}
-    }
+        let comboCount = 0;
+        let comboTimer = null;
 
-    /* Three.js 3D Setup */
-    const container = document.getElementById('canvas-container');
-    const canvas = document.getElementById('three-canvas');
-    const scene = new THREE.Scene();
-
-    const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
-    camera.position.z = 5;
-
-    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
-    renderer.setSize(container.clientWidth, container.clientHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-
-    const geometry = new THREE.CylinderGeometry(1.3, 1.3, 0.2, 32);
-    const material = new THREE.MeshStandardMaterial({
-        color: 0x00f3ff,
-        metalness: 0.85,
-        roughness: 0.15
-    });
-    const coin = new THREE.Mesh(geometry, material);
-    coin.rotation.x = Math.PI / 3;
-    scene.add(coin);
-
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.9);
-    scene.add(ambientLight);
-
-    const pointLight = new THREE.PointLight(0x00f3ff, 2.5, 10);
-    pointLight.position.set(2, 3, 4);
-    scene.add(pointLight);
-
-    function animate() {
-        requestAnimationFrame(animate);
-        coin.rotation.z += 0.012;
-        renderer.render(scene, camera);
-    }
-    animate();
-
-    /* UI Synchronization */
-    function updateUI() {
-        document.getElementById('balance').innerText = state.coins.toLocaleString();
-        document.getElementById('stars-count').innerText = state.stars;
-        document.getElementById('energy-text').innerText = `⚡ ${state.energy}/${state.maxEnergy}`;
-        document.getElementById('energy-fill').style.width = `${(state.energy / state.maxEnergy) * 100}%`;
-
-        document.getElementById('multitap-cost').innerText = `${state.multitapCost} Coin`;
-        document.getElementById('energy-cost').innerText = `${state.energyCost} Coin`;
-        document.getElementById('miner-cost').innerText = `${state.minerCost} Coin`;
-        document.getElementById('ref-count').innerText = `${state.friendsCount} ta do'st`;
-
-        // Shaxsiy havola (Link) ni ekranga chiqarish:
-        const myLink = `t.me/CyberPulseBot?start=ref_${state.refCode}`;
-        document.getElementById('ref-link-display').innerText = myLink;
-
-        document.getElementById('buy-multitap').disabled = state.coins < state.multitapCost;
-        document.getElementById('buy-energy').disabled = state.coins < state.energyCost;
-        document.getElementById('buy-miner').disabled = state.coins < state.minerCost;
-        document.getElementById('buy-star').disabled = state.coins < 5000;
-        document.getElementById('buy-star-10').disabled = state.coins < 45000;
-
-        // Task buttons sync
-        state.completedTasks.forEach(taskId => {
-            const btn = document.getElementById(`task-${taskId}`);
-            if (btn) {
-                btn.innerText = "BAJARILDI";
-                btn.disabled = true;
-            }
-        });
-
-        // Level & Leagues
-        const currentLevel = 1 + Math.floor(state.coins / 3000);
-        document.getElementById('rank-badge').innerText = `CYBER LVL ${currentLevel}`;
-
-        let league = "SILVER";
-        if (state.coins > 100000) league = "GOLD";
-        if (state.coins > 500000) league = "PLATINUM";
-        if (state.coins > 1500000) league = "DIAMOND";
-        document.getElementById('league-name').innerText = league;
-
-        // Dynamic Color Shifting
-        const root = document.documentElement;
-        const hue = (currentLevel * 35) % 360;
-        const dynamicColor = `hsl(${hue}, 100%, 50%)`;
-        root.style.setProperty('--active-glow', dynamicColor);
-        material.color.setHSL(hue / 360, 1.0, 0.5);
-
-        // Persistence
-        Object.keys(state).forEach(key => {
-            if (key === 'completedTasks') {
-                localStorage.setItem('completedTasks', JSON.stringify(state.completedTasks));
-            } else {
-                localStorage.setItem(key, state[key]);
-            }
-        });
-    }
-
-    /* Tap Handler */
-    function handleTap(e) {
-        e.preventDefault();
-        const touches = e.changedTouches ? e.changedTouches : [e];
-
-        for (let i = 0; i < touches.length; i++) {
-            if (state.energy < 1) break;
-
-            state.energy -= 1;
-            state.coins += state.tapPower;
-
-            const touch = touches[i];
-            showFloatingText(touch.clientX || touch.pageX, touch.clientY || touch.pageY, `+${state.tapPower}`);
-            
-            coin.scale.set(0.92, 0.92, 0.92);
-            setTimeout(() => coin.scale.set(1, 1, 1), 60);
-
-            playSound(420 + (comboCount * 18), 0.04);
-            triggerCombo();
-        }
-        updateUI();
-    }
-
-    const canvasArea = document.getElementById('canvas-container');
-    canvasArea.addEventListener('touchstart', handleTap, { passive: false });
-    canvasArea.addEventListener('mousedown', (e) => {
-        if (e.pointerType !== 'touch') handleTap(e);
-    });
-
-    /* Combo Mechanics */
-    function triggerCombo() {
-        comboCount++;
-        const comboBadge = document.getElementById('combo-badge');
-        const overlay = document.getElementById('combo-overlay');
-
-        comboBadge.innerText = `COMBO x${comboCount}`;
-        comboBadge.style.opacity = '1';
-
-        if (comboCount > 4) {
-            overlay.style.opacity = Math.min((comboCount - 4) * 0.12, 0.5);
-        }
-
-        clearTimeout(comboTimer);
-        comboTimer = setTimeout(() => {
-            comboCount = 0;
-            comboBadge.style.opacity = '0';
-            overlay.style.opacity = '0';
-        }, 1000);
-    }
-
-    function showFloatingText(x, y, text) {
-        const el = document.createElement('div');
-        el.className = 'tap-pop';
-        el.innerText = text;
-        el.style.left = `${x}px`;
-        el.style.top = `${y}px`;
-        document.body.appendChild(el);
-        setTimeout(() => el.remove(), 750);
-    }
-
-    /* Actions & Purchases */
-    function completeTask(id, reward) {
-        if (!state.completedTasks.includes(id)) {
-            state.completedTasks.push(id);
-            state.coins += reward;
-            playSound(750, 0.2);
-            updateUI();
-        }
-    }
-
-    function claimDailyBonus() {
-        const now = Date.now();
-        const cooldown = 24 * 60 * 60 * 1000;
-        if (now - state.lastBonusTime >= cooldown) {
-            state.coins += 2500;
-            state.lastBonusTime = now;
-            playSound(850, 0.25);
-            alert("Tabriklaymiz! Kunlik bonus +2,500 Coin qo'shildi.");
-            updateUI();
-        } else {
-            alert("Kunlik bonus allaqachon olingan! 24 soatdan keyin qaytib keling.");
-        }
-    }
-
-    function buyMultiTap() {
-        if (state.coins >= state.multitapCost) {
-            state.coins -= state.multitapCost;
-            state.tapPower += 1;
-            state.multitapCost = Math.floor(state.multitapCost * 1.75);
-            updateUI();
-        }
-    }
-
-    function buyEnergyLimit() {
-        if (state.coins >= state.energyCost) {
-            state.coins -= state.energyCost;
-            state.maxEnergy += 500;
-            state.energy += 500;
-            state.energyCost = Math.floor(state.energyCost * 1.75);
-            updateUI();
-        }
-    }
-
-    function buyMiner() {
-        if (state.coins >= state.minerCost) {
-            state.coins -= state.minerCost;
-            state.autoIncome += 1;
-            state.minerCost = Math.floor(state.minerCost * 1.9);
-            updateUI();
-        }
-    }
-
-    function buyTelegramStar() {
-        if (state.coins >= 5000) {
-            state.coins -= 5000;
-            state.stars += 1;
-            playSound(900, 0.3);
-            updateUI();
-        }
-    }
-
-    function buyTelegramStars10() {
-        if (state.coins >= 45000) {
-            state.coins -= 45000;
-            state.stars += 10;
-            playSound(950, 0.4);
-            updateUI();
-        }
-    }
-
-    /* Havoladan aniq va xatosiz nusxa ko'chirish */
-    function copyRefLink() {
-        const link = `https://t.me/CyberPulseBot?start=ref_${state.refCode}`;
-        
-        // Mobil va desktop uchun universal nusxalash usuli
-        if (navigator.clipboard && window.isSecureContext) {
-            navigator.clipboard.writeText(link).then(() => {
-                alert(`Havola nusxalandi:\n${link}`);
-            });
-        } else {
-            // Agar brauzer ruxsat bermasa (zaxira usuli)
-            const textArea = document.createElement("textarea");
-            textArea.value = link;
-            document.body.appendChild(textArea);
-            textArea.select();
+        /* Audio Synth Effects */
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playSound(freq, duration) {
             try {
-                document.execCommand('copy');
-                alert(`Havola nusxalandi:\n${link}`);
-            } catch (err) {
-                prompt("Nusxa olish uchun ustiga bosib turing:", link);
+                if(audioCtx.state === 'suspended') audioCtx.resume();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch (e) {}
+        }
+
+        /* Three.js 3D Setup */
+        const container = document.getElementById('canvas-container');
+        const canvas = document.getElementById('three-canvas');
+        const scene = new THREE.Scene();
+
+        const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
+        camera.position.z = 5;
+
+        const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+        const geometry = new THREE.CylinderGeometry(1.3, 1.3, 0.2, 32);
+        const material = new THREE.MeshStandardMaterial({
+            color: 0x00f3ff,
+            metalness: 0.85,
+            roughness: 0.15
+        });
+        const coin = new THREE.Mesh(geometry, material);
+        coin.rotation.x = Math.PI / 3;
+        scene.add(coin);
+
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.9);
+        scene.add(ambientLight);
+
+        const pointLight = new THREE.PointLight(0x00f3ff, 2.5, 10);
+        pointLight.position.set(2, 3, 4);
+        scene.add(pointLight);
+
+        function animate() {
+            requestAnimationFrame(animate);
+            coin.rotation.z += 0.012;
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        /* UI Synchronization */
+        function updateUI() {
+            document.getElementById('balance').innerText = state.coins.toLocaleString();
+            document.getElementById('stars-count').innerText = state.stars;
+            document.getElementById('energy-text').innerText = `⚡ ${state.energy}/${state.maxEnergy}`;
+            document.getElementById('energy-fill').style.width = `${(state.energy / state.maxEnergy) * 100}%`;
+
+            document.getElementById('multitap-cost').innerText = `${state.multitapCost}`;
+            document.getElementById('energy-cost').innerText = `${state.energyCost}`;
+            document.getElementById('miner-cost').innerText = `${state.minerCost}`;
+            document.getElementById('ref-count').innerText = `${state.friendsCount} ta do'st`;
+
+            // Shaxsiy havola (Link) display
+            const myLink = `t.me/${BOT_USERNAME}?start=ref_${state.refCode}`;
+            document.getElementById('ref-link-display').innerText = myLink;
+
+            // Store buttons enable/disable
+            document.getElementById('buy-multitap').disabled = state.coins < state.multitapCost;
+            document.getElementById('buy-energy').disabled = state.coins < state.energyCost;
+            document.getElementById('buy-miner').disabled = state.coins < state.minerCost;
+            document.getElementById('buy-star').disabled = state.coins < 5000;
+
+            // Task buttons sync
+            state.completedTasks.forEach(taskId => {
+                const btn = document.getElementById(`task-${taskId}`);
+                if (btn) {
+                    btn.innerText = "BAJARILDI";
+                    btn.disabled = true;
+                    btn.style.background = "#333";
+                }
+            });
+
+            // Level & Leagues
+            const currentLevel = 1 + Math.floor(state.coins / 3000);
+            document.getElementById('rank-badge').innerText = `CYBER LVL ${currentLevel}`;
+
+            let league = "SILVER";
+            if (state.coins > 100000) league = "GOLD";
+            if (state.coins > 500000) league = "PLATINUM";
+            if (state.coins > 1500000) league = "DIAMOND";
+            document.getElementById('league-name').innerText = league;
+
+            // Dynamic Color Shift
+            const root = document.documentElement;
+            const hue = (currentLevel * 35) % 360;
+            const dynamicColor = `hsl(${hue}, 100%, 50%)`;
+            root.style.setProperty('--active-glow', dynamicColor);
+            material.color.setHSL(hue / 360, 1.0, 0.5);
+            pointLight.color.setHSL(hue / 360, 1.0, 0.5);
+
+            // Persistence
+            Object.keys(state).forEach(key => {
+                if (key === 'completedTasks') {
+                    localStorage.setItem('completedTasks', JSON.stringify(state.completedTasks));
+                } else {
+                    localStorage.setItem(key, state[key]);
+                }
+            });
+        }
+
+        /* Tap Handler */
+        function handleTap(e) {
+            e.preventDefault();
+            const touches = e.changedTouches ? e.changedTouches : [e];
+
+            for (let i = 0; i < touches.length; i++) {
+                if (state.energy < 1) break;
+
+                state.energy -= 1;
+                state.coins += state.tapPower;
+
+                const touch = touches[i];
+                showFloatingText(touch.clientX || touch.pageX, touch.clientY || touch.pageY, `+${state.tapPower}`);
+                
+                coin.scale.set(0.92, 0.92, 0.92);
+                setTimeout(() => coin.scale.set(1, 1, 1), 60);
+
+                playSound(420 + (comboCount * 18), 0.04);
+                triggerCombo();
+
+                if (navigator.vibrate) {
+                    navigator.vibrate(12);
+                }
             }
-            document.body.removeChild(textArea);
-        }
-    }
-
-    /* Modal Controllers */
-    function openModal(id) { document.getElementById(id).classList.add('active'); }
-    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
-
-    /* Timers */
-    setInterval(() => {
-        if (state.energy < state.maxEnergy) {
-            state.energy = Math.min(state.energy + 2, state.maxEnergy);
             updateUI();
         }
-    }, 1000);
 
-    setInterval(() => {
-        if (state.autoIncome > 0) {
-            state.coins += state.autoIncome;
-            updateUI();
+        const canvasArea = document.getElementById('canvas-container');
+        canvasArea.addEventListener('touchstart', handleTap, { passive: false });
+        canvasArea.addEventListener('mousedown', (e) => {
+            if (e.pointerType !== 'touch') handleTap(e);
+        });
+
+        /* Combo Mechanics */
+        function triggerCombo() {
+            comboCount++;
+            const comboBadge = document.getElementById('combo-badge');
+            const overlay = document.getElementById('combo-overlay');
+
+            comboBadge.innerText = `COMBO x${comboCount}`;
+            comboBadge.style.opacity = '1';
+
+            if (comboCount > 4) {
+                overlay.style.opacity = Math.min((comboCount - 4) * 0.12, 0.5);
+            }
+
+            clearTimeout(comboTimer);
+            comboTimer = setTimeout(() => {
+                comboCount = 0;
+                comboBadge.style.opacity = '0';
+                overlay.style.opacity = '0';
+            }, 1000);
         }
-    }, 1000);
 
-    updateUI();
+        function showFloatingText(x, y, text) {
+            const el = document.createElement('div');
+            el.className = 'tap-pop';
+            el.innerText = text;
+            el.style.left = `${x}px`;
+            el.style.top = `${y}px`;
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 750);
+        }
+
+        /* Actions & Purchases */
+        function completeTask(id, reward) {
+            if (!state.completedTasks.includes(id)) {
+                state.completedTasks.push(id);
+                state.coins += reward;
+                playSound(750, 0.2);
+                alert(`Vazifa bajarildi! +${reward.toLocaleString()} Coin berildi.`);
+                updateUI();
+            }
+        }
+
+        function claimDailyBonus() {
+            const now = Date.now();
+            const cooldown = 24 * 60 * 60 * 1000;
+            if (now - state.lastBonusTime >= cooldown) {
+                state.coins += 2500;
+                state.lastBonusTime = now;
+                playSound(850, 0.25);
+                alert("Tabriklaymiz! Kunlik bonus +2,500 Coin qo'shildi.");
+                updateUI();
+            } else {
+                alert("Kunlik bonus allaqachon olingan! Erta keling.");
+            }
+        }
+
+        function buyMultiTap() {
+            if (state.coins >= state.multitapCost) {
+                state.coins -= state.multitapCost;
+                state.tapPower += 1;
+                state.multitapCost = Math.floor(state.multitapCost * 1.75);
+                playSound(600, 0.1);
+                updateUI();
+            }
+        }
+
+        function buyEnergyLimit() {
+            if (state.coins >= state.energyCost) {
+                state.coins -= state.energyCost;
+                state.maxEnergy += 500;
+                state.energy += 500;
+                state.energyCost = Math.floor(state.energyCost * 1.75);
+                playSound(600, 0.1);
+                updateUI();
+            }
+        }
+
+        function buyMiner() {
+            if (state.coins >= state.minerCost) {
+                state.coins -= state.minerCost;
+                state.autoIncome += 1;
+                state.minerCost = Math.floor(state.minerCost * 1.9);
+                playSound(600, 0.1);
+                updateUI();
+            }
+        }
+
+        function buyTelegramStar() {
+            if (state.coins >= 5000) {
+                state.coins -= 5000;
+                state.stars += 1;
+                playSound(900, 0.3);
+                updateUI();
+            }
+        }
+
+        /* Copy Ref Link */
+        function copyRefLink() {
+            const link = `https://t.me/${@kunlik_vazifalar_2026_bot}?start=ref_${state.refCode}`;
+            
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(link).then(() => {
+                    alert(`Nusxa olindi!\n\n${link}`);
+                });
+            } else {
+                const textArea = document.createElement("textarea");
+                textArea.value = link;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    alert(`Nusxa olindi!\n\n${link}`);
+                } catch (err) {
+                    prompt("Nusxa olish uchun ustiga bosib turing:", link);
+                }
+                document.body.removeChild(textArea);
+            }
+        }
+
+        /* Modal Controllers */
+        function openModal(id) { 
+            closeAllModals();
+            document.getElementById(id).classList.add('active'); 
+        }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+        function closeAllModals() {
+            document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
+        }
+
+        /* Auto regeneration & Auto Miner Interval */
+        setInterval(() => {
+            if (state.energy < state.maxEnergy) {
+                state.energy = Math.min(state.energy + 2, state.maxEnergy);
+                updateUI();
+            }
+        }, 1000);
+
+        setInterval(() => {
+            if (state.autoIncome > 0) {
+                state.coins += state.autoIncome;
+                updateUI();
+            }
+        }, 1000);
+
+        // Initial Load
+        updateUI();
+
+        // Responsive resize
+        window.addEventListener('resize', () => {
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        });
     </script>
 </body>
 </html>
