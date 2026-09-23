@@ -6,7 +6,7 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 TOKEN = os.environ.get("BOT_TOKEN")
 
 # WebApp havolasi (Netlify/Vercel/GitHub Pages bergan https linkni shu yerga yozasiz)
-WEBAPP_URL = "https://telegram-bot-7n6t.onrender.com"
+WEBAPP_URL = "https://telegram-bot-7n6t.onrender.com/miniapp.html"
 
 bot = telebot.TeleBot(TOKEN)
 
