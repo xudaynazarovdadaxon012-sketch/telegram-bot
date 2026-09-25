@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>CyberPulse - Premium 3D Clicker Mini App</title>
-    <!-- Three.js 3D kutubxonasi -->
+    <!-- Three.js 3D Kutubxonasi -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;700&display=swap');
@@ -39,7 +39,7 @@
             flex-direction: column;
         }
 
-        /* HEADER EKRAN */
+        /* HEADER EKRANI */
         .header {
             padding: 20px;
             text-align: center;
@@ -281,7 +281,7 @@
             word-break: break-all;
         }
 
-        /* UCHIB CHIQUVCHI MATN */
+        /* UCHIB CHIQUVCHI TANGALAR */
         .tap-pop {
             position: absolute;
             font-size: 2rem;
@@ -473,7 +473,7 @@
     <script>
         // ==========================================
         // BOTINGIZ USERNAME'INI SHU YERGA YOZASIZ:
-        // (@ belgisiz yozing, masalan: MeningBotim)
+        // (@ belgisiz yozing, masalan: CyberPulseBot)
         // ==========================================
         const BOT_USERNAME = "CyberPulseBot"; 
         // ==========================================
@@ -564,17 +564,14 @@
             document.getElementById('miner-cost').innerText = `${state.minerCost}`;
             document.getElementById('ref-count').innerText = `${state.friendsCount} ta do'st`;
 
-            // Shaxsiy havola (Link) display
-            const myLink = `t.me/${BOT_USERNAME}?start=ref_${state.refCode}`;
+            const myLink = `https://t.me/${BOT_USERNAME}?start=ref_${state.refCode}`;
             document.getElementById('ref-link-display').innerText = myLink;
 
-            // Store buttons enable/disable
             document.getElementById('buy-multitap').disabled = state.coins < state.multitapCost;
             document.getElementById('buy-energy').disabled = state.coins < state.energyCost;
             document.getElementById('buy-miner').disabled = state.coins < state.minerCost;
             document.getElementById('buy-star').disabled = state.coins < 5000;
 
-            // Task buttons sync
             state.completedTasks.forEach(taskId => {
                 const btn = document.getElementById(`task-${taskId}`);
                 if (btn) {
@@ -584,7 +581,6 @@
                 }
             });
 
-            // Level & Leagues
             const currentLevel = 1 + Math.floor(state.coins / 3000);
             document.getElementById('rank-badge').innerText = `CYBER LVL ${currentLevel}`;
 
@@ -594,15 +590,12 @@
             if (state.coins > 1500000) league = "DIAMOND";
             document.getElementById('league-name').innerText = league;
 
-            // Dynamic Color Shift
             const root = document.documentElement;
             const hue = (currentLevel * 35) % 360;
-            const dynamicColor = `hsl(${hue}, 100%, 50%)`;
-            root.style.setProperty('--active-glow', dynamicColor);
+            root.style.setProperty('--active-glow', `hsl(${hue}, 100%, 50%)`);
             material.color.setHSL(hue / 360, 1.0, 0.5);
             pointLight.color.setHSL(hue / 360, 1.0, 0.5);
 
-            // Persistence
             Object.keys(state).forEach(key => {
                 if (key === 'completedTasks') {
                     localStorage.setItem('completedTasks', JSON.stringify(state.completedTasks));
@@ -743,7 +736,7 @@
 
         /* Copy Ref Link */
         function copyRefLink() {
-            const link = `https://t.me/${@kunlik_vazifalar_2026_bot}?start=ref_${state.refCode}`;
+            const link = `https://t.me/${BOT_USERNAME}?start=ref_${state.refCode}`;
             
             if (navigator.clipboard && window.isSecureContext) {
                 navigator.clipboard.writeText(link).then(() => {
