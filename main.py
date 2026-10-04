@@ -3,6 +3,7 @@ import logging
 import os
 from dotenv import load_dotenv
 
+from aiohttp import web
 from aiogram import Bot, Dispatcher, F, types
 from aiogram.filters import Command, CommandStart
 from aiogram.fsm.context import FSMContext
@@ -23,7 +24,7 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 CHANNEL_ID = os.getenv("CHANNEL_ID", "@kanalingiz_usernamesi")
 ADMIN_ID = int(os.getenv("ADMIN_ID", "8898979946"))
 
-# miniapp.html joylashgan URL manzil
+# GitHub Pages-dagi miniapp.html manzili
 WEBAPP_URL = os.getenv(
     "WEBAPP_URL", "https://xudaynazarovdadaxon012-sketch.github.io/telegram-bot/miniapp.html"
 )
@@ -276,7 +277,6 @@ async def send_game_file(callback: types.CallbackQuery):
         )
 
 
-# QIDIRUV TIZIMI
 @dp.message(F.text == "🔍 O'yin Qidirish")
 async def search_prompt(message: types.Message):
     await message.answer(
@@ -322,13 +322,11 @@ async def auto_search_game(message: types.Message):
         )
 
 
-# STATISTIKA VA ANIMATSIYALI MINIAPP.HTML DIAGRAMMASI
 @dp.message(F.text == "📊 Statistika")
 async def stats_handler(message: types.Message):
     total_users = len(ALL_USERS)
     vip_count = len(VIP_USERS)
 
-    # miniapp.html sahifasiga dinamik ma'lumotlarni uzatamiz
     app_url = f"{WEBAPP_URL}?total={total_users}&vip={vip_count}"
 
     kb = InlineKeyboardMarkup(
@@ -352,7 +350,6 @@ async def stats_handler(message: types.Message):
     )
 
 
-# ADMIN PANEL VA RASSILKA
 @dp.message(F.text == "⚙ Admin Panel")
 async def admin_panel(message: types.Message):
     if message.from_user.id != ADMIN_ID:
@@ -403,7 +400,6 @@ async def support_handler(message: types.Message):
     await message.answer("👨‍‍💻 Admin aloqa: @admin_usernameringiz")
 
 
-# TELEGRAM STARS TO'LOVI
 @dp.callback_query(F.data == "buy_vip_50")
 async def send_invoice(callback: types.CallbackQuery):
     await callback.answer()
@@ -428,8 +424,25 @@ async def successful_payment_handler(message: types.Message):
     await message.answer("🎉 VIP obunangiz muvaffaqiyatli faollashtirildi!")
 
 
+# --- RENDER UCHUN VEB-SERVER (PORT SINOVIDAN O'TISH UCHUN) ---
+async def handle_ping(request):
+    return web.Response(text="Bot ishlayapti va port faol!")
+
+
+async def start_web_server():
+    app = web.Application()
+    app.router.add_get("/", handle_ping)
+    runner = web.AppRunner(app)
+    await runner.setup()
+    port = int(os.getenv("PORT", 10000))
+    site = web.TCPSite(runner, "0.0.0.0", port)
+    await site.start()
+
+
 async def main():
     logging.basicConfig(level=logging.INFO)
+    # Veb-server va botni bir vaqtda ishga tushiramiz
+    asyncio.create_task(start_web_server())
     await dp.start_polling(bot)
 
 
