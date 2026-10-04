@@ -3,148 +3,119 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Game Hub Mini App</title>
-    <!-- Telegram Web App SDK -->
+    <title>Game Hub Analitika</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root {
-            --bg-color: var(--tg-theme-bg-color, #0f172a);
-            --card-bg: var(--tg-theme-secondary-bg-color, #1e293b);
-            --text-color: var(--tg-theme-text-color, #ffffff);
-            --hint-color: var(--tg-theme-hint-color, #94a3b8);
-            --button-color: var(--tg-theme-button-color, #38bdf8);
-            --button-text: var(--tg-theme-button-text-color, #ffffff);
-        }
-
         body {
+            background-color: var(--tg-theme-bg-color, #18222d);
+            color: var(--tg-theme-text-color, #ffffff);
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
             margin: 0;
-            padding: 16px;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .header h1 {
-            font-size: 22px;
-            margin: 0 0 6px 0;
-            color: #38bdf8;
-        }
-
-        .header p {
-            font-size: 13px;
-            color: var(--hint-color);
-            margin: 0;
-        }
-
-        .section-title {
-            font-size: 14px;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: var(--hint-color);
-            margin: 16px 0 10px 4px;
-        }
-
-        .game-card {
-            background: var(--card-bg);
-            border-radius: 12px;
-            padding: 14px;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-        }
-
-        .game-info {
+            padding: 20px;
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            align-items: center;
         }
-
-        .game-title {
-            font-size: 16px;
-            font-weight: 600;
+        .card {
+            background: var(--tg-theme-secondary-bg-color, #212d3b);
+            border-radius: 16px;
+            padding: 20px;
+            width: 100%;
+            max-width: 350px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            text-align: center;
         }
-
-        .game-desc {
+        h2 {
+            margin-top: 0;
+            font-size: 20px;
+            color: #0088cc;
+        }
+        .chart-container {
+            position: relative;
+            margin: 20px 0;
+            height: 220px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .stat-item {
+            background: rgba(255,255,255,0.05);
+            padding: 10px;
+            border-radius: 10px;
+        }
+        .stat-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2ea6ff;
+        }
+        .stat-label {
             font-size: 12px;
-            color: var(--hint-color);
-        }
-
-        .btn {
-            background-color: var(--button-color);
-            color: var(--button-text);
-            border: none;
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: opacity 0.2s ease;
-        }
-
-        .btn:active {
-            opacity: 0.8;
-        }
-
-        .btn-vip {
-            background-color: #eab308;
-            color: #000000;
+            opacity: 0.7;
         }
     </style>
 </head>
 <body>
-
-    <div class="header">
-        <h1>🎮 Game Hub Store</h1>
-        <p>O'yinlarni to'g'ridan-to'g'ri Telegram chatga yuklab oling</p>
-    </div>
-
-    <div class="section-title">FREE GAMES (BEPUL)</div>
-
-    <div class="game-card">
-        <div class="game-info">
-            <span class="game-title">Need for Speed</span>
-            <span class="game-desc">PPSSPP / ISO (Mobil va PC)</span>
+    <div class="card">
+        <h2>📊 Tizim Statistikasi</h2>
+        <div class="chart-container">
+            <canvas id="statsChart"></canvas>
         </div>
-        <button class="btn" onclick="selectGame('nfs')">Yuklash</button>
-    </div>
-
-    <div class="game-card">
-        <div class="game-info">
-            <span class="game-title">Minecraft APK</span>
-            <span class="game-desc">Android versiyasi</span>
+        <div class="stats-grid">
+            <div class="stat-item">
+                <div class="stat-value" id="totalUsers">0</div>
+                <div class="stat-label">Jami A'zolar</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="vipUsers">0</div>
+                <div class="stat-label">VIP A'zolar</div>
+            </div>
         </div>
-        <button class="btn" onclick="selectGame('minecraft')">Yuklash</button>
-    </div>
-
-    <div class="section-title">VIP EXCLUSIVE (STARS)</div>
-
-    <div class="game-card">
-        <div class="game-info">
-            <span class="game-title">GTA Liberty City Stories</span>
-            <span class="game-desc">⭐ VIP Obuna talab qilinadi</span>
-        </div>
-        <button class="btn btn-vip" onclick="selectGame('vip')">VIP Olish</button>
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
-        
-        tg.ready();
         tg.expand();
 
-        function selectGame(gameType) {
-            tg.sendData(gameType);
-            tg.close();
-        }
+        // URL parametrlaridan ma'lumotlarni olish
+        const urlParams = new URLSearchParams(window.location.search);
+        const total = parseInt(urlParams.get('total')) || 0;
+        const vip = parseInt(urlParams.get('vip')) || 0;
+        const regular = Math.max(total - vip, 0);
+
+        document.getElementById('totalUsers').innerText = total;
+        document.getElementById('vipUsers').innerText = vip;
+
+        // 0 dan o'sadigan animatsiyali diagramma (Chart.js)
+        const ctx = document.getElementById('statsChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Oddiy a\'zolar', 'VIP a\'zolar'],
+                datasets: [{
+                    data: [regular, vip],
+                    backgroundColor: ['#0088cc', '#ffcc00'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: {
+                    animateScale: true,
+                    animateRotate: true,
+                    duration: 1500
+                },
+                plugins: {
+                    legend: {
+                        labels: { color: '#ffffff' }
+                    }
+                }
+            }
+        });
     </script>
 </body>
 </html>
