@@ -12,12 +12,16 @@ from aiogram.types import (
     LabeledPrice,
     PreCheckoutQuery,
     ReplyKeyboardMarkup,
+    WebAppInfo,
 )
 from aiohttp import web
 
 load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 CHANNEL_ID = os.getenv("CHANNEL_ID", "@kanalingiz_usernamesi")
+WEBAPP_URL = os.getenv(
+    "RENDER_EXTERNAL_URL", "https://sizning-app.onrender.com"
+)
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
@@ -25,12 +29,14 @@ dp = Dispatcher()
 VIP_USERS = set()
 
 
-# Render xizmati uchun veb-server
-async def handle(request):
+async def handle_index(request):
     return web.FileResponse("index.html")
 
 
-# Majburiy obuna tekshiruvi
+async def handle_miniapp(request):
+    return web.FileResponse("miniapp.html")
+
+
 async def check_subscription(user_id: int) -> bool:
     try:
         member = await bot.get_chat_member(
@@ -41,7 +47,24 @@ async def check_subscription(user_id: int) -> bool:
         return True
 
 
-# Inline tugmalar
+def get_main_menu():
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(
+                    text="🚀 Game Hub Mini App",
+                    web_app=WebAppInfo(url=f"{WEBAPP_URL}/miniapp"),
+                )
+            ],
+            [
+                KeyboardButton(text="🎮 Barcha o'yinlar"),
+                KeyboardButton(text="💎 VIP Imkoniyatlar"),
+            ],
+        ],
+        resize_keyboard=True,
+    )
+
+
 def get_inline_keyboard(is_subbed=True):
     if not is_subbed:
         return InlineKeyboardMarkup(
@@ -74,25 +97,6 @@ def get_inline_keyboard(is_subbed=True):
                 )
             ],
         ]
-    )
-
-
-def get_main_menu():
-    return ReplyKeyboardMarkup(
-        keyboard=[
-            [
-                KeyboardButton(text="🎮 Barcha o'yinlar"),
-                KeyboardButton(text="🔥 Top o'yinlar"),
-            ],
-            [
-                KeyboardButton(text="🎁 Kunlik bepul demo"),
-                KeyboardButton(text="💎 VIP Imkoniyatlar"),
-            ],
-            [
-                KeyboardButton(text="ℹ️ Yordam va Qo'llanma"),
-            ],
-        ],
-        resize_keyboard=True,
     )
 
 
@@ -143,7 +147,6 @@ async def check_sub_handler(callback: types.CallbackQuery):
         )
 
 
-# Bepul o'yinlar bo'limi
 @dp.message(F.text == "🎮 Barcha o'yinlar")
 async def free_games_handler(message: types.Message):
     kb = InlineKeyboardMarkup(
@@ -169,35 +172,71 @@ async def free_games_handler(message: types.Message):
     )
 
 
-# O'yin faylini to'g'ridan-to'g'ri Telegram chatiga yuklab berish
+# O'yin tugmasi bosilishi bilan DARCHA REZKITY fayl yuboriladi
 @dp.callback_query(F.data.startswith("dl_"))
 async def download_game(callback: types.CallbackQuery):
     game = callback.data.split("_")[1]
 
-    await callback.message.answer("📦 O'yin fayli yuklanmoqda, kuting...")
+    # Kutish xabarisiz to'g'ridan-to'g'ri faylni yuboramiz
+    file_url = "https://raw.githubusercontent.com/telegram/telegram-bot-sdk/master/README.md"
 
-    # BU YERGA O'ZINGIZNING TELEGRAM KANALINGIZDAGI FAYL HAVOLASI YOKI FILE_ID SINI QO'YASIZ
-    # Faylni to'g'ridan-to'g'ri Telegram fayli sifatida yuboradi (Brauzerga o'tmaydi)
     if game == "nfs":
-        # Masalan, Telegram'dagi o'yin faylining kodi yoki to'g'ridan-to'g mehmonga ega yuklash havolasi
-        file_url = "https://raw.githubusercontent.com/telegram/telegram-bot-sdk/master/README.md"  # Test fayl
         await callback.message.answer_document(
             document=file_url,
-            caption="🎮 <b>Need for Speed</b> fayli tayyor! Yuklab olib o'rnatishingiz mumkin.",
+            caption="🎮 <b>Need for Speed</b> fayli tayyor!",
             parse_mode="HTML",
         )
     elif game == "minecraft":
-        file_url = "https://raw.githubusercontent.com/telegram/telegram-bot-sdk/master/README.md"  # Test fayl
         await callback.message.answer_document(
             document=file_url,
-            caption="🎮 <b>Minecraft APK</b> fayli tayyor! Yuklab olib o'rnatishingiz mumkin.",
+            caption="🎮 <b>Minecraft APK</b> fayli tayyor!",
+            parse_mode="HTML",
+        )
+    elif game == "gta_lcs":
+        await callback.message.answer_document(
+            document=file_url,
+            caption="🎮 <b>GTA Liberty City Stories</b> fayli tayyor!",
+            parse_mode="HTML",
+        )
+    elif game == "gta_vcs":
+        await callback.message.answer_document(
+            document=file_url,
+            caption="🎮 <b>GTA Vice City Stories</b> fayli tayyor!",
             parse_mode="HTML",
         )
 
     await callback.answer()
 
 
-# VIP Bo'lim
+# Mini App ichidan bosilganda ham to'g'ridan-to'g'ri faylni yuborish
+@dp.message(F.web_app_data)
+async def web_app_data_handler(message: types.Message):
+    data = message.web_app_data.data
+    file_url = "https://raw.githubusercontent.com/telegram/telegram-bot-sdk/master/README.md"
+
+    if data == "nfs":
+        await message.answer_document(
+            document=file_url,
+            caption="🎮 <b>Need for Speed</b> fayli tayyor!",
+            parse_mode="HTML",
+        )
+    elif data == "minecraft":
+        await message.answer_document(
+            document=file_url,
+            caption="🎮 <b>Minecraft APK</b> fayli tayyor!",
+            parse_mode="HTML",
+        )
+    elif data == "vip":
+        await bot.send_invoice(
+            chat_id=message.from_user.id,
+            title="VIP Obuna",
+            description="Eksklyuziv GTA (PSP) o'yinlarini yuklab olish huquqi.",
+            payload="vip_sub_50_stars",
+            currency="XTR",
+            prices=[LabeledPrice(label="VIP Obuna", amount=50)],
+        )
+
+
 @dp.message(F.text == "💎 VIP Imkoniyatlar")
 @dp.callback_query(F.data == "vip_menu")
 async def vip_games_handler(event: types.Message | types.CallbackQuery):
@@ -222,7 +261,7 @@ async def vip_games_handler(event: types.Message | types.CallbackQuery):
             ]
         )
         await message.answer(
-            "💎 <b>Siz VIP a'zosiz!</b>\n\nEksklyuziv GTA o'yinlarini chatga yuklab oling:",
+            "💎 <b>Siz VIP a'zosiz!</b>\n\nEksklyuziv GTA o'yinlarini yuklab oling:",
             parse_mode="HTML",
             reply_markup=kb,
         )
@@ -239,7 +278,6 @@ async def vip_games_handler(event: types.Message | types.CallbackQuery):
         )
         await message.answer(
             "💎 <b>VIP Bo'lim (Eksklyuziv O'yinlar)</b>\n\n"
-            "Ushbu bo'limda quyidagi eksklyuziv o'yinlar mavjud:\n"
             "• <b>GTA: Liberty City Stories (PSP)</b>\n"
             "• <b>GTA: Vice City Stories (PSP)</b>\n\n"
             "VIP obunani Telegram Stars orqali xarid qiling:",
@@ -251,7 +289,6 @@ async def vip_games_handler(event: types.Message | types.CallbackQuery):
         await event.answer()
 
 
-# Telegram Stars to'lovini yaratish
 @dp.callback_query(F.data == "buy_vip_50")
 async def send_invoice(callback: types.CallbackQuery):
     await bot.send_invoice(
@@ -272,12 +309,10 @@ async def pre_checkout_handler(pre_checkout_query: PreCheckoutQuery):
 
 @dp.message(F.successful_payment)
 async def successful_payment_handler(message: types.Message):
-    user_id = message.from_user.id
-    VIP_USERS.add(user_id)
-
+    VIP_USERS.add(message.from_user.id)
     await message.answer(
         "🎉 <b>Tabriklaymiz!</b> VIP obuna muvaffaqiyatli faollashtirildi.\n\n"
-        "Endi <b>💎 VIP Imkoniyatlar</b> bo'limidan o'yinlarni yuklab olishingiz mumkin!",
+        "Endi <b>💎 VIP Imkoniyatlar</b> bo'limidan foydalanishingiz mumkin!",
         parse_mode="HTML",
     )
 
@@ -287,7 +322,9 @@ async def main():
 
     port = int(os.environ.get("PORT", 8080))
     app = web.Application()
-    app.router.add_get("/", handle)
+    app.router.add_get("/", handle_index)
+    app.router.add_get("/miniapp", handle_miniapp)
+
     runner = web.AppRunner(app)
     await runner.setup()
     site = web.TCPSite(runner, "0.0.0.0", port)
