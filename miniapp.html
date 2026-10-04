@@ -2,447 +2,50 @@
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Game Downloader & Play Hub</title>
-    <!-- Telegram Web App SDK -->
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- FontAwesome (Ikonkalar uchun) -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Hub Bot Status</title>
     <style>
-        :root {
-            --bg-color: #0d1117;
-            --card-bg: #161b22;
-            --accent-color: #00ff88;
-            --accent-glow: rgba(0, 255, 136, 0.25);
-            --danger-color: #ff4757;
-            --text-main: #f0f6fc;
-            --text-dim: #8b949e;
-            --border-color: #30363d;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            user-select: none;
-        }
-
         body {
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            padding: 12px;
-            padding-bottom: 24px;
-        }
-
-        /* Top Header */
-        .header {
+            font-family: Arial, sans-serif;
+            background-color: #0f172a;
+            color: #ffffff;
             display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 16px;
-            padding: 8px 4px;
-        }
-
-        .brand {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .brand i {
-            font-size: 24px;
-            color: var(--accent-color);
-            filter: drop-shadow(0 0 8px var(--accent-color));
-        }
-
-        .brand h1 {
-            font-size: 18px;
-            font-weight: 800;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-        }
-
-        /* Search Bar */
-        .search-box {
-            position: relative;
-            margin-bottom: 16px;
-        }
-
-        .search-box input {
-            width: 100%;
-            padding: 12px 16px 12px 42px;
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 10px;
-            color: var(--text-main);
-            font-size: 14px;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-
-        .search-box input:focus {
-            border-color: var(--accent-color);
-        }
-
-        .search-box i {
-            position: absolute;
-            left: 14px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-dim);
-        }
-
-        /* Game Cards Grid */
-        .game-list {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-
-        .game-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 14px;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-        }
-
-        .banner-container {
-            position: relative;
-            width: 100%;
-            height: 150px;
-            background-size: cover;
-            background-position: center;
-        }
-
-        .badge-category {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: rgba(0, 0, 0, 0.75);
-            backdrop-filter: blur(4px);
-            color: var(--accent-color);
-            border: 1px solid var(--accent-color);
-            padding: 4px 8px;
-            border-radius: 6px;
-            font-size: 11px;
-            font-weight: bold;
-        }
-
-        .game-details {
-            padding: 14px;
-        }
-
-        .game-title {
-            font-size: 16px;
-            font-weight: 700;
-            margin-bottom: 6px;
-        }
-
-        .game-desc {
-            font-size: 12px;
-            color: var(--text-dim);
-            line-height: 1.4;
-            margin-bottom: 12px;
-        }
-
-        .game-meta {
-            display: flex;
-            gap: 12px;
-            font-size: 11px;
-            color: var(--text-dim);
-            margin-bottom: 14px;
-        }
-
-        .game-meta span {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        /* Action Buttons */
-        .btn-group {
-            display: flex;
-            gap: 8px;
-        }
-
-        .btn {
-            flex: 1;
-            padding: 10px;
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: 700;
-            border: none;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
             justify-content: center;
-            gap: 6px;
-            transition: transform 0.1s, filter 0.2s;
-        }
-
-        .btn:active {
-            transform: scale(0.97);
-        }
-
-        .btn-demo {
-            background: rgba(0, 255, 136, 0.1);
-            color: var(--accent-color);
-            border: 1px solid var(--accent-color);
-        }
-
-        .btn-download {
-            background: var(--accent-color);
-            color: #000;
-            box-shadow: 0 0 10px var(--accent-glow);
-        }
-
-        .btn-disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            border-color: var(--border-color);
-            color: var(--text-dim);
-        }
-
-        /* Demo Modal Overlay */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
+            align-items: center;
             height: 100vh;
-            background: rgba(13, 17, 23, 0.95);
-            z-index: 999;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 16px;
+            margin: 0;
         }
-
-        .modal-header {
-            width: 100%;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-        }
-
-        .timer-badge {
-            background: var(--danger-color);
-            color: #fff;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: bold;
-        }
-
-        .demo-screen {
-            width: 100%;
-            height: 65vh;
-            background: #000;
-            border: 1px solid var(--accent-color);
-            border-radius: 12px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+        .container {
             text-align: center;
-            padding: 20px;
+            padding: 30px;
+            background: #1e293b;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
-
-        .demo-screen i {
-            font-size: 48px;
-            color: var(--accent-color);
-            margin-bottom: 12px;
+        h1 {
+            color: #38bdf8;
+            margin-bottom: 10px;
         }
-
-        .close-btn {
-            margin-top: 16px;
-            width: 100%;
-            padding: 12px;
-            background: var(--danger-color);
+        p {
+            color: #94a3b8;
+            font-size: 18px;
+        }
+        .status {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 8px 16px;
+            background-color: #22c55e;
             color: #fff;
-            border: none;
-            border-radius: 8px;
+            border-radius: 20px;
             font-weight: bold;
         }
     </style>
 </head>
 <body>
-
-    <!-- Header -->
-    <div class="header">
-        <div class="brand">
-            <i class="fa-solid fa-gamepad"></i>
-            <h1>Game Hub</h1>
-        </div>
-        <span style="font-size: 11px; color: var(--text-dim); font-weight: bold;">v2.0</span>
+    <div class="container">
+        <h1>🎮 Game Hub Bot</h1>
+        <p>Bot Render serverida muvaffaqiyatli ishlamoqda.</p>
+        <div class="status">● ONLINE</div>
     </div>
-
-    <!-- Search Bar -->
-    <div class="search-box">
-        <i class="fa-solid fa-magnifying-glass"></i>
-        <input type="text" id="searchInput" onkeyup="filterGames()" placeholder="O'yin nomini qidiring...">
-    </div>
-
-    <!-- Game List -->
-    <div class="game-list" id="gameList">
-        
-        <!-- Game Item 1 -->
-        <div class="game-card" data-title="cyber strike online fps">
-            <div class="banner-container" style="background-image: url('https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=600&q=80');">
-                <span class="badge-category">Action / FPS</span>
-            </div>
-            <div class="game-details">
-                <div class="game-title">Cyber Strike Online</div>
-                <div class="game-desc">Real vaqt rejimida kechadigan shiddatli onlayn 3D otishma o'yini. Yuqori grafika va yangi xaritalar.</div>
-                <div class="game-meta">
-                    <span><i class="fa-solid fa-hard-drive"></i> 45 MB</span>
-                    <span><i class="fa-brands fa-android"></i> Android APK</span>
-                </div>
-                <div class="btn-group">
-                    <button class="btn btn-demo" id="btn-demo-cyber" onclick="openDemo('Cyber Strike Online', 'cyber')">
-                        <i class="fa-solid fa-play"></i> Demo (1 marta)
-                    </button>
-                    <button class="btn btn-download" onclick="requestDownload('cyber_strike')">
-                        <i class="fa-solid fa-download"></i> Yuklash
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Game Item 2 -->
-        <div class="game-card" data-title="shadow runner rpg">
-            <div class="banner-container" style="background-image: url('https://images.unsplash.com/photo-1538481199705-c710c4e965fc?auto=format&fit=crop&w=600&q=80');">
-                <span class="badge-category">RPG / Adventure</span>
-            </div>
-            <div class="game-details">
-                <div class="game-title">Shadow Runner RPG</div>
-                <div class="game-desc">Ochiq dunyodagi fantastik sarguzasht, qahramonlarni rivojlantirish va tirik qolish missiyalari.</div>
-                <div class="game-meta">
-                    <span><i class="fa-solid fa-hard-drive"></i> 85 MB</span>
-                    <span><i class="fa-brands fa-android"></i> Android APK</span>
-                </div>
-                <div class="btn-group">
-                    <button class="btn btn-demo" id="btn-demo-shadow" onclick="openDemo('Shadow Runner RPG', 'shadow')">
-                        <i class="fa-solid fa-play"></i> Demo (1 marta)
-                    </button>
-                    <button class="btn btn-download" onclick="requestDownload('shadow_runner')">
-                        <i class="fa-solid fa-download"></i> Yuklash
-                    </button>
-                </div>
-            </div>
-        </div>
-
-    </div>
-
-    <!-- Demo Modal -->
-    <div class="modal" id="demoModal">
-        <div class="modal-header">
-            <h3 id="modalGameTitle" style="font-size: 16px;">Demo Rejim</h3>
-            <div class="timer-badge" id="demoTimer">01:00</div>
-        </div>
-
-        <div class="demo-screen">
-            <i class="fa-solid fa-circle-notch fa-spin"></i>
-            <h4 style="margin-bottom: 8px;">Instant Play Demo</h4>
-            <p style="font-size: 12px; color: var(--text-dim);">Sinov varianti ishga tushdi. Vaqt tugaganda to'liq versiyani yuklab oling!</p>
-        </div>
-
-        <button class="close-btn" onclick="closeDemo()">Demodan chiqish</button>
-    </div>
-
-    <script>
-        // Telegram Web App SDK'ni faollashtirish
-        const tg = window.Telegram.WebApp;
-        tg.ready();
-        tg.expand();
-
-        // 1-martalik Demo holatini eslab qolish xotirasi (LocalStorage)
-        let playedDemos = JSON.parse(localStorage.getItem('playedDemos')) || [];
-
-        // Sahifa yuklanganda ishlatilgan demolarni bloklash
-        document.addEventListener('DOMContentLoaded', () => {
-            playedDemos.forEach(gameKey => {
-                disableDemoButton(gameKey);
-            });
-        });
-
-        // Search Filter
-        function filterGames() {
-            const input = document.getElementById('searchInput').value.toLowerCase();
-            const cards = document.querySelectorAll('.game-card');
-
-            cards.forEach(card => {
-                const title = card.getAttribute('data-title');
-                if (title.includes(input)) {
-                    card.style.display = 'flex';
-                } else {
-                    card.style.display = 'none';
-                }
-            });
-        }
-
-        // Demo rejimini ochish
-        let timerInterval;
-        function openDemo(title, gameKey) {
-            if (playedDemos.includes(gameKey)) {
-                tg.showAlert("Siz ushbu o'yinning 1 martalik demosidan foydalanib bo'lgansiz!");
-                return;
-            }
-
-            document.getElementById('modalGameTitle').innerText = title;
-            document.getElementById('demoModal').style.display = 'flex';
-
-            let timeLeft = 60; // 60 soniya
-            const timerDisplay = document.getElementById('demoTimer');
-
-            timerInterval = setInterval(() => {
-                timeLeft--;
-                let secs = timeLeft < 10 ? '0' + timeLeft : timeLeft;
-                timerDisplay.innerText = `00:${secs}`;
-
-                if (timeLeft <= 0) {
-                    clearInterval(timerInterval);
-                    tg.showAlert("Sinov vaqti tugadi! O'yinning to'liq versiyasini yuklab oling.");
-                    finishDemo(gameKey);
-                }
-            }, 1000);
-        }
-
-        function closeDemo() {
-            clearInterval(timerInterval);
-            document.getElementById('demoModal').style.display = 'none';
-        }
-
-        function finishDemo(gameKey) {
-            closeDemo();
-            if (!playedDemos.includes(gameKey)) {
-                playedDemos.push(gameKey);
-                localStorage.setItem('playedDemos', JSON.stringify(playedDemos));
-                disableDemoButton(gameKey);
-            }
-        }
-
-        function disableDemoButton(gameKey) {
-            const btn = document.getElementById(`btn-demo-${gameKey}`);
-            if (btn) {
-                btn.classList.add('btn-disabled');
-                btn.innerHTML = '<i class="fa-solid fa-lock"></i> Demo ishlatilgan';
-                btn.onclick = null;
-            }
-        }
-
-        // Yuklab olish tugmasi bosilganda Telegram Botga xabar yuborish
-        function requestDownload(gameId) {
-            tg.sendData(`download:${gameId}`);
-            tg.close();
-        }
-    </script>
 </body>
 </html>
