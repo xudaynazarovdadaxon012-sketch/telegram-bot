@@ -21,11 +21,11 @@ from aiogram.types import (
 load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 CHANNEL_ID = os.getenv("CHANNEL_ID", "@kanalingiz_usernamesi")
-ADMIN_ID = int(os.getenv("ADMIN_ID", "123456789"))
+ADMIN_ID = int(os.getenv("ADMIN_ID", "8898979946"))
 
 # miniapp.html joylashgan URL manzil
 WEBAPP_URL = os.getenv(
-    "WEBAPP_URL", "https://sizning-domainigiz.com/miniapp.html"
+    "WEBAPP_URL", "https://xudaynazarovdadaxon012-sketch.github.io/telegram-bot/miniapp.html"
 )
 
 bot = Bot(token=BOT_TOKEN)
