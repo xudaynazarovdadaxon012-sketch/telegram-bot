@@ -15,7 +15,6 @@ from aiogram.types import (
 )
 from aiohttp import web
 
-# O'zgaruvchilarni yuklash
 load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 CHANNEL_ID = os.getenv("CHANNEL_ID", "@kanalingiz_usernamesi")
@@ -23,16 +22,15 @@ CHANNEL_ID = os.getenv("CHANNEL_ID", "@kanalingiz_usernamesi")
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
-# VIP foydalanuvchilarni saqlash uchun (Vaqtincha xotira, bazasiz test uchun)
 VIP_USERS = set()
 
 
-# Render xizmati uchun soxta veb-server
+# Render xizmati uchun veb-server
 async def handle(request):
     return web.FileResponse("index.html")
 
 
-# Majburiy obunani tekshirish
+# Majburiy obuna tekshiruvi
 async def check_subscription(user_id: int) -> bool:
     try:
         member = await bot.get_chat_member(
@@ -79,7 +77,6 @@ def get_inline_keyboard(is_subbed=True):
     )
 
 
-# Asosiy menyu (Reply Keyboard)
 def get_main_menu():
     return ReplyKeyboardMarkup(
         keyboard=[
@@ -117,7 +114,7 @@ async def start_handler(message: types.Message):
 
     caption_text = (
         f"🎮 Assalomu alaykum <b>{user_name}</b>, <b>Game Hub</b> botiga xush kelibsiz!\n\n"
-        "Siz bu yerda eng mashhur o'yinlarni qulay tarzda yuklab olishingiz mumkin.\n\n"
+        "Siz bu yerda o'yinlarni to'g'ridan-to'g'ri Telegram orqali yuklab olishingiz mumkin.\n\n"
         "👇 Kerakli bo'limni pastki menyudan tanlang:"
     )
 
@@ -153,40 +150,50 @@ async def free_games_handler(message: types.Message):
         inline_keyboard=[
             [
                 InlineKeyboardButton(
-                    text="🏎️ SuperTuxKart (3D Poyga)",
-                    callback_data="dl_supertux",
+                    text="🏎️ Need for Speed (PPSSPP/ISO)",
+                    callback_data="dl_nfs",
                 )
             ],
             [
                 InlineKeyboardButton(
-                    text="🏗️ Mindustry (Strategiya)",
-                    callback_data="dl_mindustry",
+                    text="⛏️ Minecraft (Android/APK)",
+                    callback_data="dl_minecraft",
                 )
             ],
         ]
     )
     await message.answer(
-        "🎮 <b>Bepul O'yinlar Katalogi:</b>\n\nYuklab olish uchun o'yinni tanlang:",
+        "🎮 <b>Bepul O'yinlar Katalogi:</b>\n\nQurilmangizga yuklab olish uchun o'yinni tanlang:",
         parse_mode="HTML",
         reply_markup=kb,
     )
 
 
-# Bepul o'yin havolalarini yuborish
+# O'yin faylini to'g'ridan-to'g'ri Telegram chatiga yuklab berish
 @dp.callback_query(F.data.startswith("dl_"))
 async def download_game(callback: types.CallbackQuery):
     game = callback.data.split("_")[1]
-    if game == "supertux":
-        url = "https://supertuxkart.net/Downloads"
-        name = "SuperTuxKart"
-    else:
-        url = "https://mindustrygame.github.io/"
-        name = "Mindustry"
 
-    await callback.message.answer(
-        f"📥 <b>{name}</b> o'yinini yuklab olish havolasi:\n{url}",
-        parse_mode="HTML",
-    )
+    await callback.message.answer("📦 O'yin fayli yuklanmoqda, kuting...")
+
+    # BU YERGA O'ZINGIZNING TELEGRAM KANALINGIZDAGI FAYL HAVOLASI YOKI FILE_ID SINI QO'YASIZ
+    # Faylni to'g'ridan-to'g'ri Telegram fayli sifatida yuboradi (Brauzerga o'tmaydi)
+    if game == "nfs":
+        # Masalan, Telegram'dagi o'yin faylining kodi yoki to'g'ridan-to'g mehmonga ega yuklash havolasi
+        file_url = "https://raw.githubusercontent.com/telegram/telegram-bot-sdk/master/README.md"  # Test fayl
+        await callback.message.answer_document(
+            document=file_url,
+            caption="🎮 <b>Need for Speed</b> fayli tayyor! Yuklab olib o'rnatishingiz mumkin.",
+            parse_mode="HTML",
+        )
+    elif game == "minecraft":
+        file_url = "https://raw.githubusercontent.com/telegram/telegram-bot-sdk/master/README.md"  # Test fayl
+        await callback.message.answer_document(
+            document=file_url,
+            caption="🎮 <b>Minecraft APK</b> fayli tayyor! Yuklab olib o'rnatishingiz mumkin.",
+            parse_mode="HTML",
+        )
+
     await callback.answer()
 
 
@@ -215,7 +222,7 @@ async def vip_games_handler(event: types.Message | types.CallbackQuery):
             ]
         )
         await message.answer(
-            "💎 <b>Siz VIP a'zosiz!</b>\n\nEksklyuziv o'yinlarni yuklab oling:",
+            "💎 <b>Siz VIP a'zosiz!</b>\n\nEksklyuziv GTA o'yinlarini chatga yuklab oling:",
             parse_mode="HTML",
             reply_markup=kb,
         )
@@ -232,7 +239,7 @@ async def vip_games_handler(event: types.Message | types.CallbackQuery):
         )
         await message.answer(
             "💎 <b>VIP Bo'lim (Eksklyuziv O'yinlar)</b>\n\n"
-            "Ushbu bo'limda quyidagi o'yinlar mavjud:\n"
+            "Ushbu bo'limda quyidagi eksklyuziv o'yinlar mavjud:\n"
             "• <b>GTA: Liberty City Stories (PSP)</b>\n"
             "• <b>GTA: Vice City Stories (PSP)</b>\n\n"
             "VIP obunani Telegram Stars orqali xarid qiling:",
@@ -244,7 +251,7 @@ async def vip_games_handler(event: types.Message | types.CallbackQuery):
         await event.answer()
 
 
-# Telegram Stars to'lovini shakllantirish
+# Telegram Stars to'lovini yaratish
 @dp.callback_query(F.data == "buy_vip_50")
 async def send_invoice(callback: types.CallbackQuery):
     await bot.send_invoice(
@@ -252,27 +259,25 @@ async def send_invoice(callback: types.CallbackQuery):
         title="VIP Obuna",
         description="Eksklyuziv GTA (PSP) o'yinlarini yuklab olish huquqi.",
         payload="vip_sub_50_stars",
-        currency="XTR",  # Telegram Stars kodi
+        currency="XTR",
         prices=[LabeledPrice(label="VIP Obuna", amount=50)],
     )
     await callback.answer()
 
 
-# To'lovni tasdiqlash
 @dp.pre_checkout_query()
 async def pre_checkout_handler(pre_checkout_query: PreCheckoutQuery):
     await bot.answer_pre_checkout_query(pre_checkout_query.id, ok=True)
 
 
-# To'lov muvaffaqiyatli amalga oshganda
 @dp.message(F.successful_payment)
 async def successful_payment_handler(message: types.Message):
     user_id = message.from_user.id
-    VIP_USERS.add(user_id)  # Foydalanuvchini VIP ro'yxatga qo'shish
+    VIP_USERS.add(user_id)
 
     await message.answer(
         "🎉 <b>Tabriklaymiz!</b> VIP obuna muvaffaqiyatli faollashtirildi.\n\n"
-        "Endi <b>💎 VIP Imkoniyatlar</b> tugmasini bosib, eksklyuziv o'yinlarni yuklab olishingiz mumkin!",
+        "Endi <b>💎 VIP Imkoniyatlar</b> bo'limidan o'yinlarni yuklab olishingiz mumkin!",
         parse_mode="HTML",
     )
 
@@ -280,7 +285,6 @@ async def successful_payment_handler(message: types.Message):
 async def main():
     logging.basicConfig(level=logging.INFO)
 
-    # Render uchun aiohttp veb-serveri
     port = int(os.environ.get("PORT", 8080))
     app = web.Application()
     app.router.add_get("/", handle)
@@ -289,7 +293,6 @@ async def main():
     site = web.TCPSite(runner, "0.0.0.0", port)
     asyncio.create_task(site.start())
 
-    # Botni ishga tushirish
     await dp.start_polling(bot)
 
 
