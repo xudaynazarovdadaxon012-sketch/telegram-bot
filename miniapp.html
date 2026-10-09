@@ -2,120 +2,134 @@
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Game Hub Analitika</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Enterprise Services</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        :root {
+            --bg: var(--tg-theme-bg-color, #f4f4f5);
+            --card-bg: var(--tg-theme-secondary-bg-color, #ffffff);
+            --text: var(--tg-theme-text-color, #09090b);
+            --hint: var(--tg-theme-hint-color, #71717a);
+            --accent: var(--tg-theme-button-color, #2563eb);
+            --accent-text: var(--tg-theme-button-text-color, #ffffff);
+        }
+
         body {
-            background-color: var(--tg-theme-bg-color, #18222d);
-            color: var(--tg-theme-text-color, #ffffff);
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", Roboto, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
             margin: 0;
-            padding: 20px;
+            padding: 16px;
+            -webkit-user-select: none;
+        }
+
+        .section-title {
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--hint);
+            margin-bottom: 8px;
+            padding-left: 4px;
+        }
+
+        .grid {
             display: flex;
             flex-direction: column;
-            align-items: center;
-        }
-        .card {
-            background: var(--tg-theme-secondary-bg-color, #212d3b);
-            border-radius: 16px;
-            padding: 20px;
-            width: 100%;
-            max-width: 350px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            text-align: center;
-        }
-        h2 {
-            margin-top: 0;
-            font-size: 20px;
-            color: #0088cc;
-        }
-        .chart-container {
-            position: relative;
-            margin: 20px 0;
-            height: 220px;
-        }
-        .stats-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
             gap: 10px;
-            margin-top: 15px;
+            margin-bottom: 20px;
         }
-        .stat-item {
-            background: rgba(255,255,255,0.05);
-            padding: 10px;
-            border-radius: 10px;
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 14px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
-        .stat-value {
-            font-size: 18px;
-            font-weight: bold;
-            color: #2ea6ff;
+
+        .card-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
         }
-        .stat-label {
+
+        .card-title {
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .card-desc {
             font-size: 12px;
-            opacity: 0.7;
+            color: var(--hint);
+        }
+
+        .card-price {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--accent);
+            margin-top: 4px;
+        }
+
+        .action-btn {
+            background-color: var(--accent);
+            color: var(--accent-text);
+            border: none;
+            border-radius: 8px;
+            padding: 8px 14px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .action-btn:active {
+            opacity: 0.85;
         }
     </style>
 </head>
 <body>
-    <div class="card">
-        <h2>📊 Tizim Statistikasi</h2>
-        <div class="chart-container">
-            <canvas id="statsChart"></canvas>
+
+    <div class="section-title">Biznes Yechimlar</div>
+    
+    <div class="grid">
+        <div class="card">
+            <div class="card-info">
+                <div class="card-title">Avtomatlashtirilgan Bot</div>
+                <div class="card-desc">CRM va to'lov tizimlari bilan integratsiya</div>
+                <div class="card-price">600,000 UZS</div>
+            </div>
+            <button class="action-btn" onclick="submitOrder('Avtomatlashtirilgan Bot', 600000)">Tanlash</button>
         </div>
-        <div class="stats-grid">
-            <div class="stat-item">
-                <div class="stat-value" id="totalUsers">0</div>
-                <div class="stat-label">Jami A'zolar</div>
+
+        <div class="card">
+            <div class="card-info">
+                <div class="card-title">Custom Mini App</div>
+                <div class="card-desc">Interaktiv HTML5/JS veb-interfeys</div>
+                <div class="card-price">900,000 UZS</div>
             </div>
-            <div class="stat-item">
-                <div class="stat-value" id="vipUsers">0</div>
-                <div class="stat-label">VIP A'zolar</div>
-            </div>
+            <button class="action-btn" onclick="submitOrder('Custom Mini App', 900000)">Tanlash</button>
         </div>
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
+        tg.ready();
         tg.expand();
 
-        // URL parametrlaridan ma'lumotlarni olish
-        const urlParams = new URLSearchParams(window.location.search);
-        const total = parseInt(urlParams.get('total')) || 0;
-        const vip = parseInt(urlParams.get('vip')) || 0;
-        const regular = Math.max(total - vip, 0);
-
-        document.getElementById('totalUsers').innerText = total;
-        document.getElementById('vipUsers').innerText = vip;
-
-        // 0 dan o'sadigan animatsiyali diagramma (Chart.js)
-        const ctx = document.getElementById('statsChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Oddiy a\'zolar', 'VIP a\'zolar'],
-                datasets: [{
-                    data: [regular, vip],
-                    backgroundColor: ['#0088cc', '#ffcc00'],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                animation: {
-                    animateScale: true,
-                    animateRotate: true,
-                    duration: 1500
-                },
-                plugins: {
-                    legend: {
-                        labels: { color: '#ffffff' }
-                    }
-                }
-            }
-        });
+        function submitOrder(title, amount) {
+            tg.HapticFeedback.impactOccurred('medium');
+            
+            tg.sendData(JSON.stringify({
+                title: title,
+                amount: amount,
+                initData: tg.initData
+            }));
+            
+            tg.close();
+        }
     </script>
 </body>
 </html>
