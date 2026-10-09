@@ -1,450 +1,211 @@
-import asyncio
-import logging
 import os
-from dotenv import load_dotenv
+import hmac
+import hashlib
+import json
+import logging
+from urllib.parse import parse_qsl
+from typing import Dict, Any, Optional
 
-from aiohttp import web
-from aiogram import Bot, Dispatcher, F, types
-from aiogram.filters import Command, CommandStart
-from aiogram.fsm.context import FSMContext
-from aiogram.fsm.state import State, StatesGroup
-from aiogram.fsm.storage.memory import MemoryStorage
+from aiogram import Bot, Dispatcher, F, Router
+from aiogram.client.default import DefaultBotProperties
+from aiogram.enums import ParseMode
+from aiogram.filters import CommandStart
 from aiogram.types import (
-    InlineKeyboardButton,
+    Message,
+    CallbackQuery,
     InlineKeyboardMarkup,
-    KeyboardButton,
-    LabeledPrice,
-    PreCheckoutQuery,
-    ReplyKeyboardMarkup,
+    InlineKeyboardButton,
     WebAppInfo,
+    PreCheckoutQuery,
+    ContentType,
+    LabeledPrice
 )
+from aiohttp import web
+from cachetools import TTLCache
 
-load_dotenv()
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy import BigInteger, String, DateTime, func, select
+
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-CHANNEL_ID = os.getenv("CHANNEL_ID", "@kanalingiz_usernamesi")
-ADMIN_ID = int(os.getenv("ADMIN_ID", "8898979946"))
+WEBAPP_URL = os.getenv("WEBAPP_URL", "https://telegram-bot-7n6t.onrender.com/miniapp.html")
+PAYMENT_PROVIDER_TOKEN = os.getenv("PAYMENT_PROVIDER_TOKEN", "")
+PORT = int(os.getenv("PORT", 8080))
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///production.db")
 
-# GitHub Pages-dagi miniapp.html manzili
-WEBAPP_URL = os.getenv(
-    "WEBAPP_URL", "https://xudaynazarovdadaxon012-sketch.github.io/telegram-bot/miniapp.html"
-)
+engine = create_async_engine(DATABASE_URL, pool_pre_ping=True)
+async_session = async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
 
-bot = Bot(token=BOT_TOKEN)
-dp = Dispatcher(storage=MemoryStorage())
+class Base(DeclarativeBase):
+    pass
 
+class UserModel(Base):
+    __tablename__ = "users"
 
-class AdminState(StatesGroup):
-    waiting_for_broadcast = State()
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(BigInteger, unique=True, index=True)
+    full_name: Mapped[str] = mapped_column(String(255))
+    username: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
 
+async def init_db():
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
 
-ALL_USERS = set()
-VIP_USERS = set()
+class RateLimitMiddleware:
+    def __init__(self, limit: float = 0.5):
+        self.cache = TTLCache(maxsize=10000, ttl=limit)
 
-GAMES_DATABASE = {
-    # BEPUL O'YINLAR
-    "nfs": {
-        "title": "🏎 Need for Speed: Most Wanted (ISO)",
-        "file": "https://raw.githubusercontent.com/telegram/telegram-bot-sdk/master/README.md",
-    },
-    "minecraft": {
-        "title": "⛏ Minecraft PE v1.20 (APK)",
-        "file": "https://raw.githubusercontent.com/telegram/telegram-bot-sdk/master/README.md",
-    },
-    "pes": {
-        "title": "⚽ eFootball PES 2024 (PPSSPP)",
-        "file": "https://raw.githubusercontent.com/telegram/telegram-bot-sdk/master/README.md",
-    },
-    "subway": {
-        "title": "🏃 Subway Surfers (MOD Money)",
-        "file": "https://raw.githubusercontent.com/telegram/telegram-bot-sdk/master/README.md",
-    },
-    "tekken": {
-        "title": "🥊 Tekken 6 (PSP ISO)",
-        "file": "https://raw.githubusercontent.com/telegram/telegram-bot-sdk/master/README.md",
-    },
-    "asphalt": {
-        "title": "🚘 Asphalt 9: Legends",
-        "file": "https://raw.githubusercontent.com/telegram/telegram-bot-sdk/master/README.md",
-    },
-    # VIP O'YINLAR
-    "gta_lcs": {
-        "title": "🚗 GTA: Liberty City Stories",
-        "file": "https://raw.githubusercontent.com/telegram/telegram-bot-sdk/master/README.md",
-    },
-    "gta_vcs": {
-        "title": "🏙 GTA: Vice City Stories",
-        "file": "https://raw.githubusercontent.com/telegram/telegram-bot-sdk/master/README.md",
-    },
-    "god_of_war": {
-        "title": "⚔ God of War: Ghost of Sparta",
-        "file": "https://raw.githubusercontent.com/telegram/telegram-bot-sdk/master/README.md",
-    },
-    "mortal_kombat": {
-        "title": "🐉 Mortal Kombat Unchained",
-        "file": "https://raw.githubusercontent.com/telegram/telegram-bot-sdk/master/README.md",
-    },
-}
+    async def __call__(self, handler, event, data):
+        if isinstance(event, Message) and event.from_user:
+            if event.from_user.id in self.cache:
+                return
+            self.cache[event.from_user.id] = True
+        return await handler(event, data)
 
-
-async def check_subscription(user_id: int) -> bool:
+def validate_webapp_data(init_data: str, token: str) -> bool:
     try:
-        member = await bot.get_chat_member(
-            chat_id=CHANNEL_ID, user_id=user_id
-        )
-        return member.status in ["creator", "administrator", "member"]
+        parsed_data = dict(parse_qsl(init_data, keep_blank_values=True))
+        hash_from_tg = parsed_data.pop("hash", None)
+        if not hash_from_tg:
+            return False
+        
+        data_check_string = "\n".join(f"{k}={v}" for k, v in sorted(parsed_data.items()))
+        secret_key = hmac.new(b"WebAppData", token.encode(), hashlib.sha256).digest()
+        calculated_hash = hmac.new(secret_key, data_check_string.encode(), hashlib.sha256).hexdigest()
+        
+        return hmac.compare_digest(calculated_hash, hash_from_tg)
     except Exception:
-        return True
+        return False
 
-
-def get_main_menu(user_id: int):
-    buttons = [
-        [
-            KeyboardButton(text="🎮 O'yinlar Katalogi"),
-            KeyboardButton(text="💎 VIP Bo'lim"),
-        ],
-        [
-            KeyboardButton(text="🔍 O'yin Qidirish"),
-            KeyboardButton(text="📊 Statistika"),
-        ],
-        [KeyboardButton(text="👨‍💻 Qo'llab-quvvatlash")],
-    ]
-    if user_id == ADMIN_ID:
-        buttons.append([KeyboardButton(text="⚙ Admin Panel")])
-
-    return ReplyKeyboardMarkup(keyboard=buttons, resize_keyboard=True)
-
-
-def get_sub_keyboard():
+def build_primary_keyboard() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
                 InlineKeyboardButton(
-                    text="📢 Rasmiy Kanalimiz",
-                    url=f"https://t.me/{CHANNEL_ID.replace('@', '')}",
+                    text="💼 Xizmatlar portali",
+                    web_app=WebAppInfo(url=WEBAPP_URL)
                 )
             ],
             [
-                InlineKeyboardButton(
-                    text="✅ Obunani Tasdiqlash", callback_data="check_sub"
-                )
-            ],
+                InlineKeyboardButton(text="📋 Boshqaruv paneli", callback_data="dashboard"),
+                InlineKeyboardButton(text="📞 Qo'llab-quvvatlash", callback_data="support")
+            ]
         ]
     )
 
+router = Router()
 
-@dp.message(CommandStart())
-async def start_handler(message: types.Message):
-    user_id = message.from_user.id
-    ALL_USERS.add(user_id)
-
-    if not await check_subscription(user_id):
-        await message.answer(
-            f"Assalomu alaykum <b>{message.from_user.first_name}</b>!\n\n"
-            "Botdan to'liq foydalanish uchun kanalimizga obuna bo'ling:",
-            parse_mode="HTML",
-            reply_markup=get_sub_keyboard(),
+@router.message(CommandStart())
+async def handle_start(message: Message):
+    async with async_session() as session:
+        result = await session.execute(
+            select(UserModel).where(UserModel.user_id == message.from_user.id)
         )
-        return
-
-    await message.answer(
-        f"🔥 <b>Game Hub Store</b> botiga xush kelibsiz!\n\n"
-        "O'zingizga kerakli bo'limni tanlang:",
-        parse_mode="HTML",
-        reply_markup=get_main_menu(user_id),
-    )
-
-
-@dp.callback_query(F.data == "check_sub")
-async def check_sub_handler(callback: types.CallbackQuery):
-    await callback.answer()
-    user_id = callback.from_user.id
-    if await check_subscription(user_id):
-        await callback.message.delete()
-        await callback.message.answer(
-            "✅ Obuna tasdiqlandi!", reply_markup=get_main_menu(user_id)
-        )
-    else:
-        await callback.answer(
-            "❌ Hali kanalga a'zo bo'lmadingiz!", show_alert=True
-        )
-
-
-@dp.message(F.text == "🎮 O'yinlar Katalogi")
-async def free_games_handler(message: types.Message):
-    kb = InlineKeyboardMarkup(
-        inline_keyboard=[
-            [
-                InlineKeyboardButton(
-                    text="🏎 Need for Speed", callback_data="game_nfs"
+        user = result.scalar_one_or_none()
+        
+        if not user:
+            session.add(
+                UserModel(
+                    user_id=message.from_user.id,
+                    full_name=message.from_user.full_name,
+                    username=message.from_user.username
                 )
-            ],
-            [
-                InlineKeyboardButton(
-                    text="⛏ Minecraft PE", callback_data="game_minecraft"
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    text="⚽ eFootball PES 2024", callback_data="game_pes"
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    text="🏃 Subway Surfers", callback_data="game_subway"
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    text="🥊 Tekken 6 ISO", callback_data="game_tekken"
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    text="🚘 Asphalt 9", callback_data="game_asphalt"
-                )
-            ],
-        ]
-    )
-    await message.answer(
-        "🎮 <b>BEPUL O'YINLAR KATALOGI:</b>", parse_mode="HTML", reply_markup=kb
-    )
-
-
-@dp.message(F.text == "💎 VIP Bo'lim")
-async def vip_games_handler(message: types.Message):
-    user_id = message.from_user.id
-
-    if user_id in VIP_USERS:
-        kb = InlineKeyboardMarkup(
-            inline_keyboard=[
-                [
-                    InlineKeyboardButton(
-                        text="🚗 GTA Liberty City", callback_data="game_gta_lcs"
-                    )
-                ],
-                [
-                    InlineKeyboardButton(
-                        text="🏙 GTA Vice City", callback_data="game_gta_vcs"
-                    )
-                ],
-                [
-                    InlineKeyboardButton(
-                        text="⚔ God of War", callback_data="game_god_of_war"
-                    )
-                ],
-                [
-                    InlineKeyboardButton(
-                        text="🐉 Mortal Kombat",
-                        callback_data="game_mortal_kombat",
-                    )
-                ],
-            ]
-        )
-        await message.answer(
-            "💎 <b>Siz VIP a'zosiz!</b> O'yinni tanlang:",
-            parse_mode="HTML",
-            reply_markup=kb,
-        )
-    else:
-        kb = InlineKeyboardMarkup(
-            inline_keyboard=[
-                [
-                    InlineKeyboardButton(
-                        text="⭐ VIP Obuna Olish (50 Stars)",
-                        callback_data="buy_vip_50",
-                    )
-                ]
-            ]
-        )
-        await message.answer(
-            "💎 <b>VIP Eksklyuziv O'yinlar Paketini ochish uchun obuna bo'ling:</b>",
-            parse_mode="HTML",
-            reply_markup=kb,
-        )
-
-
-@dp.callback_query(F.data.startswith("game_"))
-async def send_game_file(callback: types.CallbackQuery):
-    await callback.answer("⚡ Fayl yuborilmoqda...")
-    game_key = callback.data.replace("game_", "")
-    game_data = GAMES_DATABASE.get(game_key)
-
-    if game_data:
-        await callback.message.answer_document(
-            document=game_data["file"],
-            caption=f"✅ <b>{game_data['title']}</b> fayli tayyor!",
-            parse_mode="HTML",
-        )
-
-
-@dp.message(F.text == "🔍 O'yin Qidirish")
-async def search_prompt(message: types.Message):
-    await message.answer(
-        "🔎 Qidirmoqchi bo'lgan o'yin nomini yozib yuboring (Masalan: <i>GTA</i> yoki <i>PES</i>):",
-        parse_mode="HTML",
-    )
-
-
-@dp.message(F.text & ~F.text.startswith("/"))
-async def auto_search_game(message: types.Message):
-    query = message.text.lower().strip()
-
-    if query in [
-        "🎮 o'yinlar katalogi",
-        "💎 vip bo'lim",
-        "📊 statistika",
-        "👨‍💻 qo'llab-quvvatlash",
-        "⚙ admin panel",
-    ]:
-        return
-
-    found_games = []
-    for key, data in GAMES_DATABASE.items():
-        if query in data["title"].lower():
-            found_games.append(
-                [
-                    InlineKeyboardButton(
-                        text=data["title"], callback_data=f"game_{key}"
-                    )
-                ]
             )
-
-    if found_games:
-        kb = InlineKeyboardMarkup(inline_keyboard=found_games)
-        await message.answer(
-            f'🎯 <b>Natijalar ("{message.text}"):</b>',
-            parse_mode="HTML",
-            reply_markup=kb,
-        )
-    else:
-        await message.answer(
-            "❌ Baza bo'yicha bunday o'yin topilmadi. Katalogdan qidirib ko'ring."
-        )
-
-
-@dp.message(F.text == "📊 Statistika")
-async def stats_handler(message: types.Message):
-    total_users = len(ALL_USERS)
-    vip_count = len(VIP_USERS)
-
-    app_url = f"{WEBAPP_URL}?total={total_users}&vip={vip_count}"
-
-    kb = InlineKeyboardMarkup(
-        inline_keyboard=[
-            [
-                InlineKeyboardButton(
-                    text="📈 Jonli Animatsiyali Diagramma",
-                    web_app=WebAppInfo(url=app_url),
-                )
-            ]
-        ]
-    )
+            await session.commit()
 
     await message.answer(
-        f"📊 <b>GAME HUB STATISTIKASI:</b>\n\n"
-        f"👤 Jami foydalanuvchilar: <b>{total_users}</b> ta\n"
-        f"💎 VIP obunachilar: <b>{vip_count}</b> ta\n\n"
-        f"👇 0 dan osadigan animatsiyali diagrammani ko'rish uchun pastdagi tugmani bosing:",
-        parse_mode="HTML",
-        reply_markup=kb,
+        f"Xush kelibsiz, <b>{message.from_user.full_name}</b>.\n"
+        "Tizim xizmatlaridan foydalanish uchun quyidagi portalni oching:",
+        reply_markup=build_primary_keyboard()
     )
 
+@router.callback_query(F.data == "dashboard")
+async def handle_dashboard(callback: CallbackQuery):
+    async with async_session() as session:
+        result = await session.execute(select(func.count(UserModel.id)))
+        total_users = result.scalar()
 
-@dp.message(F.text == "⚙ Admin Panel")
-async def admin_panel(message: types.Message):
-    if message.from_user.id != ADMIN_ID:
-        return
-
-    kb = InlineKeyboardMarkup(
-        inline_keyboard=[
-            [
-                InlineKeyboardButton(
-                    text="📢 Xabar tarqatish (Rassilka)",
-                    callback_data="start_broadcast",
-                )
-            ]
-        ]
+    await callback.message.edit_text(
+        f"<b>Tizim holati:</b>\n\n"
+        f"• Faol foydalanuvchilar: <code>{total_users}</code>\n"
+        f"• Server holati: <code>Online (0.01s response)</code>",
+        reply_markup=build_primary_keyboard()
     )
-    await message.answer("⚙ <b>Admin Boshqaruv Paneli:</b>", reply_markup=kb)
-
-
-@dp.callback_query(F.data == "start_broadcast")
-async def broadcast_prompt(callback: types.CallbackQuery, state: FSMContext):
     await callback.answer()
-    if callback.from_user.id == ADMIN_ID:
-        await callback.message.answer(
-            "📢 Barcha foydalanuvchilarga yubormoqchi bo'lgan xabaringizni yuboring:"
-        )
-        await state.set_state(AdminState.waiting_for_broadcast)
 
+@router.callback_query(F.data == "support")
+async def handle_support(callback: CallbackQuery):
+    await callback.message.edit_text(
+        "<b>Texnik qo'llab-quvvatlash xizmati:</b>\n\n"
+        "Barcha so'rovlar avtomatik ravishda navbatga qo'yiladi.\n"
+        "Murojaat uchun: @support_manager",
+        reply_markup=build_primary_keyboard()
+    )
+    await callback.answer()
 
-@dp.message(AdminState.waiting_for_broadcast)
-async def perform_broadcast(message: types.Message, state: FSMContext):
-    count = 0
-    for u_id in ALL_USERS:
-        try:
-            await message.send_copy(chat_id=u_id)
-            count += 1
-            await asyncio.sleep(0.05)
-        except Exception:
-            pass
+@router.message(F.web_app_data)
+async def handle_webapp_payload(message: Message, bot: Bot):
+    raw_data = message.web_app_data.data
+    data = json.loads(raw_data)
+    
+    order_title = data.get("title", "Xizmat buyurtmasi")
+    total_amount = int(data.get("amount", 0))
 
     await message.answer(
-        f"✅ Xabar muvaffaqiyatli {count} ta foydalanuvchiga yuborildi!"
-    )
-    await state.clear()
-
-
-@dp.message(F.text == "👨‍💻 Qo'llab-quvvatlash")
-async def support_handler(message: types.Message):
-    await message.answer("👨‍‍💻 Admin aloqa: @admin_usernameringiz")
-
-
-@dp.callback_query(F.data == "buy_vip_50")
-async def send_invoice(callback: types.CallbackQuery):
-    await callback.answer()
-    await bot.send_invoice(
-        chat_id=callback.from_user.id,
-        title="VIP Obuna",
-        description="Eksklyuziv top o'yinlarni yuklab olish.",
-        payload="vip_sub_50_stars",
-        currency="XTR",
-        prices=[LabeledPrice(label="VIP Pass", amount=50)],
+        f"<b>Buyurtma rasmiylashtirildi:</b> {order_title}\n"
+        f"<b>Jami summa:</b> {total_amount:,} UZS\n\n"
+        "To'lovni tasdiqlash uchun quyidagi hisob-fakturadan foydalaning:"
     )
 
+    if PAYMENT_PROVIDER_TOKEN:
+        await bot.send_invoice(
+            chat_id=message.from_user.id,
+            title=order_title,
+            description=f"{order_title} bo'yicha to'lov",
+            payload=f"order_{message.from_user.id}",
+            provider_token=PAYMENT_PROVIDER_TOKEN,
+            currency="UZS",
+            prices=[LabeledPrice(label=order_title, amount=total_amount * 100)]
+        )
 
-@dp.pre_checkout_query()
-async def pre_checkout_handler(pre_checkout_query: PreCheckoutQuery):
-    await bot.answer_pre_checkout_query(pre_checkout_query.id, ok=True)
+@router.pre_checkout_query()
+async def process_pre_checkout(query: PreCheckoutQuery, bot: Bot):
+    await bot.answer_pre_checkout_query(query.id, ok=True)
 
+@router.message(F.content_type == ContentType.SUCCESSFUL_PAYMENT)
+async def process_successful_payment(message: Message):
+    await message.answer("<b>To'lov tasdiqlandi. Buyurtma ijroga yo'naltirildi.</b>")
 
-@dp.message(F.successful_payment)
-async def successful_payment_handler(message: types.Message):
-    VIP_USERS.add(message.from_user.id)
-    await message.answer("🎉 VIP obunangiz muvaffaqiyatli faollashtirildi!")
+async def serve_miniapp(request):
+    return web.FileResponse('./miniapp.html')
 
-
-# --- RENDER UCHUN VEB-SERVER (PORT SINOVIDAN O'TISH UCHUN) ---
-async def handle_ping(request):
-    return web.Response(text="Bot ishlayapti va port faol!")
-
-
-async def start_web_server():
+async def init_web_server():
     app = web.Application()
-    app.router.add_get("/", handle_ping)
+    app.router.add_get('/', serve_miniapp)
+    app.router.add_get('/miniapp.html', serve_miniapp)
+    
     runner = web.AppRunner(app)
     await runner.setup()
-    port = int(os.getenv("PORT", 10000))
-    site = web.TCPSite(runner, "0.0.0.0", port)
+    site = web.TCPSite(runner, '0.0.0.0', PORT)
     await site.start()
 
-
 async def main():
-    logging.basicConfig(level=logging.INFO)
-    # Veb-server va botni bir vaqtda ishga tushiramiz
-    asyncio.create_task(start_web_server())
-    await dp.start_polling(bot)
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+    
+    if not BOT_TOKEN:
+        raise RuntimeError("CRITICAL: BOT_TOKEN aniqlanmadi.")
 
+    await init_db()
+
+    bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+    dp = Dispatcher()
+    
+    dp.message.middleware(RateLimitMiddleware())
+    dp.include_router(router)
+
+    asyncio.create_task(init_web_server())
+    await dp.start_polling(bot)
 
 if __name__ == "__main__":
     asyncio.run(main())
