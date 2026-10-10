@@ -1,3 +1,4 @@
+import asyncio
 import os
 import hmac
 import hashlib
@@ -28,7 +29,7 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy import BigInteger, String, DateTime, func, select
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-WEBAPP_URL = os.getenv("WEBAPP_URL", "https://telegram-bot-7n6t.onrender.com/miniapp.html")
+WEBAPP_URL = os.getenv("WEBAPP_URL", "https://your-app.onrender.com/miniapp.html")
 PAYMENT_PROVIDER_TOKEN = os.getenv("PAYMENT_PROVIDER_TOKEN", "")
 PORT = int(os.getenv("PORT", 8080))
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///production.db")
@@ -62,21 +63,6 @@ class RateLimitMiddleware:
                 return
             self.cache[event.from_user.id] = True
         return await handler(event, data)
-
-def validate_webapp_data(init_data: str, token: str) -> bool:
-    try:
-        parsed_data = dict(parse_qsl(init_data, keep_blank_values=True))
-        hash_from_tg = parsed_data.pop("hash", None)
-        if not hash_from_tg:
-            return False
-        
-        data_check_string = "\n".join(f"{k}={v}" for k, v in sorted(parsed_data.items()))
-        secret_key = hmac.new(b"WebAppData", token.encode(), hashlib.sha256).digest()
-        calculated_hash = hmac.new(secret_key, data_check_string.encode(), hashlib.sha256).hexdigest()
-        
-        return hmac.compare_digest(calculated_hash, hash_from_tg)
-    except Exception:
-        return False
 
 def build_primary_keyboard() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
