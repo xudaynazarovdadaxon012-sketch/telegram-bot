@@ -1,196 +1,150 @@
 import asyncio
-import os
-import hmac
-import hashlib
-import json
 import logging
-from urllib.parse import parse_qsl
-from typing import Dict, Any, Optional
+import os
+import json
+from datetime import datetime
 
-from aiogram import Bot, Dispatcher, F, Router
-from aiogram.client.default import DefaultBotProperties
-from aiogram.enums import ParseMode
+from aiogram import Bot, Dispatcher, types, F
 from aiogram.filters import CommandStart
-from aiogram.types import (
-    Message,
-    CallbackQuery,
-    InlineKeyboardMarkup,
-    InlineKeyboardButton,
-    WebAppInfo,
-    PreCheckoutQuery,
-    ContentType,
-    LabeledPrice
-)
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 from aiohttp import web
-from cachetools import TTLCache
 
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-from sqlalchemy import BigInteger, String, DateTime, func, select
+from sqlalchemy import Column, Integer, String, DateTime, Float, create_async_engine
+from sqlalchemy.orm import declarative_base, sessionmaker
+from sqlalchemy.future import select
 
-BOT_TOKEN = os.getenv("BOT_TOKEN")
-WEBAPP_URL = os.getenv("WEBAPP_URL", "https://your-app.onrender.com/miniapp.html")
-PAYMENT_PROVIDER_TOKEN = os.getenv("PAYMENT_PROVIDER_TOKEN", "")
-PORT = int(os.getenv("PORT", 8080))
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///production.db")
+# Logging sozlamalari
+logging.basicConfig(level=logging.INFO)
 
-engine = create_async_engine(DATABASE_URL, pool_pre_ping=True)
-async_session = async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
+# Telegram Bot Token va Admin ID
+BOT_TOKEN = os.getenv("BOT_TOKEN", "YOUR_BOT_TOKEN_HERE")
+ADMIN_ID = os.getenv("ADMIN_ID", "8898979946")  # Xabarnoma boradigan admin ID si
+WEBAPP_URL = os.getenv("WEBAPP_URL", "https://xudaynazarovdadaxon012-sketch.github.io/telegram-bot/")
 
-class Base(DeclarativeBase):
-    pass
+bot = Bot(token=BOT_TOKEN)
+dp = Dispatcher()
 
-class UserModel(Base):
+# Database (SQLite) sozlamalari
+DATABASE_URL = "sqlite+aiosqlite:///smart_booking.db"
+engine = create_async_engine(DATABASE_URL, echo=False)
+AsyncSessionLocal = sessionmaker(engine, class_=AsyncSessionLocal, expire_on_commit=False)
+Base = declarative_base()
+
+# 1. Baza jadvallari (Models)
+class User(Base):
     __tablename__ = "users"
+    id = Column(Integer, primary_key=True)
+    telegram_id = Column(Integer, unique=True, nullable=False)
+    full_name = Column(String)
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(BigInteger, unique=True, index=True)
-    full_name: Mapped[str] = mapped_column(String(255))
-    username: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
+class Booking(Base):
+    __tablename__ = "bookings"
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, nullable=False)
+    user_name = Column(String)
+    service_name = Column(String, nullable=False)
+    price = Column(Float, nullable=False)
+    booking_time = Column(String, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
 
+# Bazani yaratish
 async def init_db():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
-class RateLimitMiddleware:
-    def __init__(self, limit: float = 0.5):
-        self.cache = TTLCache(maxsize=10000, ttl=limit)
-
-    async def __call__(self, handler, event, data):
-        if isinstance(event, Message) and event.from_user:
-            if event.from_user.id in self.cache:
-                return
-            self.cache[event.from_user.id] = True
-        return await handler(event, data)
-
-def build_primary_keyboard() -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup(
-        inline_keyboard=[
-            [
-                InlineKeyboardButton(
-                    text="💼 Xizmatlar portali",
-                    web_app=WebAppInfo(url=WEBAPP_URL)
-                )
-            ],
-            [
-                InlineKeyboardButton(text="📋 Boshqaruv paneli", callback_data="dashboard"),
-                InlineKeyboardButton(text="📞 Qo'llab-quvvatlash", callback_data="support")
-            ]
-        ]
-    )
-
-router = Router()
-
-@router.message(CommandStart())
-async def handle_start(message: Message):
-    async with async_session() as session:
-        result = await session.execute(
-            select(UserModel).where(UserModel.user_id == message.from_user.id)
-        )
-        user = result.scalar_one_or_none()
-        
+# 2. Telegram Bot Handlerlari
+@dp.message(CommandStart())
+async def cmd_start(message: types.Message):
+    async with AsyncSessionLocal() as session:
+        result = await session.execute(select(User).where(User.telegram_id == message.from_user.id))
+        user = result.scalars().first()
         if not user:
-            session.add(
-                UserModel(
-                    user_id=message.from_user.id,
-                    full_name=message.from_user.full_name,
-                    username=message.from_user.username
-                )
-            )
+            new_user = User(telegram_id=message.from_user.id, full_name=message.from_user.full_name)
+            session.add(new_user)
             await session.commit()
 
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="📅 Navbatga yozilish (Mini App)", web_app=WebAppInfo(url=WEBAPP_URL))]
+        ]
+    )
     await message.answer(
-        f"Xush kelibsiz, <b>{message.from_user.full_name}</b>.\n"
-        "Tizim xizmatlaridan foydalanish uchun quyidagi portalni oching:",
-        reply_markup=build_primary_keyboard()
+        f"Assalomu alaykum, <b>{message.from_user.first_name}</b>!\n\n"
+        "<b>Smart Booking</b> avtomatlashtirilgan navbatga yozilish tizimiga xush kelibsiz.\n"
+        "Quyidagi tugma orqali o'zingizga qulay xizmat va vaqtni tanlang:",
+        reply_markup=keyboard,
+        parse_mode="HTML"
     )
 
-@router.callback_query(F.data == "dashboard")
-async def handle_dashboard(callback: CallbackQuery):
-    async with async_session() as session:
-        result = await session.execute(select(func.count(UserModel.id)))
-        total_users = result.scalar()
+# Mini App'dan yuborilgan ma'lumotni qabul qilish (web_app_data)
+@dp.message(F.web_app_data)
+async def handle_webapp_data(message: types.Message):
+    try:
+        data = json.loads(message.web_app_data.data)
+        service_name = data.get("service")
+        price = data.get("price")
+        booking_time = data.get("time")
 
-    await callback.message.edit_text(
-        f"<b>Tizim holati:</b>\n\n"
-        f"• Faol foydalanuvchilar: <code>{total_users}</code>\n"
-        f"• Server holati: <code>Online (0.01s response)</code>",
-        reply_markup=build_primary_keyboard()
-    )
-    await callback.answer()
+        # Bazaga saqlash
+        async with AsyncSessionLocal() as session:
+            booking = Booking(
+                user_id=message.from_user.id,
+                user_name=message.from_user.full_name,
+                service_name=service_name,
+                price=float(price),
+                booking_time=booking_time
+            )
+            session.add(booking)
+            await session.commit()
 
-@router.callback_query(F.data == "support")
-async def handle_support(callback: CallbackQuery):
-    await callback.message.edit_text(
-        "<b>Texnik qo'llab-quvvatlash xizmati:</b>\n\n"
-        "Barcha so'rovlar avtomatik ravishda navbatga qo'yiladi.\n"
-        "Murojaat uchun: @support_manager",
-        reply_markup=build_primary_keyboard()
-    )
-    await callback.answer()
-
-@router.message(F.web_app_data)
-async def handle_webapp_payload(message: Message, bot: Bot):
-    raw_data = message.web_app_data.data
-    data = json.loads(raw_data)
-    
-    order_title = data.get("title", "Xizmat buyurtmasi")
-    total_amount = int(data.get("amount", 0))
-
-    await message.answer(
-        f"<b>Buyurtma rasmiylashtirildi:</b> {order_title}\n"
-        f"<b>Jami summa:</b> {total_amount:,} UZS\n\n"
-        "To'lovni tasdiqlash uchun quyidagi hisob-fakturadan foydalaning:"
-    )
-
-    if PAYMENT_PROVIDER_TOKEN:
-        await bot.send_invoice(
-            chat_id=message.from_user.id,
-            title=order_title,
-            description=f"{order_title} bo'yicha to'lov",
-            payload=f"order_{message.from_user.id}",
-            provider_token=PAYMENT_PROVIDER_TOKEN,
-            currency="UZS",
-            prices=[LabeledPrice(label=order_title, amount=total_amount * 100)]
+        # Mijozga javob
+        await message.answer(
+            f"✅ <b>Navbatingiz muvaffaqiyatli qabul qilindi!</b>\n\n"
+            f"📌 <b>Xizmat:</b> {service_name}\n"
+            f"💵 <b>Narxi:</b> {price:,.0f} so'm\n"
+            f"🕒 <b>Vaqti:</b> {booking_time}\n\n"
+            "Tashrifingizni kutib qolamiz!",
+            parse_mode="HTML"
         )
 
-@router.pre_checkout_query()
-async def process_pre_checkout(query: PreCheckoutQuery, bot: Bot):
-    await bot.answer_pre_checkout_query(query.id, ok=True)
+        # Admin/Biznes egasiga xabarnoma yuborish
+        if ADMIN_ID and ADMIN_ID != "YOUR_TELEGRAM_ID_HERE":
+            await bot.send_message(
+                chat_id=ADMIN_ID,
+                text=f"🔔 <b>Yangi navbat!</b>\n\n"
+                     f"👤 <b>Mijoz:</b> {message.from_user.full_name} (@{message.from_user.username})\n"
+                     f"📌 <b>Xizmat:</b> {service_name}\n"
+                     f"💵 <b>Narxi:</b> {price:,.0f} so'm\n"
+                     f"🕒 <b>Vaqti:</b> {booking_time}",
+                parse_mode="HTML"
+            )
 
-@router.message(F.content_type == ContentType.SUCCESSFUL_PAYMENT)
-async def process_successful_payment(message: Message):
-    await message.answer("<b>To'lov tasdiqlandi. Buyurtma ijroga yo'naltirildi.</b>")
+    except Exception as e:
+        logging.error(f"Xatolik yuz berdi: {e}")
+        await message.answer("⚠️ Ma'lumotlarni saqlashda xatolik yuz berdi. Iltimos, qayta urinib ko'ring.")
 
-async def serve_miniapp(request):
-    return web.FileResponse('./miniapp.html')
+# 3. Aiohttp Web Server (Mini App faylini tarqatish uchun)
+async def handle_miniapp(request):
+    try:
+        with open("miniapp.html", "r", encoding="utf-8") as f:
+            html_content = f.read()
+        return web.Response(text=html_content, content_type="text/html")
+    except FileNotFoundError:
+        return web.Response(text="<h1>miniapp.html fayli topilmadi!</h1>", content_type="text/html", status=404)
 
-async def init_web_server():
-    app = web.Application()
-    app.router.add_get('/', serve_miniapp)
-    app.router.add_get('/miniapp.html', serve_miniapp)
-    
+app = web.Application()
+app.router.add_get("/miniapp", handle_miniapp)
+
+# 4. Asosiy ishga tushirish funksiyasi
+async def main():
+    await init_db()
     runner = web.AppRunner(app)
     await runner.setup()
-    site = web.TCPSite(runner, '0.0.0.0', PORT)
+    port = int(os.getenv("PORT", 8080))
+    site = web.TCPSite(runner, "0.0.0.0", port)
     await site.start()
-
-async def main():
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
     
-    if not BOT_TOKEN:
-        raise RuntimeError("CRITICAL: BOT_TOKEN aniqlanmadi.")
-
-    await init_db()
-
-    bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
-    dp = Dispatcher()
-    
-    dp.message.middleware(RateLimitMiddleware())
-    dp.include_router(router)
-
-    asyncio.create_task(init_web_server())
+    logging.info("Web Server va Telegram Bot ishga tushdi...")
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
