@@ -9,7 +9,8 @@ from aiogram.filters import CommandStart
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 from aiohttp import web
 
-from sqlalchemy import Column, Integer, String, DateTime, Float, create_async_engine
+from sqlalchemy import Column, Integer, String, DateTime, Float
+from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 from sqlalchemy.future import select
 
