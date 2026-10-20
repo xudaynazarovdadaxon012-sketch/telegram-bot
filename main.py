@@ -18,8 +18,8 @@ logging.basicConfig(level=logging.INFO)
 
 # Telegram Bot Token va Admin ID
 BOT_TOKEN = os.getenv("BOT_TOKEN", "YOUR_BOT_TOKEN_HERE")
-ADMIN_ID = os.getenv("ADMIN_ID", "8898979946")  # Xabarnoma boradigan admin ID si
-WEBAPP_URL = os.getenv("WEBAPP_URL", "https://xudaynazarovdadaxon012-sketch.github.io/telegram-bot/")
+ADMIN_ID = os.getenv("ADMIN_ID", "YOUR_TELEGRAM_ID_HERE")
+WEBAPP_URL = os.getenv("WEBAPP_URL", "https://xudaynazarovdadaxon012-sketch.github.io/telegram-bot//miniapp")
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
@@ -76,7 +76,7 @@ async def cmd_start(message: types.Message):
         parse_mode="HTML"
     )
 
-# Mini App'dan yuborilgan ma'lumotni qabul qilish (web_app_data)
+# Mini App'dan yuborilgan ma'lumotni qabul qilish
 @dp.message(F.web_app_data)
 async def handle_webapp_data(message: types.Message):
     try:
@@ -123,7 +123,7 @@ async def handle_webapp_data(message: types.Message):
         logging.error(f"Xatolik yuz berdi: {e}")
         await message.answer("⚠️ Ma'lumotlarni saqlashda xatolik yuz berdi. Iltimos, qayta urinib ko'ring.")
 
-# 3. Aiohttp Web Server (Mini App faylini tarqatish uchun)
+# 3. Aiohttp Web Server (miniapp.html faylini o'qib beradi)
 async def handle_miniapp(request):
     try:
         with open("miniapp.html", "r", encoding="utf-8") as f:
