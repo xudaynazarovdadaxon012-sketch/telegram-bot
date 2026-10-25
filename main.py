@@ -121,8 +121,8 @@ post_text = (
     f"Sotib olish uchun botga o'ting: @{bot_username}"
 )
     
-    try:
-        await bot.send_message(chat_id=CHANNEL_ID, text=post_text, parse_mode="Markdown")
+  try:
+        await bot.send_message(chat_id=CHANNEL_ID, post_text, parse_mode="Markdown")
         await message.answer(
             f"✅ E'loningiz muvaffaqiyatli kanalga joylandi!\n"
             f"Siz belgilagan narx: {seller_price:.0f} so'm\n"
@@ -132,7 +132,6 @@ post_text = (
         await message.answer(f"❌ Kanalga chiqarishda xatolik: {e}")
 
     await state.clear()
-
 # --- E'TIROZ / TAKLIF QISMI ---
 @router.callback_query(F.data == "leave_feedback")
 async def start_feedback(callback: CallbackQuery, state: FSMContext):
