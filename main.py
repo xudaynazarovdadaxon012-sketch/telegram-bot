@@ -110,12 +110,16 @@ async def process_cash_amount(message: Message, state: FSMContext, bot: Bot):
     admin_commission = final_price - seller_price       # Sizning foydangiz
 
     # Kanalga chiqarish
-    post_text = (
-        f"🎮 **O'yin Valyutasi Savdosi!**\n\n"
-        f"💰 Narxi: `{final_price:.0f}` so'm\n"
-        f"🛡 Kafolat: 1 soatlik Escrow tizimi\n\n"
-        f"Sotib olish uchun botga o'ting: @{await bot.get_me().then(lambda m: m.username)}"
-    )
+    # Bot username'ini oldindan olib qo'yamiz
+bot_info = await bot.get_me()
+bot_username = bot_info.username
+
+post_text = (
+    f"🎮 **O'yin Valyutasi Savdosi!**\n\n"
+    f"💰 Narxi: `{final_price:.0f}` so'm\n"
+    f"🛡 Kafolat: 1 soatlik Escrow tizimi\n\n"
+    f"Sotib olish uchun botga o'ting: @{bot_username}"
+)
     
     try:
         await bot.send_message(chat_id=CHANNEL_ID, text=post_text, parse_mode="Markdown")
