@@ -122,7 +122,7 @@ post_text = (
 )
     
 try:
-        await bot.send_message(chat_id=CHANNEL_ID, post_text, parse_mode="Markdown")
+        await bot.send_message(chat_id=CHANNEL_ID, text=post_text, parse_mode="Markdown")
         await message.answer(
             f"✅ E'loningiz muvaffaqiyatli kanalga joylandi!\n"
             f"Siz belgilagan narx: {seller_price:.0f} so'm\n"
