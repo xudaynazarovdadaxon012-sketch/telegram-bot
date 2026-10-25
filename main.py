@@ -4,6 +4,7 @@ import datetime
 import logging
 from enum import Enum as PyEnum
 
+from aiohttp import web
 from aiogram import Bot, Dispatcher, F, Router
 from aiogram.filters import Command, CommandStart
 from aiogram.fsm.context import FSMContext
@@ -27,8 +28,6 @@ CHANNEL_ID = os.getenv("CHANNEL_ID", "@my_marketplace_channel")
 DATABASE_URL = "sqlite+aiosqlite:///marketplace.db"
 
 logging.basicConfig(level=logging.INFO)
-
-# (Qolgan kodlar o'zgarishsiz ishlayveradi...)
 
 # -------------------------------------------------------------------
 # 2. SQLALCHEMY MODELLARI VA BAZA SOZLAMASI
@@ -66,13 +65,13 @@ class Item(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     seller_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
 
-    game: Mapped[str] = mapped_column(String(64))  # Roblox, CS, Valorant va h.k.
-    level_range: Mapped[str] = mapped_column(String(32))  # "1-20 lvl", "50+ lvl"
-    features: Mapped[str] = mapped_column(Text)  # "Rare skinlar | Donat qilingan"
-    credentials: Mapped[str] = mapped_column(Text)  # Login:pass xaridorga beriladi
+    game: Mapped[str] = mapped_column(String(64))
+    level_range: Mapped[str] = mapped_column(String(32))
+    features: Mapped[str] = mapped_column(Text)
+    credentials: Mapped[str] = mapped_column(Text)
 
-    suggested_price: Mapped[float] = mapped_column(Float)  # Bot tavsiya qilgan narx
-    final_price: Mapped[float] = mapped_column(Float)  # Sotuvchi tasdiqlagan narx
+    suggested_price: Mapped[float] = mapped_column(Float)
+    final_price: Mapped[float] = mapped_column(Float)
 
     status: Mapped[ItemStatus] = mapped_column(
         Enum(ItemStatus), default=ItemStatus.ACTIVE
@@ -90,13 +89,11 @@ class Transaction(Base):
     buyer_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
 
     total_amount: Mapped[float] = mapped_column(Float)
-    commission: Mapped[float] = mapped_column(Float)  # 1% komissiya
-    seller_amount: Mapped[float] = mapped_column(Float)  # 99% sotuvchiga
+    commission: Mapped[float] = mapped_column(Float)
+    seller_amount: Mapped[float] = mapped_column(Float)
 
     is_completed: Mapped[bool] = mapped_column(default=False)
-    escrow_expires_at: Mapped[datetime.datetime] = mapped_column(
-        DateTime
-    )  # 1 soatlik taymer
+    escrow_expires_at: Mapped[datetime.datetime] = mapped_column(DateTime)
 
 
 async def init_db():
@@ -117,16 +114,13 @@ class SellFlow(StatesGroup):
 
 
 def calculate_price(game: str, level: str, features: list[str]) -> float:
-    """Botning avtomatik va adolatli narxlash algoritmi"""
     base_price = 15000.0 if game == "Roblox" else 25000.0
 
-    # Level qo'shimchasi
     if level == "21-50 lvl":
         base_price += 15000.0
     elif level == "50+ lvl":
         base_price += 35000.0
 
-    # Feature qo'shimchasi
     if "Rare Skinlar" in features:
         base_price += 20000.0
     if "Donat qilingan" in features:
@@ -252,8 +246,7 @@ async def show_features_keyboard(message: Message, state: FSMContext):
         ]
     )
     await message.edit_text(
-        "3️⃣ Akkaunt xususiyatlarini belgilang (bir nechta tanlash mumkin):",
-        reply_markup=kb,
+        "3️⃣ Akkaunt xususiyatlarini belgilang:", reply_markup=kb
     )
 
 
@@ -289,7 +282,6 @@ async def process_credentials(message: Message, state: FSMContext):
     level = data["level"]
     features = data["selected_features"]
 
-    # Avtomatik narx hisoblash
     suggested_price = calculate_price(game, level, features)
     await state.update_data(
         credentials=credentials,
@@ -318,8 +310,8 @@ async def process_credentials(message: Message, state: FSMContext):
         f"🎮 O'yin: {game}\n"
         f"📈 Level: {level}\n"
         f"⭐ Xususiyatlar: {feats_str}\n\n"
-        f"🤖 **Bot tomonidan tavsiya etilgan narx:** {suggested_price:,.0f} so'm\n\n"
-        f"Ushbu narxga rozimisiz yoki o'zingiz o'zgartirasizmi?",
+        f"🤖 **Bot tavsiya qilgan narx:** {suggested_price:,.0f} so'm\n\n"
+        f"Rozimisiz?",
         reply_markup=kb,
     )
     await state.set_state(SellFlow.confirm_price)
@@ -342,7 +334,6 @@ async def set_custom_price(message: Message, state: FSMContext):
     new_price = float(message.text)
     await state.update_data(final_price=new_price)
 
-    data = await state.get_data()
     kb = InlineKeyboardMarkup(
         inline_keyboard=[
             [
@@ -353,19 +344,19 @@ async def set_custom_price(message: Message, state: FSMContext):
         ]
     )
     await message.answer(
-        f"✅ Narx yangilandi: **{new_price:,.0f} so'm**\n"
-        f"E'lonni e'lon qilishga tayyormisiz?",
+        f"✅ Narx yangilandi: **{new_price:,.0f} so'm**\nE'lonni joylaymizmi?",
         reply_markup=kb,
     )
     await state.set_state(SellFlow.confirm_price)
 
 
-@router.callback_query(SellFlow.confirm_price, F.data.in_(["confirm_price", "publish_item"]))
+@router.callback_query(
+    SellFlow.confirm_price, F.data.in_(["confirm_price", "publish_item"])
+)
 async def publish_item(call: CallbackQuery, state: FSMContext, bot: Bot):
     data = await state.get_data()
 
     async with async_session() as session:
-        # Userni bazadan topamiz/yaratamiz
         db_user = await session.get(User, call.from_user.id)
         if not db_user:
             db_user = User(
@@ -377,8 +368,11 @@ async def publish_item(call: CallbackQuery, state: FSMContext, bot: Bot):
             session.add(db_user)
             await session.commit()
 
-        # Item hosil qilish
-        feats_str = " | ".join(data["selected_features"]) if data["selected_features"] else "Standart"
+        feats_str = (
+            " | ".join(data["selected_features"])
+            if data["selected_features"]
+            else "Standart"
+        )
         new_item = Item(
             seller_id=db_user.id,
             game=data["game"],
@@ -391,13 +385,11 @@ async def publish_item(call: CallbackQuery, state: FSMContext, bot: Bot):
         session.add(new_item)
         await session.commit()
         await session.refresh(new_item)
-
         item_id = new_item.id
 
     await state.clear()
     await call.message.edit_text("🎉 Akkauntingiz muvaffaqiyatli e'longa joylandi!")
 
-    # Kanalga post berish
     post_text = (
         f"📦 **YANGI AKKAUNT SOTUVDA!** #{data['game']}\n\n"
         f"🎮 **O'yin:** {data['game']}\n"
@@ -425,7 +417,25 @@ async def publish_item(call: CallbackQuery, state: FSMContext, bot: Bot):
 
 
 # -------------------------------------------------------------------
-# 5. ASOSIY ISHGA TUSHIRISH (MAIN)
+# 5. RENDER PORT TALABINI QONDIRUVCHI WEB SERVER
+# -------------------------------------------------------------------
+async def handle(request):
+    return web.Response(text="Bot ishlayapti va port ochiq!")
+
+
+async def start_web_server():
+    app = web.Application()
+    app.add_routes([web.get("/", handle)])
+    runner = web.AppRunner(app)
+    await runner.setup()
+
+    port = int(os.environ.get("PORT", 8080))
+    site = web.TCPSite(runner, "0.0.0.0", port)
+    await site.start()
+
+
+# -------------------------------------------------------------------
+# 6. ASOSIY ISHGA TUSHIRISH (MAIN)
 # -------------------------------------------------------------------
 async def main():
     await init_db()
@@ -433,7 +443,10 @@ async def main():
     dp = Dispatcher(storage=MemoryStorage())
     dp.include_router(router)
 
-    print("Bot muvaffaqiyatli ishga tushdi!")
+    # Veb-serverni ishga tushiramiz (Render uchun)
+    await start_web_server()
+    print("Web-server va bot muvaffaqiyatli ishga tushdi!")
+
     await dp.start_polling(bot)
 
 
